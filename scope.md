@@ -12,7 +12,7 @@ Major Elements
 
 Non-Elements
 ------------
-1. No new features that do not currently exist in GData.  This includes:
+No new features that do not currently exist in GData.  This includes:
   * Reports
   * Data versioning
   * Integration with external systems
