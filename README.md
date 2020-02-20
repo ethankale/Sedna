@@ -19,5 +19,6 @@ Tables are singular.  So are columns.  Pascal casing (all first words upper, no 
 * _seg Segment
 * _tr Transaction (stored proc or function)
 * _fn Function (non-transactional), etc.
+
 Mostly this is cribbed from https://stackoverflow.com/questions/4702728/relational-table-naming-convention/4703155#4703155.
 By convention, names are varchar(100), and descriptions are varchar(255).
