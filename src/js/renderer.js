@@ -1,6 +1,6 @@
 
 var apiTest = function() {
-    return $.ajax({url: "http://localhost:3000"});
+    return $.ajax({url: "http://localhost:3000/api/v1/getSites"});
 }
 
 
