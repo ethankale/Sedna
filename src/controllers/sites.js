@@ -6,6 +6,7 @@ let controller = {
         var Request = require('tedious').Request;
         const mssql_config = require('./config.js')
         
+        var returndata = []
         var connection = new Connection(mssql_config);
         
         connection.on('connect', function(err) {
@@ -17,7 +18,7 @@ let controller = {
         });
         
         function executeStatement() {
-          var request = new Request("SELECT COUNT(*) FROM Alqwu.dbo.Metadata", function(err, rowCount) {
+          var request = new Request("SELECT SiteID, Code, Name FROM Alqwu.dbo.Site", function(err, rowCount) {
             if (err) {
               console.log(err);
             } else {
@@ -25,23 +26,24 @@ let controller = {
             }
             connection.close();
           });
-
+          
           request.on('row', function(columns) {
-            columns.forEach(function(column) {
-              if (column.value === null) {
-                console.log('NULL');
-              } else {
-                console.log(column.value);
-                res.json({'value': column.value});
-              }
-            });
+              var thisrow = {}
+              columns.forEach(function(column) {
+                  thisrow[[column.metadata.colName]] = column.value;
+              });
+              returndata.push(thisrow);
           });
-
+          
           request.on('done', function(rowCount, more) {
             console.log(rowCount + ' rows returned');
           });
-
-          // In SQL Server 2000 you may need: connection.execSqlBatch(request);
+          
+          request.on('requestCompleted', function(rowCounty, more, rows) {
+            console.log('requestCompleted triggered');
+            res.json(returndata);
+          });
+          
           connection.execSql(request);
         }
     }
