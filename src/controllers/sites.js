@@ -17,6 +17,8 @@ let controller = {
             executeStatement("SELECT SiteID, Code, Name FROM Alqwu.dbo.Site", connection, res);
           }
         });
+        
+        //connection.close();
     }
 };
 

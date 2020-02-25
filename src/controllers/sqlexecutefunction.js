@@ -1,5 +1,4 @@
 
-
 var Request = require('tedious').Request;
 var returndata = []
 
@@ -28,6 +27,7 @@ function executeStatement(statement, connection, res) {
   request.on('requestCompleted', function(rowCounty, more, rows) {
     console.log('requestCompleted triggered');
     res.json(returndata);
+    returndata = [];
   });
   
   connection.execSql(request);
