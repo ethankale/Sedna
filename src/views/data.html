@@ -13,7 +13,7 @@
       <h1>Data</h1>
       <p><a href="index.html">Home</a></p>
       
-      <div class="row">
+      <div class="row border-bottom">
         <div class="col">
             <div class="form-group">
             <label for="exampleFormControlSelect1">Monitoring Site</label>
@@ -24,10 +24,20 @@
         </div>
       </div>
       
+      <div class="row">
+        <div id="paramList" class="col-4">
+          <p>Left side placeholder - there will be a list of parameters here</p>
+        </div>
+        <div class="col-8">
+          <p>Right side content - this is going to be a graph</p>
+        </div>
+      </div>
+      
     </div>
+    
   </body>
   <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
   <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
   <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="../js/renderer.js"></script>
+  <script src="../js/data.js"></script>
 </html>

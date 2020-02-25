@@ -7,5 +7,6 @@ module.exports = function (app) {
         res.json({ message: 'Alqwu API is working.' });
     });
     
-    app.get('/api/v1/getsites', ctrl.getData);
+    app.get('/api/v1/getsites', ctrl.getSitesList);
+    app.get('/api/v1/getParamsBySite', ctrl.getParamsBySite);
 };

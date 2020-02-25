@@ -1,13 +1,13 @@
 module.exports = {
-  server: 'RSH2O',
+  server: 'server',
   authentication: {
     type: 'default',
     options: {
-      userName: 'test_dev',
-      password: '1952@rsh2o'
+      userName: 'user',
+      password: 'pass'
     }
   },
   options: {
-    database: 'Alqwu'
+    database: 'db'
   }
 };
