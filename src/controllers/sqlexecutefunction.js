@@ -25,7 +25,6 @@ function executeStatement(statement, connection, res) {
   });
   
   request.on('requestCompleted', function(rowCounty, more, rows) {
-    console.log('requestCompleted triggered');
     res.json(returndata);
     returndata = [];
   });

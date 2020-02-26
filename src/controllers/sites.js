@@ -1,5 +1,4 @@
 
-// Need to separate controller and model logic here
 "use strict";
 
 var Connection = require('tedious').Connection;
