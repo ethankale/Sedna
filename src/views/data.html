@@ -13,10 +13,10 @@
       <h1>Data</h1>
       <p><a href="index.html">Home</a></p>
       
-      <div class="row border-bottom">
+      <div class="row">
         <div class="col">
-            <div class="form-group">
-            <label for="exampleFormControlSelect1">Monitoring Site</label>
+          <div class="form-group">
+            <label for="siteSelect">Monitoring Site</label>
             <select class="form-control" id="siteSelect">
               <option>Loading...</option>
             </select>
@@ -24,7 +24,19 @@
         </div>
       </div>
       
-      <div class="row">
+      <div class="form-group row">
+          <div class="col-5">
+            <label for="startDate">Start Date</label>
+            <input class="form-control" type="date" id="startDate"></input>
+          </div>
+          
+          <div class="col-5">
+            <label for="endDate">End Date</label>
+            <input class="form-control" type="date" id="endDate"></input>
+          </div>
+      </div>
+      
+      <div class="row border-top">
         <div id="paramList" class="col-4">
           <p>Left side placeholder - there will be a list of parameters here</p>
         </div>
@@ -39,5 +51,6 @@
   <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
   <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="../../node_modules/d3/dist/d3.min.js"></script>
-  <script src="../js/data.js"></script>
+  <script src="../js/data_bundle.js"></script>
+  <!--<script src="../js/data.js"></script>-->
 </html>

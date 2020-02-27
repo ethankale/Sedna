@@ -13,7 +13,7 @@ You'll need Node 12 and NPM 6.  Pull the project into a new directory with git. 
 ### Naming Conventions
 #### SQL
 Tables are singular.  So are columns.  Pascal casing (all first words upper, no spaces or underscores).  Many-to-many tables include the names of both tables.  Dtm means datetime.  IDs get unique names (unique throughout the database).  Foreign keys have the exact same name as the primary key of the joined table.  No prefixes or suffixes on tables or columns.  The following suffixes on other things:
-* _V View (with the main TableName in front, of course)
+* _v View (with the main TableName in front, of course)
 * _fk Foreign Key (the constraint name, not the column name)
 * _cac Cache
 * _seg Segment

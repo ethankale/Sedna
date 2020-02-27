@@ -1,4 +1,8 @@
 
+// Node modules.  Remember to run browserify every time to bundle this.
+var datefns    = require('date-fns');   // Bringing in everything for now; can lighten up in the future.
+var alqwuutils = require('./utils.js');
+
 var sites        = [];
 var sitesMarkup  = "";
 
@@ -34,16 +38,45 @@ function loadParamList(siteid) {
     }).done(function(data) {
         params = data;
         paramMarkup = "";
-        params.forEach(param => paramMarkup = paramMarkup + `<button data-paramid=${param.ParameterID} type="button" class="list-group-item list-group-item-action">${param.Name}</button>\n`);
+        
+        params.forEach(param => {
+            param.maxdtm = new Date(param.maxdtm)
+            paramMarkup = paramMarkup + `<button data-paramid=${param.ParameterID} 
+            data-lastcollectdtm=${param.maxdtm.toLocaleDateString()}
+            type="button" class="list-group-item list-group-item-action">
+            ${param.Name}
+            </button>\n`;
+        });
         paramMarkup = '<div class="list-group list-group-flush">' + paramMarkup + "</div>";
         $('#paramList').empty().append(paramMarkup);
-        $("#paramList div button").click(function() {loadMeasurements(siteid, $(this).data("paramid"),'2020-01-01','2020-02-01')});
+        $("#paramList div button").click(function() {
+            var lastdtm   = new Date($(this).data("lastcollectdtm"));
+            var wateryear = alqwuutils.calcWaterYear(lastdtm);
+            var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
+            var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
+            loadMeasurements(siteid, $(this).data("paramid"), firstdtm, lastdtm)
+        });
         $("#paramList div button:first").click();
     });
 }
 
 function loadMeasurements(siteid, paramid, startdtm, enddtm) {
-    $.ajax({url: `http://localhost:3000/api/v1/getMeasurements?siteid=${siteid}&paramid=${paramid}&startdtm=${startdtm}&enddtm=${enddtm}`
+    var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    var startdtmlocal = startdtm;
+    //var startdtmlocal = startdtm+utcoffsetjs;
+    var enddtmlocal   = enddtm;
+    //var enddtmlocal   = enddtm+utcoffsetjs;
+    
+    var startdtmstring = startdtmlocal.toLocaleDateString("en-US", dateoptions);
+    var enddtmstring   = enddtmlocal.toLocaleDateString("en-US", dateoptions);
+    
+    var url = 'http://localhost:3000/api/v1/getMeasurements' +
+        '?siteid=' + siteid +
+        '&paramid=' + paramid +
+        '&startdtm=' + startdtmstring +
+        '&enddtm=' + enddtmstring
+    
+    $.ajax({url: url
     }).done(function(data) {
         measurements = data;
         measurements.forEach(function(d) {
@@ -76,11 +109,13 @@ function graphMeasurements() {
       .range([ 0, width ]);
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x)
+        .ticks(3));
     
     // Add Y axis
     var y = d3.scaleLinear()
-      .domain([0, d3.max(measurements, function(d) { return +d.Value; })])
+      .domain(d3.extent(measurements, function(d) {return d.Value; }))
+      //domain([0, d3.max(measurements, function(d) { return +d.Value; })])
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));

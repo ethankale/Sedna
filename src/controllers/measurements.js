@@ -11,6 +11,8 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
+        console.log(req.query);
+        
         var siteid   = req.query.siteid;
         var paramid  = req.query.paramid;
         var startdtm = req.query.startdtm;
@@ -27,6 +29,8 @@ let controller = {
             AND ms.CollectedDtm > '${startdtm}'
             AND ms.CollectedDtm < '${enddtm}'
             ORDER BY CollectedDtm ASC`;
+        
+        //console.log(statement);
         
         connection.on('connect', function(err) {
           if(err) {

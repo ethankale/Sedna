@@ -3,3 +3,7 @@ body {
   margin: auto;
   padding: 2rem;
 }
+
+svg text {
+  font-size: 1rem;
+}
