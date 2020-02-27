@@ -17618,6 +17618,10 @@ module.exports = exports.default;
 },{"../_lib/requiredArgs/index.js":14}],226:[function(require,module,exports){
 
 // Node modules.  Remember to run browserify every time to bundle this.
+// browserify src/js/data.js -o src/js/data_bundle.js
+
+
+
 var datefns    = require('date-fns');   // Bringing in everything for now; can lighten up in the future.
 var alqwuutils = require('./utils.js');
 
@@ -17672,27 +17676,24 @@ function loadParamList(siteid) {
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
             var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-            loadMeasurements(siteid, $(this).data("paramid"), firstdtm, lastdtm)
+            loadMeasurements(siteid, $(this).data("paramid"), firstdtm, lastdtm, alqwuutils.utcoffset)
         });
         $("#paramList div button:first").click();
     });
 }
 
-function loadMeasurements(siteid, paramid, startdtm, enddtm) {
+function loadMeasurements(siteid, paramid, startdtm, enddtm, utcoffset) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-    var startdtmlocal = startdtm;
-    //var startdtmlocal = startdtm+utcoffsetjs;
-    var enddtmlocal   = enddtm;
-    //var enddtmlocal   = enddtm+utcoffsetjs;
     
-    var startdtmstring = startdtmlocal.toLocaleDateString("en-US", dateoptions);
-    var enddtmstring   = enddtmlocal.toLocaleDateString("en-US", dateoptions);
+    var startdtmstring = startdtm.toLocaleDateString("en-US", dateoptions);
+    var enddtmstring   = enddtm.toLocaleDateString("en-US", dateoptions);
     
     var url = 'http://localhost:3000/api/v1/getMeasurements' +
-        '?siteid=' + siteid +
-        '&paramid=' + paramid +
-        '&startdtm=' + startdtmstring +
-        '&enddtm=' + enddtmstring
+        '?siteid='    + siteid +
+        '&paramid='   + paramid +
+        '&startdtm='  + startdtmstring +
+        '&enddtm='    + enddtmstring +
+        '&utcoffset=' + utcoffset
     
     $.ajax({url: url
     }).done(function(data) {
