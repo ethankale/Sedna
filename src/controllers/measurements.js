@@ -11,7 +11,7 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
-        console.log(req.query);
+        //console.log(req.query);
         
         var siteid    = req.query.siteid;
         var paramid   = req.query.paramid;
@@ -33,7 +33,7 @@ let controller = {
             AND ms.CollectedDtm < DATEADD(hour, ${utcoffset}, '${enddtm}')
             ORDER BY CollectedDtm ASC`;
         
-        console.log(statement);
+        //console.log(statement);
         
         connection.on('connect', function(err) {
           if(err) {

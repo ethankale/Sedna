@@ -8,10 +8,16 @@ var datefns    = require('date-fns');   // Bringing in everything for now; can l
 var alqwuutils = require('./utils.js');
 
 var sites        = [];
+var sitecurrent  = 0;
 var sitesMarkup  = "";
 
 var params       = [];
+var paramcurrent = 0;
 var paramMarkup  = "";
+
+var wylist       = [];
+var wycurrent    = 0;
+var wymarkup     = "";
 
 var measurements = []
 
@@ -19,8 +25,31 @@ $(document).ready(function() {
     loadSites();
     $("#siteSelect").change(function() {
         measurements = [];
+        sitecurrent = $("#siteSelect").val();
         $("#chartContainer").empty();
-        loadParamList($("#siteSelect").val());
+        loadParamList(sitecurrent);
+    });
+    // These are the two date inputs - start and end date
+    $("#date-select-row input").change(function() {
+        var startdtm = new Date($("#startDate").val());
+        var enddtm   = new Date($("#endDate").val());
+        loadMeasurements(
+            sitecurrent, 
+            paramcurrent, 
+            startdtm,
+            enddtm, 
+            alqwuutils.utcoffset
+        );
+    });
+    $("#wylist").change(function() {
+        wycurrent = $("#wylist").val();
+        var firstdtm  = new Date(`${wycurrent-1}-10-01T00:00:00`);
+        var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
+        
+        $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
+        $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
+        
+        loadMeasurements(sitecurrent, paramcurrent, firstdtm, lastdtm, alqwuutils.utcoffset)
     });
 });
 
@@ -29,11 +58,15 @@ function loadSites() {
     $.ajax({url: "http://localhost:3000/api/v1/getSites"
     }).done(function(data) {
         sites = data;
-        sites.forEach(site => sitesMarkup = sitesMarkup + '<option value="' + 
+        sites.forEach(site => sitesMarkup += '<option value="' + 
             site.SiteID + '">' + 
             site.Code + ': ' + site.Name + '</option>\n');
-        $('#siteSelect').empty().append(sitesMarkup);
-        $("#siteSelect").change();
+        $('#siteSelect')
+            .empty()
+            .append(sitesMarkup)
+            .change()
+            .select2();
+        //$("#siteSelect").change();
     });
 }
 
@@ -44,9 +77,11 @@ function loadParamList(siteid) {
         paramMarkup = "";
         
         params.forEach(param => {
-            param.maxdtm = new Date(param.maxdtm)
+            param.maxdtm = new Date(param.maxdtm);
+            param.mindtm = new Date(param.mindtm);
             paramMarkup = paramMarkup + `<button data-paramid=${param.ParameterID} 
             data-lastcollectdtm=${param.maxdtm.toLocaleDateString()}
+            data-firstcollectdtm=${param.mindtm.toLocaleDateString()}
             type="button" class="list-group-item list-group-item-action">
             ${param.Name}
             </button>\n`;
@@ -57,8 +92,21 @@ function loadParamList(siteid) {
             var lastdtm   = new Date($(this).data("lastcollectdtm"));
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
-            var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-            loadMeasurements(siteid, $(this).data("paramid"), firstdtm, lastdtm, alqwuutils.utcoffset)
+            
+            $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
+            $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
+            
+            paramcurrent = $(this).data("paramid");
+            
+            wymarkup = "";
+            wylist = alqwuutils.createWYList(new Date($(this).data("firstcollectdtm")), lastdtm);
+            wylist.forEach(wy => {
+                wymarkup += `<option value=${wy}>${wy}</option>\n`
+            });
+            $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
+            //$('#wylist').val(wylist[wylist.length-1]);
+            
+            loadMeasurements(siteid, paramcurrent, firstdtm, lastdtm, alqwuutils.utcoffset)
         });
         $("#paramList div button:first").click();
     });
