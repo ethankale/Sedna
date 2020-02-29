@@ -89,6 +89,10 @@ function loadParamList(siteid) {
         paramMarkup = '<div class="list-group list-group-flush">' + paramMarkup + "</div>";
         $('#paramList').empty().append(paramMarkup);
         $("#paramList div button").click(function() {
+            
+            $("#paramList div button").removeClass('active');
+            $(this).addClass('active');
+            
             var lastdtm   = new Date($(this).data("lastcollectdtm"));
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
@@ -139,7 +143,7 @@ function graphMeasurements() {
   $("#chartContainer").empty();
   if(measurements.length > 0) {
     var margin = {top: 10, right: 30, bottom: 30, left: 60},
-        width = 460 - margin.left - margin.right,
+        width = $("#chartContainer").width() - margin.left - margin.right,
         height = 400 - margin.top - margin.bottom;
 
     // append the svg object to the body of the page
