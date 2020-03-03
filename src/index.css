@@ -7,3 +7,8 @@ body {
 svg text {
   font-size: 1rem;
 }
+
+#downloadParameterSelect {
+    width:100%;
+    max-width:90%;
+}

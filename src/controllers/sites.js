@@ -25,9 +25,10 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
-        var statement = `SELECT SiteID, ParameterID, Name, maxdtm, mindtm
+        var statement = `SELECT SiteID, ParameterID, MethodID, Name, Method, maxdtm, mindtm
           FROM [Measurement_By_SamplePoint_v]
-          WHERE SiteID = ${req.query.siteid}`
+          WHERE SiteID = ${req.query.siteid}
+          ORDER BY Name`
         
         connection.on('connect', function(err) {
           if(err) {

@@ -10,6 +10,51 @@
     <link rel="stylesheet" href="../index.css">
   </head>
   <body>
+    
+    <!-- Data download modal -->
+    <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Download Data</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          
+          <div class="modal-body">
+            <div id="downloadDateRow" class="form-group row">
+              <div class="col-5">
+                <label for="downloadStartDate">Start Date</label>
+                <input class="form-control" type="date" id="downloadStartDate"></input>
+              </div>
+              
+              <div class="col-5">
+                <label for="downloadEndDate">End Date</label>
+                <input class="form-control" type="date" id="downloadEndDate"></input>
+              </div>
+            </div>
+            
+            <div id="downloadParameterRow" class="form-group row">
+              <div class="col">
+                <label for="downloadParameterSelect">Parameter</label>
+                <select id="downloadParameterSelect" class="form-control" style="width:100%; max-width:90%;">
+                </select>
+              </div>
+            </div>
+            
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary">Download CSV</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+    
+    <!-- Begin main page content -->
     <div class="container-fluid" role="main">
       <h1>Data</h1>
       <p><a href="index.html">Home</a></p>
@@ -46,7 +91,7 @@
       
       <div class="row border-top">
         <div id="paramList" class="col-4">
-          <p>Left side placeholder - there will be a list of parameters here</p>
+          <p>Loading Parameters...</p>
         </div>
         <div id="chartContainer" class="col-8">
         </div>
@@ -58,7 +103,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col text-center">
-            <button type="button" class="btn btn-primary">Download Data</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
           </div>  
         </div>
       </div>
@@ -71,5 +116,4 @@
   <script src="../../node_modules/select2/dist/js/select2.min.js"></script>
   <script src="../../node_modules/d3/dist/d3.min.js"></script>
   <script src="../js/data_bundle.js"></script>
-  <!--<script src="../js/data.js"></script>-->
 </html>

@@ -17640,6 +17640,7 @@ var wymarkup     = "";
 var measurements = []
 
 $(document).ready(function() {
+    $("#downloadParameterSelect").select2();
     loadSites();
     $("#siteSelect").change(function() {
         measurements = [];
@@ -17649,15 +17650,7 @@ $(document).ready(function() {
     });
     // These are the two date inputs - start and end date
     $("#date-select-row input").change(function() {
-        var startdtm = new Date($("#startDate").val());
-        var enddtm   = new Date($("#endDate").val());
-        loadMeasurements(
-            sitecurrent, 
-            paramcurrent, 
-            startdtm,
-            enddtm, 
-            alqwuutils.utcoffset
-        );
+        updateDates();
     });
     $("#wylist").change(function() {
         wycurrent = $("#wylist").val();
@@ -17667,7 +17660,7 @@ $(document).ready(function() {
         $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
         $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
         
-        loadMeasurements(sitecurrent, paramcurrent, firstdtm, lastdtm, alqwuutils.utcoffset)
+        updateDates();
     });
 });
 
@@ -17684,7 +17677,6 @@ function loadSites() {
             .append(sitesMarkup)
             .change()
             .select2();
-        //$("#siteSelect").change();
     });
 }
 
@@ -17693,22 +17685,35 @@ function loadParamList(siteid) {
     }).done(function(data) {
         params = data;
         paramMarkup = "";
+        var downloadParamMarkup = "";
         
         params.forEach(param => {
             param.maxdtm = new Date(param.maxdtm);
             param.mindtm = new Date(param.mindtm);
-            paramMarkup = paramMarkup + `<button data-paramid=${param.ParameterID} 
-            data-lastcollectdtm=${param.maxdtm.toLocaleDateString()}
-            data-firstcollectdtm=${param.mindtm.toLocaleDateString()}
-            type="button" class="list-group-item list-group-item-action">
-            ${param.Name}
-            </button>\n`;
+            paramMarkup += `<a href="#"
+                data-paramid=${param.ParameterID} 
+                data-methodid=${param.MethodID} 
+                data-lastcollectdtm=${param.maxdtm.toLocaleDateString()} 
+                data-firstcollectdtm=${param.mindtm.toLocaleDateString()} 
+                class="list-group-item list-group-item-action">
+                <h5>${param.Name}</h5>
+                <small>${param.Method}</small>
+                </a>\n`;
+            
+            downloadParamMarkup += `<option 
+                data-paramid=${param.ParameterID}
+                data-methodid=${param.MethodID}>
+                ${param.Name} (${param.Method})
+                </option>`
+            
         });
         paramMarkup = '<div class="list-group list-group-flush">' + paramMarkup + "</div>";
+        $('#downloadParameterSelect').empty().append(downloadParamMarkup);
+        
         $('#paramList').empty().append(paramMarkup);
-        $("#paramList div button").click(function() {
+        $("#paramList div a").click(function() {
             
-            $("#paramList div button").removeClass('active');
+            $("#paramList div a").removeClass('active');
             $(this).addClass('active');
             
             var lastdtm   = new Date($(this).data("lastcollectdtm"));
@@ -17728,9 +17733,9 @@ function loadParamList(siteid) {
             $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
             //$('#wylist').val(wylist[wylist.length-1]);
             
-            loadMeasurements(siteid, paramcurrent, firstdtm, lastdtm, alqwuutils.utcoffset)
+            updateDates();
         });
-        $("#paramList div button:first").click();
+        $("#paramList div a:first").click();
     });
 }
 
@@ -17802,7 +17807,22 @@ function graphMeasurements() {
         .y(function(d) { return y(d.Value) })
         )
   }
+}
 
+function updateDates() {
+    var startdtm = new Date($("#startDate").val());
+    var enddtm   = new Date($("#endDate").val());
+    
+    $("#downloadStartDate").val($("#startDate").val());
+    $("#downloadEndDate").val($("#endDate").val());
+    
+    loadMeasurements(
+        sitecurrent, 
+        paramcurrent, 
+        startdtm,
+        enddtm, 
+        alqwuutils.utcoffset
+    );
 }
 
 },{"./utils.js":227,"date-fns":115}],227:[function(require,module,exports){
