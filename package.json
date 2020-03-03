@@ -53,6 +53,7 @@
     "express": "^4.17.1",
     "jquery": "^3.4.1",
     "msnodesqlv8": "^0.8.6",
+    "papaparse": "^5.1.1",
     "select2": "^4.0.13",
     "tedious": "^8.0.1"
   },

@@ -23,6 +23,11 @@
           </div>
           
           <div class="modal-body">
+          
+            <div id="downloadAlert" class="row alert alert-info" role="alert">
+              Download data to a local CSV file
+            </div>
+          
             <div id="downloadDateRow" class="form-group row">
               <div class="col-5">
                 <label for="downloadStartDate">Start Date</label>
@@ -38,15 +43,23 @@
             <div id="downloadParameterRow" class="form-group row">
               <div class="col">
                 <label for="downloadParameterSelect">Parameter</label>
-                <select id="downloadParameterSelect" class="form-control" style="width:100%; max-width:90%;">
+                <select id="downloadParameterSelect" class="form-control" style="width:100%; max-width:90%;" multiple="multiple">
                 </select>
+              </div>
+            </div>
+            
+            <div id="downloadFileNameRow" class="form-group row">
+              <div class="col">
+                <label for="downloadFileName">File Name</label>
+                <input id="downloadFileName" class="form-control">
+                </input>
               </div>
             </div>
             
           </div>
           
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary">Download CSV</button>
+            <button id="downloadDataButton" type="button" class="btn btn-primary">Download CSV</button>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           </div>
           

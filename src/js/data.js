@@ -4,16 +4,18 @@
 
 
 
-var datefns    = require('date-fns');   // Bringing in everything for now; can lighten up in the future.
+var datefns    = require('date-fns');
+var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
 
 var sites        = [];
 var sitecurrent  = 0;
 var sitesMarkup  = "";
 
-var params       = [];
-var paramcurrent = 0;
-var paramMarkup  = "";
+var params        = [];
+var paramcurrent  = 0;
+var methodcurrent = 0;
+var paramMarkup   = "";
 
 var wylist       = [];
 var wycurrent    = 0;
@@ -23,27 +25,67 @@ var measurements = []
 
 $(document).ready(function() {
     $("#downloadParameterSelect").select2();
-    loadSites();
+    
+    $("#downloadDataButton").click(function() {
+        var startdtm  = new Date($("#downloadStartDate").val());
+        var enddtm    = new Date($("#downloadEndDate").val());
+        var paramList = $("#downloadParameterSelect").val();
+        var filename  = $("#downloadFileName").val();
+        
+        if (paramList.length > 0 && !isNaN(startdtm) && !isNaN(enddtm) && filename.length > 0) {
+            var paramids  = [];
+            var methodids = [];
+            paramList.forEach(param => {
+                paramids.push(param.split("|")[0]);
+                methodids.push(param.split("|")[1]);
+            });
+            $("#downloadAlert")
+                .removeClass("alert-danger alert-info alert-success")
+                .addClass("alert-primary")
+                .text("Downloading now...")
+            
+            downloadMeasurements(
+                sitecurrent, 
+                paramids, 
+                methodids,
+                startdtm,
+                enddtm, 
+                alqwuutils.utcoffset
+            );
+        } else {
+            $("#downloadAlert")
+                .removeClass("alert-primary alert-info alert-success")
+                .addClass("alert-danger")
+                .text("Valid start date, end date, parameters, and file name are all required.");
+        };
+    });
+    
     $("#siteSelect").change(function() {
         measurements = [];
         sitecurrent = $("#siteSelect").val();
+        $("#downloadFileName").val("c:/data/data.csv");
         $("#chartContainer").empty();
         loadParamList(sitecurrent);
     });
+    
     // These are the two date inputs - start and end date
     $("#date-select-row input").change(function() {
         updateDates();
     });
+    
     $("#wylist").change(function() {
         wycurrent = $("#wylist").val();
         var firstdtm  = new Date(`${wycurrent-1}-10-01T00:00:00`);
         var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
+
         
         $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
         $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
         
         updateDates();
     });
+    
+    loadSites();
 });
 
 
@@ -83,8 +125,7 @@ function loadParamList(siteid) {
                 </a>\n`;
             
             downloadParamMarkup += `<option 
-                data-paramid=${param.ParameterID}
-                data-methodid=${param.MethodID}>
+                value=${param.ParameterID}|${param.MethodID}>
                 ${param.Name} (${param.Method})
                 </option>`
             
@@ -105,7 +146,8 @@ function loadParamList(siteid) {
             $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
             $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
             
-            paramcurrent = $(this).data("paramid");
+            paramcurrent  = $(this).data("paramid");
+            methodcurrent = $(this).data("methodid");
             
             wymarkup = "";
             wylist = alqwuutils.createWYList(new Date($(this).data("firstcollectdtm")), lastdtm);
@@ -121,7 +163,7 @@ function loadParamList(siteid) {
     });
 }
 
-function loadMeasurements(siteid, paramid, startdtm, enddtm, utcoffset) {
+function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
     
     var startdtmstring = startdtm.toLocaleDateString("en-US", dateoptions);
@@ -130,17 +172,51 @@ function loadMeasurements(siteid, paramid, startdtm, enddtm, utcoffset) {
     var url = 'http://localhost:3000/api/v1/getMeasurements' +
         '?siteid='    + siteid +
         '&paramid='   + paramid +
+        '&methodid='  + methodid +
         '&startdtm='  + startdtmstring +
         '&enddtm='    + enddtmstring +
         '&utcoffset=' + utcoffset
     
     $.ajax({url: url
+        }).done(function(data) {
+            measurements = data;
+            measurements.forEach(function(d) {
+                d.dtm = Date.parse(d.CollectedDtm);
+            });
+            graphMeasurements();
+    });
+}
+function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utcoffset) {
+    var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
+    
+    var startdtmstring = startdtm.toLocaleDateString("en-US", dateoptions);
+    var enddtmstring   = enddtm.toLocaleDateString("en-US", dateoptions);
+    
+    var paramidsString  = "";
+    var methodidsString = "";
+    
+    paramids.forEach(paramid => { paramidsString += "&paramids=" + paramid })
+    methodids.forEach(methodid => { methodidsString += "&methodids=" + methodid })
+    
+    var url = 'http://localhost:3000/api/v1/getMeasurementDetails' +
+        '?siteid='      + siteid +
+        paramidsString  +
+        methodidsString +
+        '&startdtm='    + startdtmstring +
+        '&enddtm='      + enddtmstring +
+        '&utcoffset='   + utcoffset;
+    
+    $.ajax({url: url
     }).done(function(data) {
         measurements = data;
         measurements.forEach(function(d) {
-            d.dtm = Date.parse(d.CollectedDtm);
+            d.CollectedDtm = datefns.format(Date.parse(d.CollectedDtm),"yyyy-MM-dd HH:mm:ss");
         });
-        graphMeasurements();
+        window.writeText(Papa.unparse(data), $("#downloadFileName").val());
+        $("#downloadAlert")
+            .removeClass("alert-danger alert-info alert-primary")
+            .addClass("alert-success")
+            .text("Download Complete!")
     });
 }
 
@@ -201,6 +277,7 @@ function updateDates() {
     loadMeasurements(
         sitecurrent, 
         paramcurrent, 
+        methodcurrent,
         startdtm,
         enddtm, 
         alqwuutils.utcoffset

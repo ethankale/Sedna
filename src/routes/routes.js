@@ -14,6 +14,9 @@ module.exports = function (app) {
     // Parameter: siteid
     app.get('/api/v1/getParamsBySite', sites.getParamsBySite);
     
-    // Parameters: siteid, parameterid, startdtm, enddtm
+    // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurements', measurements.getMeasurements);
+    
+    // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
+    app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
 };
