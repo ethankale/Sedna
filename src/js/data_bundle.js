@@ -17668,7 +17668,7 @@ $(document).ready(function() {
             $("#downloadAlert")
                 .removeClass("alert-danger alert-info alert-success")
                 .addClass("alert-primary")
-                .text("Downloading now!")
+                .text("Downloading now...")
             
             downloadMeasurements(
                 sitecurrent, 
@@ -17836,7 +17836,12 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utc
     }).done(function(data) {
         measurements = data;
         measurements.forEach(function(d) {
-            d.CollectedDtm = datefns.format(Date.parse(d.CollectedDtm),"yyyy-MM-dd HH:mm:ss");
+            //d.localDTM = datefns.format(datefns.parse(d.CollectedDtm, "yyyy-MM-dd[T]HH:mm:ss.SSS[Z]", new Date()),"yyyy-MM-dd HH:mm:ss");
+            
+            // This is super ugly, but date-fns insists on treating every date like it's UTC, 
+            //   and I specifically want all the dates in the front end to be local, 
+            //   with UTC on the back end.
+            d.CollectedDtm = d.CollectedDtm.replace("T", " ").replace("Z", " ").trim();
         });
         window.writeText(Papa.unparse(data), $("#downloadFileName").val());
         $("#downloadAlert")

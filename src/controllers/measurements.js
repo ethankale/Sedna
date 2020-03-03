@@ -62,10 +62,6 @@ let controller = {
         var paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
         var methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
         
-        
-        //console.log("paramids = " + req.query.paramids);
-        //console.log("methodids = " + req.query.methodids);
-        
         var statement = `SELECT 
             DATEADD(hour, ${utcoffset}, ms.CollectedDtm) as CollectedDtm,
             ms.Value, sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
@@ -82,8 +78,8 @@ let controller = {
             WHERE sp.SiteID = ${siteid}
             AND md.ParameterID IN (${paramstring})
             AND md.MethodID IN  (${methodstring})
-            AND ms.CollectedDtm > DATEADD(hour, ${utcoffset}, '${startdtm}')
-            AND ms.CollectedDtm < DATEADD(hour, ${utcoffset}, '${enddtm}')
+            AND ms.CollectedDtm >= DATEADD(hour, ${utcoffset*-1}, '${startdtm}')
+            AND ms.CollectedDtm <= DATEADD(hour, ${utcoffset*-1}, '${enddtm}')
             ORDER BY CollectedDtm ASC`;
         
         
