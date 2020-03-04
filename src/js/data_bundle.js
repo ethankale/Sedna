@@ -17633,6 +17633,7 @@ License: MIT
 var datefns    = require('date-fns');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
+var dataload   = require('./dataload.js')
 
 var sites        = [];
 var sitecurrent  = 0;
@@ -17685,6 +17686,8 @@ $(document).ready(function() {
                 .text("Valid start date, end date, parameters, and file name are all required.");
         };
     });
+    
+
     
     $("#siteSelect").change(function() {
         measurements = [];
@@ -17915,7 +17918,84 @@ function updateDates() {
     );
 }
 
-},{"./utils.js":228,"date-fns":115,"papaparse":226}],228:[function(require,module,exports){
+},{"./dataload.js":228,"./utils.js":229,"date-fns":115,"papaparse":226}],228:[function(require,module,exports){
+
+var Papa       = require('papaparse');
+
+$(document).ready(function() {
+    $("#siteSelect").change(function() {
+        $("#uploadColumnSelectContainer").addClass("d-none");
+        $("#uploadColumnSelectForm").empty();
+        $("#uploadFileName").text("Select a File...");
+    });
+    
+    
+    $("#openCSVFileButton").click(function() {
+        
+        $("#uploadAlert")
+            .removeClass("alert-danger alert-info alert-success")
+            .addClass("alert-primary")
+            .text("Uploading file now...")
+        
+        var [filePath, fileText] = window.openCSV();
+        $("#uploadFileName").text(filePath);
+        
+        var fileData = Papa.parse(fileText, {header: true});
+        var headers  = Object.keys(fileData.data[0]);
+        
+        console.log(filePath);
+        console.log(headers);
+        console.log(fileData);
+        
+        $("#uploadAlert")
+            .removeClass("alert-danger alert-info alert-primary")
+            .addClass("alert-success")
+            .text("File upload complete!")
+        
+        var siteid = $("#siteSelect").val();
+        $.ajax({url: `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`
+        }).done(function(metas) {
+            var uploadHeaderMarkup = "";
+            headers.forEach(header => {
+                uploadHeaderMarkup += buildUploadColumnSelect(header, metas);
+            })
+            
+            $("#uploadColumnSelectContainer").removeClass("d-none");
+            $("#uploadColumnSelectForm")
+                .empty()
+                .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
+            
+        });
+    });
+});
+
+// There are some magic numbers here (sorry).
+// Using negative numbers because metadata ids will always be positive.
+//   -1 = Empty (ignore the column during import)
+//   -2 = Date and Time
+//   -3 = Flag/qualifier
+var buildUploadColumnSelect = function(colname, metas) {
+    var metaoptions = `
+        <option value=-1>Blank</option>\n
+        <option value=-2>Date and Time</option>\n
+        <option value=-3>Flag or Qualifier</option>\n`;
+    
+    metas.forEach(meta => {
+        metaoptions += `<option
+            value=${meta.MetadataID}>
+            ${meta.Parameter} (${meta.Method})
+            </option>\n`
+    });
+    
+    return `<div class="form-group">
+        <label for="uploadHeader${colname}">${colname}</label>
+        <select class="form-control" id="uploadHeader${colname}">
+        ${metaoptions}
+        </select>
+      </div>\n`
+}
+
+},{"papaparse":226}],229:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()

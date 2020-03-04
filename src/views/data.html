@@ -13,29 +13,46 @@
     
     <!-- Data upload modal -->
     <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog" role="document">
+      <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Upload Data</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           
           <div class="modal-body">
-          
-            <div id="uploadAlert" class="row alert alert-info" role="alert">
-              Load data from a CSV file
+            <div class="container-fluid">
+                <div id="uploadAlert" class="row alert alert-info" role="alert">
+                  Load data from a CSV file
+                </div>
+                
+                <div class="row">
+                  <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
+                </div>
+                
+                <div class="row">
+                  <small id="uploadFileName" class="text-muted">Select a File...</small>
+                </div>
+                
+                <div id="uploadColumnSelectContainer" class="d-none">
+                  <h5 id="uploadColumnSelectHeader" class="row mt-2">Select Columns</h5>
+                  <div id="uploadColumnSelectForm" class="row"></div>
+                  <button id="uploadColumnSelectReviewButton" type="button" class="btn btn-primary row mb-2">Review Data</button>
+                </div>
+                
+                <div id="uploadReviewContainer" class="d-none">
+                
+                </div>
+                
             </div>
-            
-            
+              
+            <div class="modal-footer">
+              <button id="uploadDataButton" type="button" class="btn btn-primary" disabled>Upload Data</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
           </div>
-          
-          <div class="modal-footer">
-            <button id="uploadDataButton" type="button" class="btn btn-primary">Upload CSV</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-          
         </div>
       </div>
     </div>

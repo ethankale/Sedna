@@ -19,4 +19,7 @@ module.exports = function (app) {
     
     // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
+    
+    // Paramter: siteid
+    app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
 };

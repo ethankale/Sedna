@@ -7,6 +7,7 @@
 var datefns    = require('date-fns');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
+var dataload   = require('./dataload.js')
 
 var sites        = [];
 var sitecurrent  = 0;
@@ -59,6 +60,8 @@ $(document).ready(function() {
                 .text("Valid start date, end date, parameters, and file name are all required.");
         };
     });
+    
+
     
     $("#siteSelect").change(function() {
         measurements = [];

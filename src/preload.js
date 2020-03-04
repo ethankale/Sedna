@@ -1,4 +1,6 @@
-const { writeFile } = require('fs')
+const { writeFile }    = require('fs')
+const { readFileSync } = require('fs')
+const { dialog }       = require('electron').remote;
 
 window.writeText = function (text, filepath) {
   var result = writeFile(filepath, text, function(err) {
@@ -7,3 +9,15 @@ window.writeText = function (text, filepath) {
     }
   });
 }
+
+window.openCSV = function() {
+    var path = dialog.showOpenDialogSync({
+        title: 'Select CSV',
+        properties: ['openFile']
+    })[0];
+    
+    console.log(path);
+    var data = readFileSync(path, "utf8");
+    return [path, data];
+}
+
