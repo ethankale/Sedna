@@ -25,25 +25,39 @@
           <div class="modal-body">
             <div class="container-fluid">
                 <div id="uploadAlert" class="row alert alert-info" role="alert">
-                  Load data from a CSV file
-                </div>
-                
-                <div class="row">
-                  <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
-                </div>
-                
-                <div class="row">
-                  <small id="uploadFileName" class="text-muted">Select a File...</small>
+                    Load data from a CSV file
+                  </div>
+                <div id="uploadCSVContainer">
+                  
+                  <div class="row">
+                    <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
+                  </div>
+                  
+                  <div class="row">
+                    <small id="uploadFileName" class="text-muted">Select a File...</small>
+                  </div>
                 </div>
                 
                 <div id="uploadColumnSelectContainer" class="d-none">
-                  <h5 id="uploadColumnSelectHeader" class="row mt-2">Select Columns</h5>
                   <div id="uploadColumnSelectForm" class="row"></div>
-                  <button id="uploadColumnSelectReviewButton" type="button" class="btn btn-primary row mb-2">Review Data</button>
+                  
+                  <div class="row">
+                    <button id="uploadColumnBackButton" type="button" class="btn btn-outline-primary btn-sm mb-2">Back to CSV</button>
+                    <button id="uploadColumnSelectReviewButton" type="button" class="btn btn-outline-primary btn-sm mb-2">Review Data</button>
+                  </div>
                 </div>
                 
                 <div id="uploadReviewContainer" class="d-none">
-                
+                  <div id="uploadReviewTabs">
+                    
+                    <ul class="nav nav-tabs" id="uploadReviewTab" role="tablist">
+                    </ul>
+                    
+                    <div class="tab-content" id="uploadReviewTabContent">
+                    </div>
+                    
+                  </div>
+                  <button id="uploadReviewBackButton" type="button" class="btn btn-outline-primary btn-sm row mb-2">Back to Columns</button>
                 </div>
                 
             </div>

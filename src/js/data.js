@@ -61,8 +61,6 @@ $(document).ready(function() {
         };
     });
     
-
-    
     $("#siteSelect").change(function() {
         measurements = [];
         sitecurrent = $("#siteSelect").val();
