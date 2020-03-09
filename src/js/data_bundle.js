@@ -37160,15 +37160,16 @@ $(document).ready(function() {
         var [filePath, fileText] = window.openCSV();
         $("#uploadFileName").text(filePath);
         
-        var fileData = Papa.parse(fileText, {header: true});
+        var fileData = Papa.parse(fileText, {header: true, skipEmptyLines: true,});
         var headers  = Object.keys(fileData.data[0]);
+        console.log(headers);
         
         $("#uploadAlert")
             .removeClass("alert-danger alert-info alert-primary")
             .addClass("alert-success")
             .text("File upload complete!")
         
-        var siteid = $("#siteSelect").val();
+        var siteid    = $("#siteSelect").val();
         $.ajax({url: `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`
         }).done(function(metas) {
             var uploadHeaderMarkup = "";
@@ -37189,11 +37190,40 @@ $(document).ready(function() {
                 .text("Match the CSV headers with the correct metadata.")
             
         });
+        $("#uploadColumnSelectReviewButton").off("click");
         $("#uploadColumnSelectReviewButton").click(function() {
             reviewData(headers, fileData);
         });
     });
 });
+
+
+// There are some magic numbers here (sorry).
+// Using negative numbers because metadata ids will always be positive.
+//   -1 = Empty (ignore the column during import)
+//   -2 = Date and Time
+//   -3 = Flag/qualifier
+var buildUploadColumnSelect = function(colname, metas) {
+    var metaoptions = `
+        <option value=-1>Blank</option>\n
+        <option value=-2>Date and Time</option>\n
+        <option value=-3>Flag or Qualifier</option>\n`;
+    
+    metas.forEach(meta => {
+        metaoptions += `<option
+            value=${meta.MetadataID}
+            data-frequency=${meta.FrequencyMinutes}>
+            ${meta.Parameter} (${meta.Method})
+            </option>\n`
+    });
+    
+    return `<div class="form-group">
+        <label for="uploadHeader${colname}">${colname.trim()}</label>
+        <select class="form-control" id="uploadHeader${colname}">
+        ${metaoptions}
+        </select>
+      </div>\n`
+}
 
 var reviewData = function(headers, fileData) {
     
@@ -37243,7 +37273,8 @@ var reviewData = function(headers, fileData) {
         headers.forEach(header => {
           var headert    = header.trim();
           var selectVal  = $("#uploadHeader" + header).val();
-          var selectName = $("#uploadHeader"+ header + " :selected").text()
+          var selectName = $("#uploadHeader"+ header + " :selected").text();
+          var selectFreq = $("#uploadHeader"+ header + " :selected").data('frequency');
           
           // Figure out a way to pull out the date column + the selected column
           
@@ -37251,9 +37282,9 @@ var reviewData = function(headers, fileData) {
             var csum = 0;
             var cmis = 0;
             var cmax = 0;
-            var cmin = data[0][header];
+            var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-                d.Value = Number(d[header]);
+                d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
                 d.dtm   = new Date(d[dtmColName]);
                 if (isNaN(d.Value)) {
                     cmis += 1;
@@ -37265,7 +37296,13 @@ var reviewData = function(headers, fileData) {
                 arr[i] = d;
             });
             
-            console.log(data);
+            //console.log(data);
+            
+            var dataFilled = fillGaps(data, 60, "dtm", "Value", "ValueFilled");
+            cmis += (dataFilled.length - data.length)
+            
+            //console.log(dataFilled);
+            
             
             $("#uploadReviewTab").append(
               `<li class="nav-item">
@@ -37288,16 +37325,14 @@ var reviewData = function(headers, fileData) {
                 </tbody>
               </table>
               </div>\n`)
-              .append(function() {graphColumn("#graph"+header, data)});
-            
-            
+              .append(function() {
+                  graphColumn("#graph"+header, data, 'dtm', 'Value')
+              });
           }
         })
         
-        
         $("#uploadColumnSelectContainer").addClass("d-none");
         $("#uploadCSVContainer").addClass("d-none");
-        
         $("#uploadReviewContainer").removeClass("d-none");
         
         $("#uploadAlert")
@@ -37305,43 +37340,50 @@ var reviewData = function(headers, fileData) {
             .addClass("alert-info")
             .text("Review uploaded data for accuracy.")
         
+        $('#uploadReviewTab a:first').tab('show')
+        
     }
 }
 
+var fillGaps = function(arr, freq, datecol, valuecol, newcol) {
+    var newarr = [];
+    
+    arr.forEach((d, i, arr) => {
+        let d_copy = {...d};
+        if (i==0) {
+            d_copy[newcol] = d_copy[valuecol];
+            newarr.push(d_copy);
+        } else {
+            var lastdate     = arr[i-1][datecol];
+            var currentDate  = arr[i][datecol];
+            var diff         = (currentDate - lastdate)/(1000*60);
+            var ntoinsert    = diff/freq;
+            
+            //console.log(`Iteration ${i}; ntoinsert = ${ntoinsert}; diff = ${diff}`);
+            
+            for (let j=1; j<=ntoinsert; j++) {
+                let insertDate = new Date(lastdate);
+                insertDate.setMinutes(lastdate.getMinutes() + (j*freq));
+                
+                d_copy[newcol] = j == 1 ? d_copy[valuecol] : NaN;
+                
+                let d_new = {...d_copy};
+                d_new[datecol] = insertDate;
+                
+                newarr.push(d_new);
+            };
+        };
+    })
+    return newarr;
+};
 
-// There are some magic numbers here (sorry).
-// Using negative numbers because metadata ids will always be positive.
-//   -1 = Empty (ignore the column during import)
-//   -2 = Date and Time
-//   -3 = Flag/qualifier
-var buildUploadColumnSelect = function(colname, metas) {
-    var metaoptions = `
-        <option value=-1>Blank</option>\n
-        <option value=-2>Date and Time</option>\n
-        <option value=-3>Flag or Qualifier</option>\n`;
-    
-    metas.forEach(meta => {
-        metaoptions += `<option
-            value=${meta.MetadataID}>
-            ${meta.Parameter} (${meta.Method})
-            </option>\n`
-    });
-    
-    return `<div class="form-group">
-        <label for="uploadHeader${colname}">${colname.trim()}</label>
-        <select class="form-control" id="uploadHeader${colname}">
-        ${metaoptions}
-        </select>
-      </div>\n`
-}
 
 // measurements needs be an object with 'dtm' and 'Value' arrays
-function graphColumn(selector, measurements) {
+var graphColumn = function(selector, measurements, datecol, valuecol) {
     $(selector).empty();
     var margin = {top: 10, right: 60, bottom: 30, left: 40},
         width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;
-    console.log("width: " + width + "; height: "+ height);
     // append the svg object to the body of the page
     var svg = d3.select(selector)
       .append("svg")
@@ -37354,7 +37396,7 @@ function graphColumn(selector, measurements) {
     //Read the data
     // Add X axis --> it is a date format
     var x = d3.scaleTime()
-      .domain(d3.extent(measurements, function(d) { return new Date(d.dtm); }))
+      .domain(d3.extent(measurements, function(d) { return new Date(d[datecol]); }))
       .range([ 0, width ]);
     svg.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -37363,7 +37405,7 @@ function graphColumn(selector, measurements) {
     
     // Add Y axis
     var y = d3.scaleLinear()
-      .domain(d3.extent(measurements, function(d) {return d.Value; }))
+      .domain(d3.extent(measurements, function(d) {return d[valuecol]; }))
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));
@@ -37375,9 +37417,9 @@ function graphColumn(selector, measurements) {
       .attr("stroke", "steelblue")
       .attr("stroke-width", 1.5)
       .attr("d", d3.line()
-        .defined(d => !isNaN(d.Value))
-        .x(function(d) { return x(new Date(d.dtm)) })
-        .y(function(d) { return y(d.Value) })
+        .defined(d => !isNaN(d[valuecol]))
+        .x(function(d) { return x(new Date(d[datecol])) })
+        .y(function(d) { return y(d[valuecol]) })
         )
 }
 
