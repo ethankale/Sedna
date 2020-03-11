@@ -41,7 +41,7 @@ $(document).ready(function() {
         
         var fileData = Papa.parse(fileText, {header: true, skipEmptyLines: true,});
         var headers  = Object.keys(fileData.data[0]);
-        console.log(headers);
+        //console.log(headers);
         
         $("#uploadAlert")
             .removeClass("alert-danger alert-info alert-primary")
@@ -153,16 +153,19 @@ var reviewData = function(headers, fileData) {
           var headert    = header.trim();
           var selectVal  = $("#uploadHeader" + header).val();
           var selectName = $("#uploadHeader"+ header + " :selected").text();
-          var selectFreq = $("#uploadHeader"+ header + " :selected").data('frequency');
+          var selectFreq = Number($("#uploadHeader"+ header + " :selected").data('frequency'));
           
           // Figure out a way to pull out the date column + the selected column
           
           if (selectVal >= 0) {
+            console.log(selectFreq);
+            dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
+            
             var csum = 0;
             var cmis = 0;
             var cmax = 0;
             var cmin = Number(data[0][header]);
-            data.forEach((d, i, arr) => {
+            dataFilled.forEach((d, i, arr) => {
                 d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
                 d.dtm   = new Date(d[dtmColName]);
                 if (isNaN(d.Value)) {
@@ -175,13 +178,9 @@ var reviewData = function(headers, fileData) {
                 arr[i] = d;
             });
             
-            //console.log(data);
-            
-            var dataFilled = fillGaps(data, 60, "dtm", "Value", "ValueFilled");
             cmis += (dataFilled.length - data.length)
             
-            //console.log(dataFilled);
-            
+            console.log(dataFilled);
             
             $("#uploadReviewTab").append(
               `<li class="nav-item">
@@ -203,9 +202,39 @@ var reviewData = function(headers, fileData) {
                   <tr> <th scope="row">Min</th>         <td>${cmin.toFixed(2)}</tr>
                 </tbody>
               </table>
+                  <form>
+                    <div class="row">
+                      <!--<div class="col-3">
+                        <button id="fillGaps${header}" type="button" class="btn btn-outline-primary">Fill Gaps</button>
+                      </div>-->
+                      <div class="col-4">
+                        <input type="text" class="form-control" id="offset${header}" placeholder="Offset">
+                      </div>
+                      <div class="col-4">
+                        <input type="text" class="form-control" id="drift${header}" placeholder="Drift">
+                      </div>
+                      <div class="col-4">
+                        <button id="correct${header}" type="button" class="btn btn-outline-primary">Correct</button>
+                      </div>
+                    </div>
+                  </form>
               </div>\n`)
               .append(function() {
-                  graphColumn("#graph"+header, data, 'dtm', 'Value')
+                  graphColumn("#graph"+header, dataFilled, 'dtm', 'Value');
+                  $("#correct"+header).click(() => {
+                      //console.log($("#offset"+header).val() + $("#drift"+header).val());
+                      let offset = Number($("#offset"+header).val());
+                      let drift  = Number($("#drift"+header).val());
+                      
+                      offset = isNaN(offset) ? 0 : offset;
+                      drift  = isNaN(drift)  ? 0 : drift;
+                      
+                      let adjustedCol = 'ValueAdjusted';
+                      
+                      let dataAdjusted = adjustValues(dataFilled, 'Value', offset, drift, adjustedCol)
+                      console.log(dataAdjusted);
+                      graphColumn("#graph"+header, dataAdjusted, 'dtm', 'Value', adjustedCol);
+                  });
               });
           }
         })
@@ -224,13 +253,16 @@ var reviewData = function(headers, fileData) {
     }
 }
 
-var fillGaps = function(arr, freq, datecol, valuecol, newcol) {
+// There are two kinds of gap filling.  The first is to add missing rows
+//   where the date-time field indicates that data are missing.  The second
+//   is to interpolate values where they are missing.  This function
+//   only does the FIRST - adds rows.
+var fillGaps = function(data, freq, datecol, valuecol) {
     var newarr = [];
     
-    arr.forEach((d, i, arr) => {
+    data.forEach((d, i, arr) => {
         let d_copy = {...d};
         if (i==0) {
-            d_copy[newcol] = d_copy[valuecol];
             newarr.push(d_copy);
         } else {
             var lastdate     = arr[i-1][datecol];
@@ -238,27 +270,48 @@ var fillGaps = function(arr, freq, datecol, valuecol, newcol) {
             var diff         = (currentDate - lastdate)/(1000*60);
             var ntoinsert    = diff/freq;
             
-            //console.log(`Iteration ${i}; ntoinsert = ${ntoinsert}; diff = ${diff}`);
+            if (isFinite(ntoinsert)) {
             
-            for (let j=1; j<=ntoinsert; j++) {
-                let insertDate = new Date(lastdate);
-                insertDate.setMinutes(lastdate.getMinutes() + (j*freq));
-                
-                d_copy[newcol] = j == 1 ? d_copy[valuecol] : NaN;
-                
-                let d_new = {...d_copy};
-                d_new[datecol] = insertDate;
-                
-                newarr.push(d_new);
-            };
+                for (let j=1; j<=ntoinsert; j++) {
+                    let insertDate = new Date(lastdate);
+                    insertDate.setMinutes(lastdate.getMinutes() + (j*freq));
+                    
+                    d_copy[valuecol] = j == ntoinsert ? d_copy[valuecol] : NaN;
+                    
+                    let d_new = {...d_copy};
+                    d_new[datecol] = insertDate;
+                    
+                    newarr.push(d_new);
+                };
+            } else {
+                console.log("Detected infinite value - bad spacing of data?");
+                newarr.push(d_copy);
+            }
         };
-    })
+    });
     return newarr;
 };
 
+// Naively assumes no gaps in timesteps.  Use fillGaps first.
+// Offset - difference between actual and recorded value at first timestep.
+// Drift - difference between actual and the offset plus recorded value at last timestep.
+// Example: if your recorded values at first and last timestep are both five, and the
+//   actual values are 4 and 7, then the offset is -1 (4-5) and the drift is 3 (7-[5-1]).
+var adjustValues = function(arr, valuecol, offset, drift, newcol) {
+    var newarr = [];
+    var stepchange = drift/arr.length;
+    
+    arr.forEach((d, i, arr) => {
+        let d_copy = {...d};
+        d_copy[newcol] = d_copy[valuecol] + ((stepchange*i)+offset);
+        newarr.push(d_copy);
+    });
+    return newarr;
+}
+
 
 // measurements needs be an object with 'dtm' and 'Value' arrays
-var graphColumn = function(selector, measurements, datecol, valuecol) {
+var graphColumn = function(selector, measurements, datecol, valuecol, filledval) {
     $(selector).empty();
     var margin = {top: 10, right: 60, bottom: 30, left: 40},
         width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
@@ -288,6 +341,19 @@ var graphColumn = function(selector, measurements, datecol, valuecol) {
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));
+    
+    if (typeof filledval !== 'undefined') {
+      svg.append("path")
+        .datum(measurements)
+        .attr("fill", "none")
+        .attr("stroke", "orange")
+        .attr("stroke-width", 2.5)
+        .attr("d", d3.line()
+          .defined(d => !isNaN(d[filledval]))
+          .x(function(d) { return x(new Date(d[datecol])) })
+          .y(function(d) { return y(d[filledval]) })
+          )
+    }
     
     // Add the line
     svg.append("path")

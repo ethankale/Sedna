@@ -35,8 +35,6 @@ let controller = {
             AND ms.CollectedDtm < DATEADD(hour, ${utcoffset}, '${enddtm}')
             ORDER BY CollectedDtm ASC`;
         
-        console.log(statement);
-        
         connection.on('connect', function(err) {
           if(err) {
             console.log('Error: ', err)
