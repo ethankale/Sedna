@@ -17,7 +17,7 @@ window.openCSV = function() {
     })[0];
     
     console.log(path);
-    var data = readFileSync(path, "utf8");
+    var data = readFileSync(path, "utf8").trim();
     return [path, data];
 }
 

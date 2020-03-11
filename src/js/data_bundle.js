@@ -37125,7 +37125,9 @@ var d3   = require('d3');
 
 $(document).ready(function() {
     $("#siteSelect").change(function() {
+        $("#uploadCSVContainer").removeClass("d-none");
         $("#uploadColumnSelectContainer").addClass("d-none");
+        $("#uploadReviewContainer").addClass("d-none");
         $("#uploadColumnSelectForm").empty();
         $("#uploadFileName").text("Select a File...");
     });
@@ -37160,9 +37162,25 @@ $(document).ready(function() {
         var [filePath, fileText] = window.openCSV();
         $("#uploadFileName").text(filePath);
         
-        var fileData = Papa.parse(fileText, {header: true, skipEmptyLines: true,});
+        let papaConfig = {
+            delimiter: ',',
+            quoteChar: '"',
+            header: true, 
+            skipEmptyLines: true,
+            fastMode: false,
+            transformHeader: function(h) {
+                return h.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_ -]/g, '');
+            }
+        };
+        
+        // Even with the transform header function we may get some column names
+        //   that are invalid selectors.  in theory we could search for the CSS
+        //   valid selector regex -?[_a-zA-Z]+[_a-zA-Z0-9-]* and replace anything
+        //   that doesn't match, but replace with what?
+        
+        var fileData = Papa.parse(fileText, papaConfig);
         var headers  = Object.keys(fileData.data[0]);
-        //console.log(headers);
+        console.log(headers);
         
         $("#uploadAlert")
             .removeClass("alert-danger alert-info alert-primary")
@@ -37405,7 +37423,7 @@ var fillGaps = function(data, freq, datecol, valuecol) {
                     newarr.push(d_new);
                 };
             } else {
-                console.log("Detected infinite value - bad spacing of data?");
+                console.log("Detected infinite value - data spacing may be bad.");
                 newarr.push(d_copy);
             }
         };
