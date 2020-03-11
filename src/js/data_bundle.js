@@ -37123,34 +37123,85 @@ function updateDates() {
 var Papa = require('papaparse');
 var d3   = require('d3');
 
+// From CSV upload to column selection
+
+// From column selection back to CSV upload
+var showUpload = function() {
+    console.log("showUpload");
+    $("#uploadCSVContainer").removeClass("d-none");
+    $("#uploadColumnSelectContainer").addClass("d-none");
+    $("#uploadReviewContainer").addClass("d-none");
+    $("#uploadFileName").text("Select a File...");
+    
+    $("#uploadBackButton")
+      .addClass("d-none")
+      .off("click");
+    
+    $("#uploadNextButton")
+      .removeClass("d-none")
+      .addClass("disabled")
+      .off("click");
+    
+    $("#uploadAlert")
+        .removeClass("alert-success alert-danger alert-primary")
+        .addClass("alert-info")
+        .text("Select a File...")
+};
+
+var showColumnSelect = function() {
+    console.log("showColumnSelect");
+    $("#uploadCSVContainer").addClass("d-none");
+    $("#uploadColumnSelectContainer").removeClass("d-none");
+    $("#uploadReviewContainer").addClass("d-none");
+    $("#uploadBackButton")
+      .removeClass("d-none")
+      .off("click")
+      .click(() => { showUpload(); });
+    
+    $("#uploadNextButton")
+      .removeClass("d-none")
+      .off("click")
+      .click(function() {reviewData(headers, fileData); });
+    
+    $("#uploadAlert")
+      .removeClass("alert-success alert-danger alert-primary")
+      .addClass("alert-info")
+      .text("Match the CSV headers with the correct metadata.")
+}
+
+// From column selection to data review
+var showReview = function() {
+    console.log("showReview");
+    $("#uploadColumnSelectContainer").addClass("d-none");
+    $("#uploadCSVContainer").addClass("d-none");
+    $("#uploadReviewContainer").removeClass("d-none");
+    
+    $("#uploadBackButton")
+      .removeClass("d-none")
+      .off("click")
+      .click(() => { showUpload(); });
+    
+    $("#uploadNextButton")
+      .addClass("d-none");
+    
+    $("#uploadAlert")
+        .removeClass("alert-success alert-danger alert-primary")
+        .addClass("alert-info")
+        .text("Review uploaded data for accuracy.")
+};
+
 $(document).ready(function() {
     $("#siteSelect").change(function() {
         $("#uploadCSVContainer").removeClass("d-none");
         $("#uploadColumnSelectContainer").addClass("d-none");
         $("#uploadReviewContainer").addClass("d-none");
+        $("#uploadBackButton").addClass("d-none");
+        $("#uploadNextButton").addClass("d-none");
         $("#uploadColumnSelectForm").empty();
         $("#uploadFileName").text("Select a File...");
     });
     
-    $("#uploadColumnBackButton").click(function()  {
-        $("#uploadCSVContainer").removeClass("d-none");
-        $("#uploadColumnSelectContainer").addClass("d-none");
-        $("#uploadReviewContainer").addClass("d-none");
-        $("#uploadAlert")
-            .removeClass("alert-success alert-danger alert-primary")
-            .addClass("alert-info")
-            .text("Select a File...")
-    });
-    
-    $("#uploadReviewBackButton").click(function() {
-        $("#uploadCSVContainer").addClass("d-none");
-        $("#uploadColumnSelectContainer").removeClass("d-none");
-        $("#uploadReviewContainer").addClass("d-none");
-        $("#uploadAlert")
-            .removeClass("alert-success alert-danger alert-primary")
-            .addClass("alert-info")
-            .text("Match the CSV headers with the correct metadata.")
-    });
+
     
     $("#openCSVFileButton").click(function() {
         
@@ -37180,7 +37231,7 @@ $(document).ready(function() {
         
         var fileData = Papa.parse(fileText, papaConfig);
         var headers  = Object.keys(fileData.data[0]);
-        console.log(headers);
+        //console.log(headers);
         
         $("#uploadAlert")
             .removeClass("alert-danger alert-info alert-primary")
@@ -37195,22 +37246,15 @@ $(document).ready(function() {
                 uploadHeaderMarkup += buildUploadColumnSelect(header, metas);
             })
             
-            $("#uploadColumnSelectContainer").removeClass("d-none");
-            $("#uploadCSVContainer").addClass("d-none");
+            showColumnSelect();
             
             $("#uploadColumnSelectForm")
-                .empty()
-                .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
-            
-            $("#uploadAlert")
-                .removeClass("alert-success alert-danger alert-primary")
-                .addClass("alert-info")
-                .text("Match the CSV headers with the correct metadata.")
-            
-        });
-        $("#uploadColumnSelectReviewButton").off("click");
-        $("#uploadColumnSelectReviewButton").click(function() {
-            reviewData(headers, fileData);
+              .empty()
+              .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
+            $("#uploadNextButton")
+              .removeClass("d-none disabled")
+              .off('click')
+              .click(function() {reviewData(headers, fileData); });
         });
     });
 });
@@ -37319,7 +37363,7 @@ var reviewData = function(headers, fileData) {
             
             cmis += (dataFilled.length - data.length)
             
-            console.log(dataFilled);
+            //console.log(dataFilled);
             
             $("#uploadReviewTab").append(
               `<li class="nav-item">
@@ -37378,14 +37422,7 @@ var reviewData = function(headers, fileData) {
           }
         })
         
-        $("#uploadColumnSelectContainer").addClass("d-none");
-        $("#uploadCSVContainer").addClass("d-none");
-        $("#uploadReviewContainer").removeClass("d-none");
-        
-        $("#uploadAlert")
-            .removeClass("alert-success alert-danger alert-primary")
-            .addClass("alert-info")
-            .text("Review uploaded data for accuracy.")
+        showReview();
         
         $('#uploadReviewTab a:first').tab('show')
         
@@ -37423,7 +37460,7 @@ var fillGaps = function(data, freq, datecol, valuecol) {
                     newarr.push(d_new);
                 };
             } else {
-                console.log("Detected infinite value - data spacing may be bad.");
+                //console.log("Detected infinite value - data spacing may be bad.");
                 newarr.push(d_copy);
             }
         };

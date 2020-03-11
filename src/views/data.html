@@ -33,18 +33,10 @@
                     <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
                   </div>
                   
-                  <div class="row">
-                    <small id="uploadFileName" class="text-muted">Select a File...</small>
-                  </div>
                 </div>
                 
                 <div id="uploadColumnSelectContainer" class="d-none">
                   <div id="uploadColumnSelectForm" class="row"></div>
-                  
-                  <div class="row">
-                    <button id="uploadColumnBackButton" type="button" class="btn btn-outline-primary btn-sm mb-2">Back to CSV</button>
-                    <button id="uploadColumnSelectReviewButton" type="button" class="btn btn-outline-primary btn-sm mb-2">Review Data</button>
-                  </div>
                 </div>
                 
                 <div id="uploadReviewContainer" class="d-none">
@@ -57,16 +49,18 @@
                     </div>
                     
                   </div>
-                  
-                  <div class="row">
-                    <button id="uploadReviewBackButton" type="button" class="btn btn-outline-primary btn-sm  mb-2">Back to Columns</button>
-                  </div>
                 </div>
                 
             </div>
-              
+            
+            <div class="row">
+              <small id="uploadFileName" class="text-muted">Select a File...</small>
+            </div>
+            
             <div class="modal-footer">
-              <button id="uploadDataButton" type="button" class="btn btn-primary" disabled>Upload Data</button>
+              
+              <button id="uploadBackButton" type="button" class="btn btn-primary">Restart</button>
+              <button id="uploadNextButton" type="button" class="btn btn-primary">Next</button>
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
           </div>
