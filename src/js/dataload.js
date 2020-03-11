@@ -177,7 +177,7 @@ var reviewData = function(headers, fileData) {
           
           if (selectVal >= 0) {
             console.log(selectFreq);
-            dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
+            let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
             
             var csum = 0;
             var cmis = 0;
@@ -353,9 +353,16 @@ var graphColumn = function(selector, measurements, datecol, valuecol, filledval)
       .call(d3.axisBottom(x)
         .ticks(3));
     
+    let valueExtent  = d3.extent(measurements, function(d) {return d[valuecol]; });
+    let filledExtent = typeof filledval == 'undefined' ? valueExtent : d3.extent(measurements, function(d) {return d[filledval]; });
+    //let filledExtent = d3.extent(measurements, function(d) {return d[filledval]; });
+    let yextent = [d3.min(valueExtent.concat(filledExtent)), d3.max(valueExtent.concat(filledExtent))]
+    
+    console.log(valueExtent + " - " + filledExtent + " - " + yextent);
+    
     // Add Y axis
     var y = d3.scaleLinear()
-      .domain(d3.extent(measurements, function(d) {return d[valuecol]; }))
+      .domain(yextent)
       .range([ height, 0 ]);
     svg.append("g")
       .call(d3.axisLeft(y));
