@@ -17,9 +17,14 @@ module.exports = function (app) {
     // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurements', measurements.getMeasurements);
     
+    // Add one or more new measurements to the database
+    app.post('/api/v1/measurements', measurements.addMeasurements);
+    
     // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
     
     // Paramter: siteid
     app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
+    
+    
 };

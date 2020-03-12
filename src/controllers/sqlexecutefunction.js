@@ -2,7 +2,7 @@
 var Request = require('tedious').Request;
 var returndata = []
 
-function executeStatement(statement, connection, res) {
+const executeStatement = function(statement, connection, res) {
   var request = new Request(statement, function(err, rowCount) {
     if (err) {
       console.log(err);
@@ -32,4 +32,7 @@ function executeStatement(statement, connection, res) {
   connection.execSql(request);
 }
 
-module.exports = executeStatement;
+//const insertRow
+
+
+module.exports.executeSelect = executeStatement;

@@ -37122,6 +37122,7 @@ function updateDates() {
 
 var Papa = require('papaparse');
 var d3   = require('d3');
+var alqwuutils = require('./utils.js');
 
 // From CSV upload to column selection
 
@@ -37201,7 +37202,6 @@ $(document).ready(function() {
         $("#uploadFileName").text("Select a File...");
     });
     
-
     
     $("#openCSVFileButton").click(function() {
         
@@ -37309,7 +37309,6 @@ var reviewData = function(headers, fileData) {
       dtmColName = $("#uploadHeader" + header).val() == -2 ? header : dtmColName;
     });
     
-    
     if (columncount < 2) {
         $("#uploadAlert")
             .removeClass("alert-success alert-info alert-primary")
@@ -37341,14 +37340,12 @@ var reviewData = function(headers, fileData) {
           // Figure out a way to pull out the date column + the selected column
           
           if (selectVal >= 0) {
-            console.log(selectFreq);
-            let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
             
             var csum = 0;
             var cmis = 0;
             var cmax = 0;
             var cmin = Number(data[0][header]);
-            dataFilled.forEach((d, i, arr) => {
+            data.forEach((d, i, arr) => {
                 d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
                 d.dtm   = new Date(d[dtmColName]);
                 if (isNaN(d.Value)) {
@@ -37360,6 +37357,9 @@ var reviewData = function(headers, fileData) {
                 }
                 arr[i] = d;
             });
+            
+            let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
+            console.log(dataFilled);
             
             cmis += (dataFilled.length - data.length)
             
@@ -37387,23 +37387,27 @@ var reviewData = function(headers, fileData) {
               </table>
                   <form>
                     <div class="row">
-                      <!--<div class="col-3">
-                        <button id="fillGaps${header}" type="button" class="btn btn-outline-primary">Fill Gaps</button>
-                      </div>-->
-                      <div class="col-4">
+                      <div class="col-3">
                         <input type="text" class="form-control" id="offset${header}" placeholder="Offset">
                       </div>
-                      <div class="col-4">
+                      <div class="col-3">
                         <input type="text" class="form-control" id="drift${header}" placeholder="Drift">
                       </div>
-                      <div class="col-4">
+                      <div class="col-3">
                         <button id="correct${header}" type="button" class="btn btn-outline-primary">Correct</button>
+                      </div>
+                      <div class="col-3">
+                        <button id="upload${header}" type="button" class="btn btn-outline-primary">Upload</button>
                       </div>
                     </div>
                   </form>
               </div>\n`)
               .append(function() {
                   graphColumn("#graph"+header, dataFilled, 'dtm', 'Value');
+                  
+                  var dataAdjusted = [];
+                  let adjustedCol = 'ValueAdjusted';
+                  
                   $("#correct"+header).click(() => {
                       //console.log($("#offset"+header).val() + $("#drift"+header).val());
                       let offset = Number($("#offset"+header).val());
@@ -37412,11 +37416,47 @@ var reviewData = function(headers, fileData) {
                       offset = isNaN(offset) ? 0 : offset;
                       drift  = isNaN(drift)  ? 0 : drift;
                       
-                      let adjustedCol = 'ValueAdjusted';
                       
-                      let dataAdjusted = adjustValues(dataFilled, 'Value', offset, drift, adjustedCol)
+                      dataAdjusted = adjustValues(dataFilled, 'Value', offset, drift, adjustedCol)
                       console.log(dataAdjusted);
                       graphColumn("#graph"+header, dataAdjusted, 'dtm', 'Value', adjustedCol);
+                  });
+                  $("#upload"+header).click(() => {
+                      
+                      let interimData = dataAdjusted.length > 0 ? dataAdjusted : dataFilled;
+                      let finalData = [];
+                      console.log(dataAdjusted.length);
+                      
+                      interimData.forEach((d, i, arr) => {
+                          let d_new = {};
+                          
+                          d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
+                          d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
+                          d_new.metaid = selectVal;
+                          
+                          finalData.push(d_new);
+                      });
+                      
+                      let step = 20;
+                      for (let i=0; i<finalData.length; i+=step) {
+                        let dataToLoad = finalData.slice(i, i+step);
+                        //console.log(dataToLoad.length);
+                        
+                        $.post({
+                          contentType: 'application/json',
+                          data: JSON.stringify(dataToLoad),
+                          dataType: 'json',
+                          success: function(data){
+                              console.log("Upload successful!");
+                          },
+                          error: function(){
+                              console.log("Upload failed.");
+                          },
+                          processData: false,
+                          type: 'POST',
+                          url: 'http://localhost:3000/api/v1/measurements'
+                        });
+                      }
                   });
               });
           }
@@ -37441,16 +37481,16 @@ var fillGaps = function(data, freq, datecol, valuecol) {
         if (i==0) {
             newarr.push(d_copy);
         } else {
-            var lastdate     = arr[i-1][datecol];
+            var lastDate     = arr[i-1][datecol];
             var currentDate  = arr[i][datecol];
-            var diff         = (currentDate - lastdate)/(1000*60);
+            var diff         = (currentDate - lastDate)/(1000*60); // Minutes
             var ntoinsert    = diff/freq;
             
             if (isFinite(ntoinsert)) {
             
                 for (let j=1; j<=ntoinsert; j++) {
-                    let insertDate = new Date(lastdate);
-                    insertDate.setMinutes(lastdate.getMinutes() + (j*freq));
+                    let insertDate = new Date(lastDate);
+                    insertDate.setMinutes(lastDate.getMinutes() + (j*freq));
                     
                     d_copy[valuecol] = j == ntoinsert ? d_copy[valuecol] : NaN;
                     
@@ -37552,7 +37592,7 @@ var graphColumn = function(selector, measurements, datecol, valuecol, filledval)
 }
 
 
-},{"d3":32,"papaparse":258}],261:[function(require,module,exports){
+},{"./utils.js":261,"d3":32,"papaparse":258}],261:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()
@@ -37573,6 +37613,23 @@ exports.createWYList = function(startdt, enddt) {
         currwy = currwy+1;
     };
     return(wylist);
+}
+
+exports.formatDateForSQL = function(dt) {
+    let months  = dt.getMonth()+1;
+    let days    = dt.getDay();
+    let hours   = dt.getHours();
+    let minutes = dt.getMinutes();
+    let seconds = dt.getSeconds();
+    
+    months  = months  < 10 ? '0'+months  : months;
+    days    = days    < 10 ? '0'+days    : days;
+    minutes = minutes < 10 ? '0'+minutes : minutes;
+    seconds = seconds < 10 ? '0'+seconds : seconds;
+    
+    var strTime = hours + ':' + minutes + ':' + seconds;
+    var strDate = dt.getFullYear() + "-" + months + "-" + days;
+    return  strDate + " " + strTime;
 }
 
 var utcoffset = -8;

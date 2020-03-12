@@ -4,7 +4,7 @@
 var Connection = require('tedious').Connection;
 const mssql_config = require('./config.js')
 
-var executeStatement = require('./sqlexecutefunction.js')
+const sqlfunctions = require('./sqlexecutefunction.js')
 
 let controller = {
     getMeasurements: function (req, res) {
@@ -39,7 +39,7 @@ let controller = {
           if(err) {
             console.log('Error: ', err)
           } else {
-            executeStatement(statement, connection, res);
+            sqlfunctions.executeSelect(statement, connection, res);
           }
         });
     },
@@ -87,9 +87,15 @@ let controller = {
           if(err) {
             console.log('Error: ', err)
           } else {
-            executeStatement(statement, connection, res);
+            sqlfunctions.executeSelect(statement, connection, res);
           }
         });
+    },
+    
+    addMeasurements: function (req, res) {
+        //console.log(req.query);
+        console.log(req.body);
+        res.json("Success");
     }
 };
 

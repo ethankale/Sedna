@@ -5,6 +5,7 @@
   "description": "A desktop application for managing hydrologic data",
   "main": "src/index.js",
   "scripts": {
+    "compile": "browserify src/js/data.js -o src/js/data_bundle.js",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",

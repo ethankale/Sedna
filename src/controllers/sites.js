@@ -4,7 +4,7 @@
 var Connection = require('tedious').Connection;
 const mssql_config = require('./config.js')
 
-var executeStatement = require('./sqlexecutefunction.js')
+const sqlfunctions = require('./sqlexecutefunction.js')
 
 
 let controller = {
@@ -15,7 +15,7 @@ let controller = {
           if(err) {
             console.log('Error: ', err)
           } else {
-            executeStatement("SELECT SiteID, Code, Name FROM Site", connection, res);
+            sqlfunctions.executeSelect("SELECT SiteID, Code, Name FROM Site", connection, res);
           }
         });
     },
@@ -32,7 +32,7 @@ let controller = {
           if(err) {
             console.log('Error: ', err)
           } else {
-            executeStatement(statement, connection, res);
+            sqlfunctions.executeSelect(statement, connection, res);
           }
         });
     },
@@ -60,7 +60,7 @@ let controller = {
           if(err) {
             console.log('Error: ', err)
           } else {
-            executeStatement(statement, connection, res);
+            sqlfunctions.executeSelect(statement, connection, res);
           }
         });
     }

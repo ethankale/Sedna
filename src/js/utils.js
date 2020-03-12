@@ -20,6 +20,23 @@ exports.createWYList = function(startdt, enddt) {
     return(wylist);
 }
 
+exports.formatDateForSQL = function(dt) {
+    let months  = dt.getMonth()+1;
+    let days    = dt.getDay();
+    let hours   = dt.getHours();
+    let minutes = dt.getMinutes();
+    let seconds = dt.getSeconds();
+    
+    months  = months  < 10 ? '0'+months  : months;
+    days    = days    < 10 ? '0'+days    : days;
+    minutes = minutes < 10 ? '0'+minutes : minutes;
+    seconds = seconds < 10 ? '0'+seconds : seconds;
+    
+    var strTime = hours + ':' + minutes + ':' + seconds;
+    var strDate = dt.getFullYear() + "-" + months + "-" + days;
+    return  strDate + " " + strTime;
+}
+
 var utcoffset = -8;
 
 exports.utcoffset   = utcoffset;             // Difference between local and UTC

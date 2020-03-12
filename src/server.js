@@ -3,9 +3,12 @@
     
     // API using Express
     
-    const express = require('express')
-    const app = express()
-    const port = 3000
+    const express = require('express');
+    const app = express();
+    app.use(express.json());
+    app.allowRendererProcessReuse = true;
+    //app.use(express.urlencoded({ extended: true }));
+    const port = 3000;
     
     const appRoutes = require('./routes/routes.js')(app)
     
