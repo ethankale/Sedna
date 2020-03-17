@@ -94,6 +94,7 @@ let controller = {
     
     addMeasurements: function (req, res) {
         //console.log(req.query);
+        
         console.log(req.body);
         res.json("Success");
     }

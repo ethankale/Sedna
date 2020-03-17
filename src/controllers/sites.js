@@ -43,7 +43,7 @@ let controller = {
         var siteid    = req.query.siteid;
         
         var statement = `SELECT md.MetadataID, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
-        md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes
+        md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints
         FROM Metadata as md
         INNER JOIN SamplePoint as sp
         ON md.SamplePointID = sp.SamplePointID

@@ -408,7 +408,7 @@ var adjustValues = function(arr, valuecol, offset, drift, newcol) {
 // measurements needs be an object with 'dtm' and 'Value' arrays
 var graphColumn = function(selector, measurements, datecol, valuecol, filledval) {
     $(selector).empty();
-    var margin = {top: 10, right: 60, bottom: 30, left: 40},
+    var margin = {top: 10, right: 60, bottom: 30, left: 60},
         width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;
     // append the svg object to the body of the page

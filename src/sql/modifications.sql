@@ -1,0 +1,1 @@
+ALTER TABLE Metadata ADD DecimalPoints tinyint DEFAULT 2;

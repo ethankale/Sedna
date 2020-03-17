@@ -37274,7 +37274,8 @@ var buildUploadColumnSelect = function(colname, metas) {
     metas.forEach(meta => {
         metaoptions += `<option
             value=${meta.MetadataID}
-            data-frequency=${meta.FrequencyMinutes}>
+            data-frequency=${meta.FrequencyMinutes}
+            data-decimals=${meta.DecimalPoints}>
             ${meta.Parameter} (${meta.Method})
             </option>\n`
     });
@@ -37336,6 +37337,7 @@ var reviewData = function(headers, fileData) {
           var selectVal  = $("#uploadHeader" + header).val();
           var selectName = $("#uploadHeader"+ header + " :selected").text();
           var selectFreq = Number($("#uploadHeader"+ header + " :selected").data('frequency'));
+          let decimals   = 10**Number($("#uploadHeader"+ header + " :selected").data('decimals'));
           
           // Figure out a way to pull out the date column + the selected column
           
@@ -37430,7 +37432,7 @@ var reviewData = function(headers, fileData) {
                       interimData.forEach((d, i, arr) => {
                           let d_new = {};
                           
-                          d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
+                          d_new.Value  = typeof d[adjustedCol] == 'undefined' ? Math.round(d.Value*decimals)/decimals : d[adjustedCol];
                           d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
                           d_new.metaid = selectVal;
                           
@@ -37529,7 +37531,7 @@ var adjustValues = function(arr, valuecol, offset, drift, newcol) {
 // measurements needs be an object with 'dtm' and 'Value' arrays
 var graphColumn = function(selector, measurements, datecol, valuecol, filledval) {
     $(selector).empty();
-    var margin = {top: 10, right: 60, bottom: 30, left: 40},
+    var margin = {top: 10, right: 60, bottom: 30, left: 60},
         width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
         height = 200 - margin.top - margin.bottom;
     // append the svg object to the body of the page

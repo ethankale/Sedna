@@ -10,6 +10,11 @@ Development
 -----------
 You'll need Node 12 and NPM 6.  Pull the project into a new directory with git.  `npm install` to install all the dependencies. `npm init` to run the project.  This will start an Electron project.
 
+Some SQL Server caveats:
+
+1: Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip.
+2: If you're using a user with SQL Server login, you have to enable SQL Server logins; by default it only allows Windows connections.
+
 ### Naming Conventions
 #### SQL
 Tables are singular.  So are columns.  Pascal casing (all first words upper, no spaces or underscores).  Many-to-many tables include the names of both tables.  Dtm means datetime.  IDs get unique names (unique throughout the database).  Foreign keys have the exact same name as the primary key of the joined table.  No prefixes or suffixes on tables or columns.  The following suffixes on other things:
