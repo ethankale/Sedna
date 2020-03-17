@@ -89,4 +89,4 @@ typings/
 out/
 
 # Config file
-src/config.js
+*/config.js
