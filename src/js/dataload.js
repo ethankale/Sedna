@@ -311,14 +311,14 @@ var reviewData = function(headers, fileData) {
                           
                           d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
                           d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
-                          d_new.metaid = selectVal;
+                          //d_new.metaid = selectVal;
                           
                           finalData.push(d_new);
                       });
                       
                       let step = 20;
                       for (let i=0; i<finalData.length; i+=step) {
-                        let dataToLoad = finalData.slice(i, i+step);
+                        let dataToLoad = {'metaid':selectVal, 'measurements':finalData.slice(i, i+step)};
                         //console.log(dataToLoad.length);
                         
                         $.post({

@@ -93,10 +93,39 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
-        //console.log(req.query);
+        let connection = new Connection(mssql_config);
         
-        console.log(req.body);
-        res.json("Success");
+        connection.on('connect', function(err_conn) {
+          if (err_conn) {
+              res.json("Error: " + err_conn);
+          } else {
+            let Request = require('tedious').Request;
+            let statement = "SELECT DecimalPoints FROM Metadata WHERE MetadataID = " + req.body.metaid;
+            console.log(statement);
+            let decimals = 3;
+            
+            let request = new Request(statement, function(err, rowCount, rows) {
+              if (err) {
+                //console.log("Error connecting.");
+                console.log(err);
+                res.json("Error: " + err);
+              } else {
+                console.log(req.body);
+                res.json("Success");
+              }
+              connection.close();
+            });
+            
+            request.on('row', function(columns) {
+                columns.forEach(function(column) {
+                    decimals = column.value;
+                });
+            });
+            
+            connection.execSql(request);
+          }
+        });
+
     }
 };
 
