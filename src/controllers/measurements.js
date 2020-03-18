@@ -45,6 +45,32 @@ let controller = {
         });
     },
     
+    getCountByDtmAndMetaid: function(req, res) {
+        var returndata = [];
+        var connection = new Connection(mssql_config);
+        
+        var metaid    = req.query.methodid;
+        var startdtm  = req.query.startdtm;
+        var enddtm    = req.query.enddtm;
+        var utcoffset = req.query.utcoffset;
+        
+        var statement = `SELECT 
+          COUNT(MeasurementID) as measurementCount
+          FROM Measurement
+          WHERE MetadataID = ${metaid}
+          AND CollectedDtm > DATEADD(hour, ${utcoffset}, '${startdtm}')
+          AND CollectedDtm < DATEADD(hour, ${utcoffset}, '${startdtm}')
+        `;
+        
+        connection.on('connect', function(err) {
+          if(err) {
+            console.log('Error: ', err)
+          } else {
+            sqlfunctions.executeSelect(statement, connection, res);
+          }
+        });
+    }
+    
     getDetails: function (req, res) {
         var returndata = [];
         var connection = new Connection(mssql_config);
