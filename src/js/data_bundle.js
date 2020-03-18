@@ -37123,6 +37123,7 @@ function updateDates() {
 var Papa = require('papaparse');
 var d3   = require('d3');
 var alqwuutils = require('./utils.js');
+let utcoffset = -8;  // hours to add to local time to get UTC
 
 // From CSV upload to column selection
 
@@ -37346,8 +37347,11 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
+                let utcsymbol = utcoffset > 0 ? "+" : "-";
+                let utcnumber = Math.abs(utcoffset);
+                d.dtm         = new Date(d[dtmColName] + utcsymbol + utcnumber);
+                
                 d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
-                d.dtm   = new Date(d[dtmColName]);
                 if (isNaN(d.Value)) {
                     cmis += 1;
                 } else {
@@ -37432,17 +37436,14 @@ var reviewData = function(headers, fileData) {
                           
                           d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
                           d_new.dtm    = d.dtm;
-                          //d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
-                          //d_new.metaid = selectVal;
                           
                           finalData.push(d_new);
                       });
                       
-                      let step = 20;
+                      let step = 20;    // The max number of rows to bulk insert.
                       for (let i=0; i<finalData.length; i+=step) {
-                      //for (let i=0; i<40; i+=step) {
-                        let dataToLoad = {'metaid':selectVal, 'measurements':finalData.slice(i, i+step)};
-                        //console.log(dataToLoad.length);
+                        let dataToLoad = {'metaid':selectVal,
+                                          'measurements':finalData.slice(i, i+step)};
                         
                         $.post({
                           contentType: 'application/json',

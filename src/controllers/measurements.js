@@ -126,21 +126,15 @@ let controller = {
           bulkLoad.addColumn('Value', TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
           bulkLoad.addColumn('MetadataID', TYPES.Int, { nullable: false });
           
-          console.log("Metaid = " + metaid);
-          console.log("Multiplier = " + multiplier);
-          //console.log(measurements);
-          
           let measurements_toload = [];
           
           measurements.every( (measurement, index) => {
             let measurement_new = {};
-
+            
             measurement_new.CollectedDtm = new Date(measurement.dtm);
             measurement_new.Value        = Math.round(measurement.Value*multiplier)/multiplier;
             measurement_new.MetadataID   = parseInt(metaid);
             
-            //console.log('measurement', measurement);
-            console.log('measurement_new', measurement_new);
             measurements_toload.push(measurement_new);
             
             try { 
@@ -154,6 +148,7 @@ let controller = {
           });
           //console.log(measurements_toload);
           bulkConnection.execBulkLoad(bulkLoad);
+          res.json("Success");
         };
         
         connection.on('connect', function(err_conn) {
@@ -166,14 +161,13 @@ let controller = {
             
             let request = new Request(statement, function(err, rowCount, rows) {
               if (err) {
-                //console.log("Error connecting.");
                 console.log(err);
                 res.json("Error: " + err);
               } else {
-                console.log("Request callback function triggered.")
+                //console.log("Request callback function triggered.")
+                //console.log(req.body);
                 callbackBus.requestComplete = true;
                 console.log(callbackBus.loadMeasurement);
-                res.json("Success");
               }
               connection.close();
             });
