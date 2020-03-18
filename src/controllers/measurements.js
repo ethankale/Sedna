@@ -2,6 +2,7 @@
 "use strict";
 
 var Connection = require('tedious').Connection;
+var TYPES = require('tedious').TYPES;
 const mssql_config = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
@@ -93,7 +94,67 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
-        let connection = new Connection(mssql_config);
+        let connection     = new Connection(mssql_config);
+        let bulkConnection = new Connection(mssql_config);
+        let decimals       = 3;
+        let multiplier     = 10;
+        
+        const callbackBus    = {
+            requestComplete: false,
+            bulkConnected: false,
+            get loadMeasurement() {
+                if(this.requestComplete & this.bulkConnected) {
+                    loadBulkMeasurements(multiplier, req.body.metaid, req.body.measurements);
+                    return "Loading bulk measurements.";
+                } else {
+                    return "Waiting for request or bulk connect, or both";
+                }
+            }
+        };
+        
+        let loadBulkMeasurements = function(multiplier, metaid, measurements) {
+          let options = { keepNulls: true };
+          let bulkLoad = bulkConnection.newBulkLoad('Measurement', options, function (err, rowCount) {
+            if (err) {
+                console.log("Could not run the bulk load for measurements.");
+                throw err;
+            };
+            console.log('inserted %d rows', isNaN(rowCount) ? 0 : rowCount);
+            bulkConnection.close();
+          });
+          bulkLoad.addColumn('CollectedDtm', TYPES.DateTime2, { nullable: false });
+          bulkLoad.addColumn('Value', TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
+          bulkLoad.addColumn('MetadataID', TYPES.Int, { nullable: false });
+          
+          console.log("Metaid = " + metaid);
+          console.log("Multiplier = " + multiplier);
+          //console.log(measurements);
+          
+          let measurements_toload = [];
+          
+          measurements.every( (measurement, index) => {
+            let measurement_new = {};
+
+            measurement_new.CollectedDtm = new Date(measurement.dtm);
+            measurement_new.Value        = Math.round(measurement.Value*multiplier)/multiplier;
+            measurement_new.MetadataID   = parseInt(metaid);
+            
+            //console.log('measurement', measurement);
+            console.log('measurement_new', measurement_new);
+            measurements_toload.push(measurement_new);
+            
+            try { 
+              bulkLoad.addRow(measurement_new);
+              return true;
+            } catch(error) {
+              res.json("Error: " + error);
+              return false;
+            }
+            
+          });
+          //console.log(measurements_toload);
+          bulkConnection.execBulkLoad(bulkLoad);
+        };
         
         connection.on('connect', function(err_conn) {
           if (err_conn) {
@@ -102,7 +163,6 @@ let controller = {
             let Request = require('tedious').Request;
             let statement = "SELECT DecimalPoints FROM Metadata WHERE MetadataID = " + req.body.metaid;
             console.log(statement);
-            let decimals = 3;
             
             let request = new Request(statement, function(err, rowCount, rows) {
               if (err) {
@@ -110,7 +170,9 @@ let controller = {
                 console.log(err);
                 res.json("Error: " + err);
               } else {
-                console.log(req.body);
+                console.log("Request callback function triggered.")
+                callbackBus.requestComplete = true;
+                console.log(callbackBus.loadMeasurement);
                 res.json("Success");
               }
               connection.close();
@@ -118,9 +180,21 @@ let controller = {
             
             request.on('row', function(columns) {
                 columns.forEach(function(column) {
-                    decimals = column.value;
+                    decimals   = column.value;
+                    multiplier = 10**decimals;
                 });
             });
+            
+            bulkConnection.on('connect', function(err) {
+              if (err) {
+                  console.log('Bulk connection failed.');
+                  throw err;
+              }
+              callbackBus.bulkConnected = true;
+              console.log(callbackBus.loadMeasurement);
+            });
+            
+            Object.defineProperty
             
             connection.execSql(request);
           }

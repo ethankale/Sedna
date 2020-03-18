@@ -37431,7 +37431,8 @@ var reviewData = function(headers, fileData) {
                           let d_new = {};
                           
                           d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
-                          d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
+                          d_new.dtm    = d.dtm;
+                          //d_new.dtm    = alqwuutils.formatDateForSQL(d.dtm);
                           //d_new.metaid = selectVal;
                           
                           finalData.push(d_new);
@@ -37439,6 +37440,7 @@ var reviewData = function(headers, fileData) {
                       
                       let step = 20;
                       for (let i=0; i<finalData.length; i+=step) {
+                      //for (let i=0; i<40; i+=step) {
                         let dataToLoad = {'metaid':selectVal, 'measurements':finalData.slice(i, i+step)};
                         //console.log(dataToLoad.length);
                         
@@ -37447,7 +37449,7 @@ var reviewData = function(headers, fileData) {
                           data: JSON.stringify(dataToLoad),
                           dataType: 'json',
                           success: function(data){
-                              console.log("Upload successful!");
+                              console.log(data);
                           },
                           error: function(){
                               console.log("Upload failed.");
