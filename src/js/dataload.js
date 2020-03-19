@@ -338,22 +338,26 @@ var reviewData = function(headers, fileData) {
                           let step = 30;    // The max number of rows to bulk insert.
                           for (let i=0; i<finalData.length; i+=step) {
                             let dataToLoad = {'metaid':selectVal,
+                                              'loadnumber': i/step,
                                               'measurements':finalData.slice(i, i+step)};
+                            console.log("Starting Post #" + i/step);
                             
                             $.post({
                               contentType: 'application/json',
                               data: JSON.stringify(dataToLoad),
                               dataType: 'json',
+                              timeout: 3000,
                               success: function(data){
-                                  console.log(data);
+                                  console.log("Server says: " + data);
+                                  console.log("Loaded Post #" + i/step);
                               },
                               error: function(){
-                                  console.log("Upload failed.");
+                                  console.log("Upload failed for Post #" + i/step);
                               },
                               processData: false,
                               type: 'POST',
                               url: 'http://localhost:3000/api/v1/measurements'
-                            });
+                            }); 
                           };
                         };
                       });

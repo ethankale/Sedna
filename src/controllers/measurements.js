@@ -114,6 +114,8 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
+        //console.log("Starting #" + req.body.loadnumber);
+        
         let connection     = new Connection(mssql_config);
         let bulkConnection = new Connection(mssql_config);
         let decimals       = 3;
@@ -127,7 +129,7 @@ let controller = {
                     loadBulkMeasurements(multiplier, req.body.metaid, req.body.measurements);
                     //return req.body.measurements;
                 } else {
-                    return "Waiting for request or bulk connect, or both";
+                    //return "Waiting for request or bulk connect, or both";
                 }
             }
         };
@@ -139,7 +141,7 @@ let controller = {
                 console.log("Could not run the bulk load for measurements.");
                 throw err;
             };
-            console.log('inserted %d rows', isNaN(rowCount) ? 0 : rowCount);
+            //console.log('inserted %d rows', isNaN(rowCount) ? 0 : rowCount);
             bulkConnection.close();
           });
           bulkLoad.addColumn('CollectedDtm', TYPES.DateTime2, { nullable: false });
@@ -160,8 +162,21 @@ let controller = {
             
           });
           bulkConnection.execBulkLoad(bulkLoad);
+          console.log("Loaded #" + req.body.loadnumber);
           res.json("Success");
         };
+        
+        bulkConnection.on('connect', function(err) {
+          if (err) {
+              console.log('Bulk connection failed.');
+              throw err;
+          }
+          callbackBus.bulkConnected = true;
+          console.log("Bulk connection for #" + req.body.loadnumber);
+          
+          //console.log(callbackBus.loadMeasurement);
+          callbackBus.loadMeasurement;
+        });
         
         connection.on('connect', function(err_conn) {
           if (err_conn) {
@@ -176,7 +191,10 @@ let controller = {
                 res.json("Error: " + err);
               } else {
                 callbackBus.requestComplete = true;
-                console.log(callbackBus.loadMeasurement);
+                console.log("Got metaid for #" + req.body.loadnumber);
+                
+                //console.log(callbackBus.loadMeasurement);
+                callbackBus.loadMeasurement;
               }
               connection.close();
             });
@@ -188,16 +206,7 @@ let controller = {
                 });
             });
             
-            bulkConnection.on('connect', function(err) {
-              if (err) {
-                  console.log('Bulk connection failed.');
-                  throw err;
-              }
-              callbackBus.bulkConnected = true;
-              console.log(callbackBus.loadMeasurement);
-            });
-            
-            Object.defineProperty
+
             
             connection.execSql(request);
           }
