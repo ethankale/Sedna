@@ -37429,7 +37429,8 @@ var reviewData = function(headers, fileData) {
                       
                       let interimData = dataAdjusted.length > 0 ? dataAdjusted : dataFilled;
                       let finalData = [];
-                      console.log(dataAdjusted.length);
+                      let mindate   = new Date('9999-01-01');
+                      let maxdate   = new Date('0001-01-01');
                       
                       interimData.forEach((d, i, arr) => {
                           let d_new = {};
@@ -37437,29 +37438,47 @@ var reviewData = function(headers, fileData) {
                           d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
                           d_new.dtm    = d.dtm;
                           
+                          mindate = d_new.dtm > mindate ? mindate : d_new.dtm;
+                          maxdate = d_new.dtm < maxdate ? maxdate : d_new.dtm;
+                          
                           finalData.push(d_new);
                       });
                       
-                      let step = 20;    // The max number of rows to bulk insert.
-                      for (let i=0; i<finalData.length; i+=step) {
-                        let dataToLoad = {'metaid':selectVal,
-                                          'measurements':finalData.slice(i, i+step)};
+                      let urlMeasureCount = "http://localhost:3000/api/v1/getMeasurementCount" +
+                        "?metaid=" + selectVal +
+                        "&startdtm=" + mindate.toLocaleDateString() + " " + mindate.toLocaleTimeString() +
+                        "&enddtm=" + maxdate.toLocaleDateString() + " " + maxdate.toLocaleTimeString() +
+                        "&utcoffset=" + utcoffset
+                      console.log(urlMeasureCount);
+                      $.ajax({url: urlMeasureCount
+                      }).done(function(data) {
+                        let rowcount = parseInt(data[0].measurementCount);
+                        console.log("Number of existing records: " + data[0].measurementCount);
                         
-                        $.post({
-                          contentType: 'application/json',
-                          data: JSON.stringify(dataToLoad),
-                          dataType: 'json',
-                          success: function(data){
-                              console.log(data);
-                          },
-                          error: function(){
-                              console.log("Upload failed.");
-                          },
-                          processData: false,
-                          type: 'POST',
-                          url: 'http://localhost:3000/api/v1/measurements'
-                        });
-                      }
+                        if (rowcount < 1) {
+                          let step = 30;    // The max number of rows to bulk insert.
+                          for (let i=0; i<finalData.length; i+=step) {
+                            let dataToLoad = {'metaid':selectVal,
+                                              'measurements':finalData.slice(i, i+step)};
+                            
+                            $.post({
+                              contentType: 'application/json',
+                              data: JSON.stringify(dataToLoad),
+                              dataType: 'json',
+                              agent:false,
+                              success: function(data){
+                                  console.log(data);
+                              },
+                              error: function(){
+                                  console.log("Upload failed.");
+                              },
+                              processData: false,
+                              type: 'POST',
+                              url: 'http://localhost:3000/api/v1/measurements'
+                            });
+                          };
+                        };
+                      });
                   });
               });
           }

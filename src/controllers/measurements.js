@@ -12,8 +12,6 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
-        //console.log(req.query);
-        
         var siteid    = req.query.siteid;
         var paramid   = req.query.paramid;
         var methodid  = req.query.methodid;
@@ -49,7 +47,7 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
-        var metaid    = req.query.methodid;
+        var metaid    = req.query.metaid;
         var startdtm  = req.query.startdtm;
         var enddtm    = req.query.enddtm;
         var utcoffset = req.query.utcoffset;
@@ -59,8 +57,7 @@ let controller = {
           FROM Measurement
           WHERE MetadataID = ${metaid}
           AND CollectedDtm > DATEADD(hour, ${utcoffset}, '${startdtm}')
-          AND CollectedDtm < DATEADD(hour, ${utcoffset}, '${startdtm}')
-        `;
+          AND CollectedDtm < DATEADD(hour, ${utcoffset}, '${enddtm}')`;
         
         connection.on('connect', function(err) {
           if(err) {
@@ -69,7 +66,7 @@ let controller = {
             sqlfunctions.executeSelect(statement, connection, res);
           }
         });
-    }
+    },
     
     getDetails: function (req, res) {
         var returndata = [];
@@ -107,9 +104,6 @@ let controller = {
             AND ms.CollectedDtm <= DATEADD(hour, ${utcoffset*-1}, '${enddtm}')
             ORDER BY CollectedDtm ASC`;
         
-        
-        console.log(statement);
-        
         connection.on('connect', function(err) {
           if(err) {
             console.log('Error: ', err)
@@ -131,7 +125,7 @@ let controller = {
             get loadMeasurement() {
                 if(this.requestComplete & this.bulkConnected) {
                     loadBulkMeasurements(multiplier, req.body.metaid, req.body.measurements);
-                    return "Loading bulk measurements.";
+                    //return req.body.measurements;
                 } else {
                     return "Waiting for request or bulk connect, or both";
                 }
@@ -154,7 +148,7 @@ let controller = {
           
           let measurements_toload = [];
           
-          measurements.every( (measurement, index) => {
+          measurements.forEach( (measurement, index) => {
             let measurement_new = {};
             
             measurement_new.CollectedDtm = new Date(measurement.dtm);
@@ -162,17 +156,9 @@ let controller = {
             measurement_new.MetadataID   = parseInt(metaid);
             
             measurements_toload.push(measurement_new);
-            
-            try { 
-              bulkLoad.addRow(measurement_new);
-              return true;
-            } catch(error) {
-              res.json("Error: " + error);
-              return false;
-            }
+            bulkLoad.addRow(measurement_new);
             
           });
-          //console.log(measurements_toload);
           bulkConnection.execBulkLoad(bulkLoad);
           res.json("Success");
         };
@@ -183,15 +169,12 @@ let controller = {
           } else {
             let Request = require('tedious').Request;
             let statement = "SELECT DecimalPoints FROM Metadata WHERE MetadataID = " + req.body.metaid;
-            console.log(statement);
             
             let request = new Request(statement, function(err, rowCount, rows) {
               if (err) {
                 console.log(err);
                 res.json("Error: " + err);
               } else {
-                //console.log("Request callback function triggered.")
-                //console.log(req.body);
                 callbackBus.requestComplete = true;
                 console.log(callbackBus.loadMeasurement);
               }

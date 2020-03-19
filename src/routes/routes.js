@@ -17,6 +17,9 @@ module.exports = function (app) {
     // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurements', measurements.getMeasurements);
     
+    // Parameters: metaid, startdtm, enddtm, utcoffset
+    app.get('/api/v1/getMeasurementCount', measurements.getCountByDtmAndMetaid)
+    
     // Add one or more new measurements to the database
     app.post('/api/v1/measurements', measurements.addMeasurements);
     
