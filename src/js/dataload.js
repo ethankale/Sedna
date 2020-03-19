@@ -2,7 +2,7 @@
 var Papa = require('papaparse');
 var d3   = require('d3');
 var alqwuutils = require('./utils.js');
-let utcoffset = -8;  // hours to add to local time to get UTC
+let utcoffset = 8;  // hours to add to local time to get UTC
 
 // From CSV upload to column selection
 
@@ -226,7 +226,10 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-                let utcsymbol = utcoffset > 0 ? "+" : "-";
+                // Since we're converting local time to UTC by specifing the offset,
+                //   we have to reverse positive/negative.  For example,
+                //   PST is behind UTC by 8 hours - so -8 is correct.
+                let utcsymbol = utcoffset > 0 ? "-" : "+";
                 let utcnumber = Math.abs(utcoffset);
                 d.dtm         = new Date(d[dtmColName] + utcsymbol + utcnumber);
                 

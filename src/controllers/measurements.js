@@ -56,12 +56,13 @@ let controller = {
           COUNT(MeasurementID) as measurementCount
           FROM Measurement
           WHERE MetadataID = ${metaid}
-          AND CollectedDtm > DATEADD(hour, ${utcoffset}, '${startdtm}')
-          AND CollectedDtm < DATEADD(hour, ${utcoffset}, '${enddtm}')`;
+          AND CollectedDtm >= DATEADD(hour, ${utcoffset}, '${startdtm}')
+          AND CollectedDtm <= DATEADD(hour, ${utcoffset}, '${enddtm}')`;
         
         connection.on('connect', function(err) {
           if(err) {
             console.log('Error: ', err)
+            res.json(err);
           } else {
             sqlfunctions.executeSelect(statement, connection, res);
           }
