@@ -163,7 +163,7 @@ let controller = {
             
           });
           bulkConnection.execBulkLoad(bulkLoad);
-          console.log("Loaded #" + req.body.loadnumber);
+          //console.log("Loaded #" + req.body.loadnumber);
           res.json("Success");
         };
         
@@ -173,7 +173,7 @@ let controller = {
               throw err;
           }
           callbackBus.bulkConnected = true;
-          console.log("Bulk connection for #" + req.body.loadnumber);
+          //console.log("Bulk connection for #" + req.body.loadnumber);
           
           //console.log(callbackBus.loadMeasurement);
           callbackBus.loadMeasurement;
@@ -192,7 +192,7 @@ let controller = {
                 res.json("Error: " + err);
               } else {
                 callbackBus.requestComplete = true;
-                console.log("Got metaid for #" + req.body.loadnumber);
+                //console.log("Got metaid for #" + req.body.loadnumber);
                 
                 //console.log(callbackBus.loadMeasurement);
                 callbackBus.loadMeasurement;

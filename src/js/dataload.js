@@ -309,6 +309,11 @@ var reviewData = function(headers, fileData) {
                   });
                   $("#upload"+header).click(() => {
                       
+                      $("#uploadAlert")
+                        .removeClass("alert-success  alert-primary alert-danger")
+                        .addClass("alert-info")
+                        .text("Uploading data...")
+                      
                       let interimData = dataAdjusted.length > 0 ? dataAdjusted : dataFilled;
                       let finalData = [];
                       let mindate   = new Date('9999-01-01');
@@ -335,33 +340,22 @@ var reviewData = function(headers, fileData) {
                       $.ajax({url: urlMeasureCount
                       }).done(function(data) {
                         let rowcount = parseInt(data[0].measurementCount);
-                        console.log("Number of existing records: " + data[0].measurementCount);
+                        console.log("Number of existing records: " + rowcount);
                         
-                        if (rowcount < 1) {
-                          let step = 30;    // The max number of rows to bulk insert.
-                          for (let i=0; i<finalData.length; i+=step) {
-                            let dataToLoad = {'metaid':selectVal,
-                                              'loadnumber': i/step,
-                                              'measurements':finalData.slice(i, i+step)};
-                            console.log("Starting Post #" + i/step);
-                            
-                            $.post({
-                              contentType: 'application/json',
-                              data: JSON.stringify(dataToLoad),
-                              dataType: 'json',
-                              timeout: 3000,
-                              success: function(data){
-                                  console.log("Server says: " + data);
-                                  console.log("Loaded Post #" + i/step);
-                              },
-                              error: function(){
-                                  console.log("Upload failed for Post #" + i/step);
-                              },
-                              processData: false,
-                              type: 'POST',
-                              url: 'http://localhost:3000/api/v1/measurements'
-                            }); 
-                          };
+                        if (rowcount > 0) {
+                          $("#uploadAlert")
+                            .removeClass("alert-success  alert-primary  alert-info")
+                            .addClass("alert-danger")
+                            .text("There are already " + rowcount + " records in the database.  Overwrite?")
+                          
+                          $(`#upload${header}`).text("Overwrite?");
+                          $(`#upload${header}`).off("click");
+                          $(`#upload${header}`).click(() => { 
+                            loadMeasurements(finalData, selectVal) 
+                          });
+                        
+                        } else {
+                          loadMeasurements(finalData, selectVal);
                         };
                       });
                   });
@@ -374,6 +368,48 @@ var reviewData = function(headers, fileData) {
         $('#uploadReviewTab a:first').tab('show')
         
     }
+}
+
+var loadMeasurements = function(finalData, metaid) {
+  let errors = 0;
+  let step = 30;    // The max number of rows to bulk insert.
+  for (let i=0; i<finalData.length; i+=step) {
+    let dataToLoad = {'metaid': metaid,
+                      'loadnumber': i/step,
+                      'measurements': finalData.slice(i, i+step)};
+    console.log("Starting Post #" + i/step);
+    
+    $.post({
+      contentType: 'application/json',
+      data: JSON.stringify(dataToLoad),
+      dataType: 'json',
+      timeout: 3000,
+      success: function(data){
+          console.log("Server says: " + data);
+          errors += data != 'Success' ? 0 : 1;
+          //console.log("Loaded Post #" + i/step);
+      },
+      error: function(){
+          console.log("Upload failed for Post #" + i/step);
+          errors += 1;
+      },
+      processData: false,
+      type: 'POST',
+      url: 'http://localhost:3000/api/v1/measurements'
+    }); 
+  };
+  
+  if (errors == 0) {
+    $("#uploadAlert")
+      .removeClass("  alert-primary  alert-info alert-danger")
+      .addClass("alert-success")
+      .text("Data loaded!")
+  } else {
+    $("#uploadAlert")
+      .removeClass("alert-success alert-primary  alert-info ")
+      .addClass("alert-danger")
+      .text("Failed to load some or all of the data.")
+  };
 }
 
 // There are two kinds of gap filling.  The first is to add missing rows

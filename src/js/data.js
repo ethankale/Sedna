@@ -25,6 +25,14 @@ var wymarkup     = "";
 var measurements = []
 
 $(document).ready(function() {
+    
+    /*
+    window.onerror = function(msg, url, line, col, error) {
+        console.log(msg + "; " + line + "; " + col);
+        console.log(error);
+    }
+    */
+    
     $("#downloadParameterSelect").select2();
     
     $("#downloadDataButton").click(function() {
@@ -218,11 +226,20 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utc
             //   with UTC on the back end.
             d.CollectedDtm = d.CollectedDtm.replace("T", " ").replace("Z", " ").trim();
         });
+        
         window.writeText(Papa.unparse(data), $("#downloadFileName").val());
-        $("#downloadAlert")
-            .removeClass("alert-danger alert-info alert-primary")
-            .addClass("alert-success")
-            .text("Download Complete!")
+        
+        if (window.writeFileStatus == "Success") {
+          $("#downloadAlert")
+              .removeClass("alert-danger alert-info alert-primary")
+              .addClass("alert-success")
+              .text("Download Complete!");
+        } else {
+          $("#downloadAlert")
+              .removeClass("alert-success alert-info alert-primary")
+              .addClass("alert-danger")
+              .text("Could not save file.  Check the file name and folder, and try again.")
+        }
     });
 }
 

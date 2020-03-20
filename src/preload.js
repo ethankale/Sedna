@@ -1,14 +1,29 @@
-const { writeFile }    = require('fs')
+const { writeFileSync }    = require('fs')
 const { readFileSync } = require('fs')
 const { dialog }       = require('electron').remote;
 
 window.writeText = function (text, filepath) {
-  var result = writeFile(filepath, text, function(err) {
+  /*
+  var result = writeFileSync(filepath, text, function(err) {
     if(err) {
-      throw err;
+      window.writeFileStatus = "Fail"
+      //throw err;
+    } else {
+      window.writeFileStatus = "Success"
     }
   });
+  */
+  
+  try {
+      writeFileSync(filepath, text)
+      window.writeFileStatus = "Success";
+  } catch(err) {
+      //console.log(err);
+      window.writeFileStatus = "Fail";
+  }
 }
+
+window.writeFileStatus = "Success";
 
 window.openCSV = function() {
     var path = dialog.showOpenDialogSync({
