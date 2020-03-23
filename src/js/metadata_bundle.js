@@ -4,22 +4,27 @@ var alqwuutils = require('./utils.js');
 
 $(document).ready(function() {
   
-  $("#dr-samplePoint").select2();
+  $("#dr-samplePoint").select2({disabled: true});
   loadSamplePointList();
   
-  $("#dr-parameter").select2();
+  $("#dr-parameter").select2({disabled: true});
   loadParameterList();
   
-  $("#dr-method").select2();
+  $("#dr-method").select2({disabled: true});
   loadMethodList();
   
-  $("#dr-unit").select2();
+  $("#dr-unit").select2({disabled: true});
   loadUnitList();
   
   $("#metadataSelect").select2();
   $("#metadataSelect").change(function() {
+    disableEditDataRecord();
     let metaid = $("#metadataSelect :selected").val()
     fillMetadataDetails(metaid);
+  });
+  
+  $("#dr-edit").click(function() {
+    editDataRecord();
   });
   
   loadMetadataList(1);
@@ -50,7 +55,6 @@ function loadMetadataList(active) {
 function fillMetadataDetails(metaid) {
   $.ajax({url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${metaid}`
     }).done(function(data) {
-      console.log(data);
       
       let spID     = data[0].SamplePointID;
       let prID     = data[0].ParameterID;
@@ -59,6 +63,7 @@ function fillMetadataDetails(metaid) {
       let freq     = data[0].FrequencyMinutes;
       let decimals = data[0].DecimalPoints;
       let active   = data[0].Active;
+      let notes    = data[0].Notes;
       
       $("#dr-samplePoint").val(spID);
       $("#dr-samplePoint").change();
@@ -75,6 +80,7 @@ function fillMetadataDetails(metaid) {
       $("#dr-frequency").val(freq);
       $("#dr-decimalpoints").val(decimals);
       $("#dr-active").prop('checked', active);
+      $("#dr-notes").val(notes);
       
     });
 };
@@ -142,6 +148,66 @@ function loadUnitList() {
     $('#dr-unit').empty().append(options);
   });
 };
+
+function editDataRecord() {
+  $("#dr-samplePoint").prop('disabled', false);
+  $("#dr-parameter").prop('disabled', false);
+  $("#dr-method").prop('disabled', false);
+  $("#dr-unit").prop('disabled', false);
+  $("#dataRecordFieldset").prop('disabled', false);
+  $("#dr-edit")
+    .text("Lock")
+    .off('click')
+    .on('click', function() {disableEditDataRecord()});
+  $("#dr-update")
+    .prop('disabled', false)
+    .on('click', function() { updateDataRecord() });
+}
+
+function disableEditDataRecord() {
+  $("#dr-samplePoint").prop('disabled', true);
+  $("#dr-parameter").prop('disabled', true);
+  $("#dr-method").prop('disabled', true);
+  $("#dr-unit").prop('disabled', true);
+  $("#dataRecordFieldset").prop('disabled', true);
+  $("#dr-edit")
+    .text("Edit")
+    .off('click')
+    .on('click', function() {editDataRecord()});
+  $("#dr-update")
+    .prop('disabled', true)
+    .off('click');
+}
+
+function updateDataRecord() {
+  let drUpdate = {};
+  
+  drUpdate.metadataID    = $("#metadataSelect").val();
+  drUpdate.samplePointID = $("#dr-samplePoint").val();
+  drUpdate.parameterID   = $("#dr-parameter").val();
+  drUpdate.methodID      = $("#dr-method").val();
+  drUpdate.unitID        = $("#dr-unit").val();
+  drUpdate.frequency     = $("#dr-frequency").val();
+  drUpdate.decimals      = $("#dr-decimalpoints").val();
+  drUpdate.active        = $("#dr-active").prop('checked');
+  drUpdate.notes         = $("#dr-notes").val();
+  
+  console.log(JSON.stringify(drUpdate));
+  
+  $.ajax({
+    url: 'http://localhost:3000/api/v1/metadata',
+    contentType: 'application/json',
+    method: 'PUT',
+    data: JSON.stringify(drUpdate),
+    dataType: 'json',
+    timeout: 3000,
+  }).done(function() {
+    console.log("Worked!");
+  }).fail(function() {
+    console.log("Didn't work :(");
+  });
+  
+}
 
 
 },{"./utils.js":2}],2:[function(require,module,exports){

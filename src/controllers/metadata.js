@@ -1,6 +1,7 @@
 "use strict";
 
 var Connection = require('tedious').Connection;
+var TYPES      = require('tedious').TYPES;
 const mssql_config = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
@@ -68,12 +69,42 @@ let controller = {
     },
     
     updateMetadata: function (req, res) {
+      console.log(req.body);
+      let connection     = new Connection(mssql_config);
+      
+      connection.on('connect', function(err) {
         
+        let active = req.body.active ? 1 : 0;
+        
+        let statement = `UPDATE Metadata
+          SET SamplePointID = ${req.body.samplePointID},
+            ParameterID = ${req.body.parameterID},
+            MethodID = ${req.body.methodID},
+            UnitID = ${req.body.unitID},
+            FrequencyMinutes = ${req.body.frequency},
+            DecimalPoints = ${req.body.decimals},
+            Active = ${active},
+            Notes = '${req.body.notes}'
+          WHERE metadataID = ${req.body.metadataID}`
+        /*
+        var request = new Request(statement, function(err, rowCount) {
+          
+        });
+        */
+        console.log(statement);
+      });
+      
+      req.body
+      
+      
     },
     
     addMetadata: function (req, res) {
-        
+      
     }
 };
+
+
+
 
 module.exports = controller;

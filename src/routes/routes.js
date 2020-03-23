@@ -48,6 +48,9 @@ module.exports = function (app) {
     // Parameter: metadataid
     app.get('/api/v1/metadataDetails', metadata.getMetadataDetails);
     
+    // Parameters: ALL fields in Metadata, including ID
+    app.put('/api/v1/metadata', metadata.updateMetadata);
+    
     
     // Sample Points
     
