@@ -6,12 +6,12 @@ const mssql_config = require('./config.js')
 const sqlfunctions = require('./sqlexecutefunction.js')
 
 let controller = {
-  getParameterList: function (req, res) {
+  getUnitList: function (req, res) {
     var connection = new Connection(mssql_config);
     
-    var statement = `SELECT ParameterID, Name
-      FROM Parameter
-      ORDER BY Name ASC`
+    var statement = `SELECT UnitID, Symbol
+      FROM Unit
+      ORDER BY Symbol ASC`
     
     connection.on('connect', function(err) {
       if(err) {

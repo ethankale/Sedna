@@ -30,8 +30,6 @@ let controller = {
         
         statement = statement + " ORDER BY st.Code"
         
-        console.log(statement);
-        
         connection.on('connect', function(err) {
           if(err) {
             console.log('Error: ', err)
@@ -55,8 +53,10 @@ let controller = {
           ,[Active]
           ,[FrequencyMinutes]
           ,[DecimalPoints]
-          WHERE MetadataID = ${metaid}
-          ORDER BY Name`
+          FROM Metadata
+          WHERE MetadataID = ${metaid}`
+        
+        console.log(statement);
         
         connection.on('connect', function(err) {
           if(err) {

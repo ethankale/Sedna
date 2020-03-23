@@ -3,6 +3,10 @@
 const sites        = require('../controllers/sites.js');
 const measurements = require('../controllers/measurements.js');
 const metadata     = require('../controllers/metadata.js');
+const samplepoints = require('../controllers/samplepoints.js');
+const parameters   = require('../controllers/parameters.js');
+const methods      = require('../controllers/methods.js');
+const units        = require('../controllers/units.js');
 
 module.exports = function (app) {
     app.get('/',  function(req, res) {
@@ -39,7 +43,29 @@ module.exports = function (app) {
     app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
     
     // Parameter: active
-    app.get('/api/v1/metadataList', metadata.getMetadataList)
+    app.get('/api/v1/metadataList', metadata.getMetadataList);
+    
+    // Parameter: metadataid
+    app.get('/api/v1/metadataDetails', metadata.getMetadataDetails);
     
     
+    // Sample Points
+    
+    // No params yet; eventually active
+    app.get('/api/v1/samplePointList', samplepoints.getSamplePointList);
+    
+    
+    // Parameters
+    
+    app.get('/api/v1/parameterList', parameters.getParameterList);
+    
+    
+    // Methods
+    
+    app.get('/api/v1/methodList', methods.getMethodList);
+    
+    
+    // Units
+    
+    app.get('/api/v1/unitList', units.getUnitList);
 };
