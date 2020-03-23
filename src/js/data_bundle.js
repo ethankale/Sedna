@@ -36830,8 +36830,6 @@ License: MIT
 // Node modules.  Remember to run browserify every time to bundle this.
 // browserify src/js/data.js -o src/js/data_bundle.js
 
-
-
 var datefns    = require('date-fns');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
