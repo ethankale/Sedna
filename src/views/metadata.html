@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Gage Data</title>
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="../index.css">
+  </head>
+  <body>
+    
+    <!-- Begin main page content -->
+    <div class="container-fluid" role="main">
+      <h1>Metadata</h1>
+      <p><a href="index.html">Home</a></p>
+      
+      <div class="row">
+        <div class="col-3">
+          <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <a class="nav-link active" id="v-pills-datarecord-tab" data-toggle="pill" 
+              href="#v-pills-datarecord" role="tab" aria-controls="v-pills-datarecord" 
+              aria-selected="true">Data Record</a>
+            <a class="nav-link" id="v-pills-equipment-tab" data-toggle="pill" 
+              href="#v-pills-equipment" role="tab" aria-controls="v-pills-equipment" 
+              aria-selected="false">Equipment</a>
+            <a class="nav-link" id="v-pills-parameter-tab" data-toggle="pill" 
+              href="#v-pills-parameter" role="tab" aria-controls="v-pills-parameter" 
+              aria-selected="false">Parameter</a>
+            <a class="nav-link" id="v-pills-method-tab" data-toggle="pill" 
+              href="#v-pills-method" role="tab" aria-controls="v-pills-method" 
+              aria-selected="false">Method</a>
+          </div>
+        </div>
+        <div class="col-9">
+          <div class="tab-content" id="v-pills-tabContent">
+            <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
+              aria-labelledby="v-pills-datarecord-tab">Data Record</div>
+            <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 
+              aria-labelledby="v-pills-equipment-tab">Equipment</div>
+            <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
+              aria-labelledby="v-pills-parameter-tab">Parameter</div>
+            <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
+              aria-labelledby="v-pills-method-tab">Method</div>
+          </div>
+        </div>
+    </div>
+    
+    <footer class="footer fixed-bottom">
+      <div class="container-fluid">
+        <div class="row">
+
+        </div>
+      </div>
+    </footer>
+    
+  </body>
+  <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
+  <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../../node_modules/select2/dist/js/select2.min.js"></script>
+  <script src="../../node_modules/d3/dist/d3.min.js"></script>
+  <script src="../js/data_bundle.js"></script>
+</html>

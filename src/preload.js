@@ -3,17 +3,6 @@ const { readFileSync } = require('fs')
 const { dialog }       = require('electron').remote;
 
 window.writeText = function (text, filepath) {
-  /*
-  var result = writeFileSync(filepath, text, function(err) {
-    if(err) {
-      window.writeFileStatus = "Fail"
-      //throw err;
-    } else {
-      window.writeFileStatus = "Success"
-    }
-  });
-  */
-  
   try {
       writeFileSync(filepath, text)
       window.writeFileStatus = "Success";
