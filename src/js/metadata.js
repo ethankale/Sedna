@@ -27,12 +27,18 @@ $(document).ready(function() {
     editDataRecord();
   });
   
-  loadMetadataList(1);
+  $("#dr-activeFilterCheck").change(function() {
+    let active = $("#dr-activeFilterCheck").prop('checked');
+    loadMetadataList(active);
+  });
+  
+  let active = $("#dr-activeFilterCheck").prop('checked');
+  loadMetadataList(active);
 });
 
 function loadMetadataList(active) {
   let requestParams = '';
-  if (active != 0) {
+  if (active) {
     requestParams = '?active=1';
   };
   
