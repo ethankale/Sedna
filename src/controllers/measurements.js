@@ -2,7 +2,8 @@
 "use strict";
 
 var Connection = require('tedious').Connection;
-var TYPES = require('tedious').TYPES;
+let Request    = require('tedious').Request;
+var TYPES      = require('tedious').TYPES;
 const mssql_config = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
@@ -183,7 +184,6 @@ let controller = {
           if (err_conn) {
               res.json("Error: " + err_conn);
           } else {
-            let Request = require('tedious').Request;
             let statement = "SELECT DecimalPoints FROM Metadata WHERE MetadataID = " + req.body.metaid;
             
             let request = new Request(statement, function(err, rowCount, rows) {

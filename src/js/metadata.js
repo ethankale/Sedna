@@ -1,5 +1,6 @@
 
 var alqwuutils = require('./utils.js');
+var utcoffset = 8;
 
 $(document).ready(function() {
   
@@ -52,7 +53,7 @@ function loadMetadataList(active) {
 }
 
 function fillMetadataDetails(metaid) {
-  $.ajax({url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${metaid}`
+  $.ajax({url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${metaid}&utcoffset=${utcoffset}`
     }).done(function(data) {
       
       let spID     = data[0].SamplePointID;
@@ -63,6 +64,10 @@ function fillMetadataDetails(metaid) {
       let decimals = data[0].DecimalPoints;
       let active   = data[0].Active;
       let notes    = data[0].Notes;
+      
+      let mindate  = new Date(data[0].MinDate);
+      let maxdate  = new Date(data[0].MaxDate);
+      let nmeasure = data[0].MeasurementCount;
       
       $("#dr-samplePoint").val(spID);
       $("#dr-samplePoint").change();
@@ -80,6 +85,10 @@ function fillMetadataDetails(metaid) {
       $("#dr-decimalpoints").val(decimals);
       $("#dr-active").prop('checked', active);
       $("#dr-notes").val(notes);
+      
+      $("#dr-narrative").html(`This data record has <strong>${nmeasure}</strong> 
+        measurements between <strong>${mindate.toDateString()}</strong> 
+        and <strong>${maxdate.toDateString()}</strong>.`)
       
     });
 };
@@ -160,7 +169,7 @@ function editDataRecord() {
     .on('click', function() {disableEditDataRecord()});
   $("#dr-update")
     .prop('disabled', false)
-    .on('click', function() { updateDataRecord() });
+    .on('click', function() { clickDRUpdateButton() });
 }
 
 function disableEditDataRecord() {
@@ -172,11 +181,25 @@ function disableEditDataRecord() {
   $("#dr-edit")
     .text("Edit")
     .off('click')
-    .on('click', function() {editDataRecord()});
+    .on('click', function() { editDataRecord() });
   $("#dr-update")
     .prop('disabled', true)
     .off('click');
 }
+
+function clickDRUpdateButton() {
+  $("#updateAlert")
+    .removeClass("alert-primary alert-success alert-danger")
+    .addClass("alert-info")
+    .text('Update the currently selected data?')
+  $("#updateDataButton")
+    .off('click')
+    .prop('disabled', false)
+    .on('click', function() { updateDataRecord() });
+  $("#updateDataCloseButton")
+    .text("Cancel")
+  $("#updateModal").modal();
+};
 
 function updateDataRecord() {
   let drUpdate = {};
@@ -201,9 +224,21 @@ function updateDataRecord() {
     dataType: 'json',
     timeout: 3000,
   }).done(function() {
-    console.log("Worked!");
+    $("#updateAlert")
+      .removeClass("alert-primary alert-danger alert-info")
+      .addClass("alert-success")
+      .text("Successfully updated.");
   }).fail(function() {
-    console.log("Didn't work :(");
+    $("#updateAlert")
+      .removeClass("alert-primary alert-success alert-info")
+      .addClass("alert-danger")
+      .text("Update failed; check your data.");
+  }).always(function() {
+    $("#updateDataButton")
+      .off('click')
+      .prop('disabled', true);
+    $("#updateDataCloseButton")
+    .text("Close")
   });
   
 }
