@@ -34,6 +34,10 @@ $(document).ready(function() {
   
   let active = $("#dr-activeFilterCheck").prop('checked');
   loadMetadataList(active);
+  
+  $("#dr-new").click(function() {
+    clickNewDRButton();
+  });
 });
 
 function loadMetadataList(active) {
@@ -75,17 +79,10 @@ function fillMetadataDetails(metaid) {
       let maxdate  = new Date(data[0].MaxDate);
       let nmeasure = data[0].MeasurementCount;
       
-      $("#dr-samplePoint").val(spID);
-      $("#dr-samplePoint").change();
-      
-      $("#dr-parameter").val(prID);
-      $("#dr-parameter").change();
-      
-      $("#dr-method").val(mtID);
-      $("#dr-method").change();
-      
-      $("#dr-unit").val(utID);
-      $("#dr-unit").change();
+      $("#dr-samplePoint").val(spID).change();
+      $("#dr-parameter").val(prID).change();
+      $("#dr-method").val(mtID).change();
+      $("#dr-unit").val(utID).change();
       
       $("#dr-frequency").val(freq);
       $("#dr-decimalpoints").val(decimals);
@@ -102,7 +99,10 @@ function fillMetadataDetails(metaid) {
 function loadSamplePointList() {
   $.ajax({url: 'http://localhost:3000/api/v1/samplePointList'
   }).done(function(data){
-    let options = '';
+    let options = `<option 
+        value=-1>
+        None
+        </option>`;
     
     data.forEach(sp => {
       options += `<option 
@@ -118,7 +118,10 @@ function loadSamplePointList() {
 function loadParameterList() {
   $.ajax({url: 'http://localhost:3000/api/v1/parameterList'
   }).done(function(data){
-    let options = '';
+    let options = `<option 
+        value=-1}>
+        None
+        </option>`;
     
     data.forEach(param => {
       options += `<option 
@@ -134,7 +137,10 @@ function loadParameterList() {
 function loadMethodList() {
   $.ajax({url: 'http://localhost:3000/api/v1/methodList'
   }).done(function(data){
-    let options = '';
+    let options = `<option 
+        value=-1}>
+        None
+        </option>`;
     
     data.forEach(method => {
       options += `<option 
@@ -150,7 +156,10 @@ function loadMethodList() {
 function loadUnitList() {
   $.ajax({url: 'http://localhost:3000/api/v1/unitList'
   }).done(function(data){
-    let options = '';
+    let options = `<option 
+        value=-1}>
+        None
+        </option>`;
     
     data.forEach(unit => {
       options += `<option 
@@ -249,3 +258,48 @@ function updateDataRecord() {
   
 }
 
+function clickNewDRButton() {
+  $("#dr-samplePoint")
+    .prop('disabled', false)
+    .val(-1)
+    .change();
+  $("#dr-parameter")
+    .prop('disabled', false)
+    .val(-1)
+    .change();
+  $("#dr-method")
+    .prop('disabled', false)
+    .val(-1)
+    .change();
+  $("#dr-unit")
+    .prop('disabled', false)
+    .val(-1)
+    .change();
+  $("#dataRecordFieldset").prop('disabled', false);
+  $("#dr-frequency").val(15);
+  $("#dr-decimalpoints").val(2);
+  $("#dr-notes").val('');
+  $("#dr-narrative").text('Fill in the values below to create a new data record.')
+  
+  $("#dr-edit")
+    .prop('disabled', true)
+    .off('click');
+  $("#dr-update")
+    .prop('disabled', true)
+    .off('click');
+  
+  $("#metadataSelect").prop('disabled', true);
+  $("#dr-activeFilterCheck").prop('disabled', true);
+  
+  $("#dr-cancel")
+    .prop('disabled', false)
+    .off('click')
+    .on('click', function() {
+        $("#metadataSelect").prop('disabled', false);
+        $("#dr-activeFilterCheck").prop('disabled', false);
+        disableEditDataRecord();
+        $("#metadataSelect").change();
+        $("#dr-cancel").prop('disabled', true);
+    });
+  
+}
