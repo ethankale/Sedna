@@ -41,7 +41,7 @@ $(document).ready(function() {
   });
 });
 
-function loadMetadataList(active) {
+function loadMetadataList(active, metaid) {
   let requestParams = '';
   if (active) {
     requestParams = '?active=1';
@@ -59,7 +59,12 @@ function loadMetadataList(active) {
     });
     
     $('#metadataSelect').empty().append(options);
-    $("#metadataSelect").change();
+    
+    if (typeof metaid == 'undefined') {
+      $("#metadataSelect").change();
+    } else {
+      $("#metadataSelect").val(metaid).change();
+    }
   });
 }
 
@@ -314,23 +319,22 @@ function clickNewDRButton() {
   $("#dr-cancel")
     .prop('disabled', false)
     .off('click')
-    .on('click', function() {
-        $('#dr-selectHeader').removeClass('d-none');
-        disableEditDataRecord();
-        $("#metadataSelect").change();
-        $("#dr-cancel").prop('disabled', true);
-        $("#dr-edit")
-          .prop('disabled', false)
-          .off('click')
-          .on('click', function() { editDataRecord() });
-        $("#dr-new")
-          .text("New")
-          .off('click')
-          .on('click', function() {
-            clickNewDRButton();
-          });
-    });
-  
+    .on('click', function() { cancelNewDR() });
+}
+
+function cancelNewDR() {
+    $('#dr-selectHeader').removeClass('d-none');
+    disableEditDataRecord();
+    $("#metadataSelect").change();
+    $("#dr-cancel").prop('disabled', true);
+    $("#dr-edit")
+      .prop('disabled', false)
+      .off('click')
+      .on('click', function() { editDataRecord() });
+    $("#dr-new")
+      .text("New")
+      .off('click')
+      .on('click', function() { clickNewDRButton(); });
 }
 
 function clickCreateDRButton() {
@@ -360,11 +364,17 @@ function createNewDR() {
     data: JSON.stringify(drUpdate),
     dataType: 'json',
     timeout: 3000,
-  }).done(function() {
+  }).done(function(data) {
+    //console.log(data);
     $("#updateAlert")
       .removeClass("alert-primary alert-danger alert-info")
       .addClass("alert-success")
       .text("Successfully added new data record.");
+    cancelNewDR();
+    
+    let active = $("#dr-activeFilterCheck").prop('checked');
+    loadMetadataList(active, data);
+    
   }).fail(function() {
     $("#updateAlert")
       .removeClass("alert-primary alert-success alert-info")
@@ -377,7 +387,6 @@ function createNewDR() {
     $("#updateDataCloseButton")
       .text("Close")
   });
-  
 }
 
 },{"./utils.js":2}],2:[function(require,module,exports){
