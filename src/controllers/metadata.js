@@ -81,18 +81,18 @@ let controller = {
       
       connection.on('connect', function(err) {
         
-        let active = req.body.active ? 1 : 0;
-        
+        let active = req.body.active;
+          
         let statement = `UPDATE Metadata
-          SET SamplePointID = ${req.body.samplePointID},
-            ParameterID = ${req.body.parameterID},
-            MethodID = ${req.body.methodID},
-            UnitID = ${req.body.unitID},
-            FrequencyMinutes = ${req.body.frequency},
-            DecimalPoints = ${req.body.decimals},
-            Active = ${active},
-            Notes = '${req.body.notes}'
-          WHERE metadataID = ${req.body.metadataID}`
+          SET SamplePointID = @samplePointID,
+            ParameterID = @parameterID,
+            MethodID = @methodID,
+            UnitID = @unitID,
+            FrequencyMinutes = @frequency,
+            DecimalPoints = @decimals,
+            Active = @active,
+            Notes = @notes
+          WHERE metadataID = @metadataID`
         
         var request = new Request(statement, function(err, rowCount) {
           if (err) {
@@ -103,6 +103,16 @@ let controller = {
           }
           connection.close();
         });
+        
+        request.addParameter('metadataID', TYPES.Int, req.body.metadataID)
+        request.addParameter('samplePointID', TYPES.Int, req.body.samplePointID)
+        request.addParameter('parameterID', TYPES.Int, req.body.parameterID)
+        request.addParameter('methodID', TYPES.Int, req.body.methodID)
+        request.addParameter('unitID', TYPES.Int, req.body.unitID)
+        request.addParameter('frequency', TYPES.Int, req.body.frequency)
+        request.addParameter('decimals', TYPES.Int, req.body.decimals)
+        request.addParameter('notes', TYPES.VarChar, req.body.notes)
+        request.addParameter('active', TYPES.Bit, active)
         
         connection.execSql(request);
         
