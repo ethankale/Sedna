@@ -60,7 +60,7 @@ let controller = {
           ,[FrequencyMinutes]
           ,[DecimalPoints]
           FROM Metadata as md
-          INNER JOIN Measurement as ms
+          LEFT JOIN Measurement as ms
           on md.MetadataID = ms.MetadataID
           WHERE md.MetadataID = ${metaid}
           GROUP BY md.MetadataID, md.ParameterID, md.UnitID, md.SamplePointID, 
@@ -121,7 +121,50 @@ let controller = {
     },
     
     addMetadata: function (req, res) {
+      let connection = new Connection(mssql_config);
+      let lastid     = 0;
       
+      console.log(req.body);
+      
+      connection.on('connect', function(err) {
+        
+        let active = req.body.active;
+          
+        let statement = `INSERT INTO Metadata
+          (SamplePointID, ParameterID, MethodID, UnitID,
+          FrequencyMinutes, DecimalPoints, Active, Notes)
+          VALUES 
+            (@samplePointID, @parameterID, @methodID,
+            @unitID, @frequency, @decimals,
+            @active, @notes);
+          SELECT SCOPE_IDENTITY() AS LastID;`
+        
+        var request = new Request(statement, function(err, rowCount) {
+          if (err) {
+            res.status(400).end();
+            console.log(err);
+          } else {
+            res.status(200).json(lastid);
+          }
+          connection.close();
+        });
+        
+        request.on('row', function(columns) {
+          lastid = columns[0].value;
+        });
+        
+        request.addParameter('samplePointID', TYPES.Int, req.body.samplePointID)
+        request.addParameter('parameterID', TYPES.Int, req.body.parameterID)
+        request.addParameter('methodID', TYPES.Int, req.body.methodID)
+        request.addParameter('unitID', TYPES.Int, req.body.unitID)
+        request.addParameter('frequency', TYPES.Int, req.body.frequency)
+        request.addParameter('decimals', TYPES.Int, req.body.decimals)
+        request.addParameter('notes', TYPES.VarChar, req.body.notes)
+        request.addParameter('active', TYPES.Bit, active)
+        
+        connection.execSql(request);
+        
+      });
     }
 };
 

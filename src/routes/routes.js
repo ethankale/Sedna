@@ -51,6 +51,9 @@ module.exports = function (app) {
     // Parameters: ALL fields in Metadata, including ID
     app.put('/api/v1/metadata', metadata.updateMetadata);
     
+    // Parameters: ALL fields in Metadata, EXCEPT ID
+    app.post('/api/v1/metadata', metadata.addMetadata);
+    
     
     // Sample Points
     

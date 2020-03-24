@@ -89,9 +89,15 @@ function fillMetadataDetails(metaid) {
       $("#dr-active").prop('checked', active);
       $("#dr-notes").val(notes);
       
-      $("#dr-narrative").html(`This data record has <strong>${nmeasure}</strong> 
-        measurements between <strong>${mindate.toDateString()}</strong> 
-        and <strong>${maxdate.toDateString()}</strong>.`)
+      let narrative = `This data record has <strong>${nmeasure}</strong> measurements`
+      if (nmeasure > 0) {
+          narrative +=  ` between <strong>${mindate.toDateString()}</strong> 
+            and <strong>${maxdate.toDateString()}</strong>.`;
+      } else {
+          narrative += ".";
+      }
+      
+      $("#dr-narrative").html(narrative);
       
     });
 };
@@ -119,7 +125,7 @@ function loadParameterList() {
   $.ajax({url: 'http://localhost:3000/api/v1/parameterList'
   }).done(function(data){
     let options = `<option 
-        value=-1}>
+        value=-1>
         None
         </option>`;
     
@@ -138,7 +144,7 @@ function loadMethodList() {
   $.ajax({url: 'http://localhost:3000/api/v1/methodList'
   }).done(function(data){
     let options = `<option 
-        value=-1}>
+        value=-1>
         None
         </option>`;
     
@@ -157,7 +163,7 @@ function loadUnitList() {
   $.ajax({url: 'http://localhost:3000/api/v1/unitList'
   }).done(function(data){
     let options = `<option 
-        value=-1}>
+        value=-1>
         None
         </option>`;
     
@@ -210,13 +216,14 @@ function clickDRUpdateButton() {
   $("#updateDataButton")
     .off('click')
     .prop('disabled', false)
+    .text('Update Data')
     .on('click', function() { updateDataRecord() });
   $("#updateDataCloseButton")
     .text("Cancel")
   $("#updateModal").modal();
 };
 
-function updateDataRecord() {
+function makeDRObject() {
   let drUpdate = {};
   
   drUpdate.metadataID    = $("#metadataSelect").val();
@@ -229,7 +236,13 @@ function updateDataRecord() {
   drUpdate.active        = $("#dr-active").prop('checked');
   drUpdate.notes         = $("#dr-notes").val();
   
-  console.log(JSON.stringify(drUpdate));
+  return drUpdate;
+}
+
+function updateDataRecord() {
+  let drUpdate = makeDRObject();
+  
+  //console.log(JSON.stringify(drUpdate));
   
   $.ajax({
     url: 'http://localhost:3000/api/v1/metadata',
@@ -253,7 +266,7 @@ function updateDataRecord() {
       .off('click')
       .prop('disabled', true);
     $("#updateDataCloseButton")
-    .text("Close")
+      .text("Close")
   });
   
 }
@@ -288,18 +301,80 @@ function clickNewDRButton() {
     .prop('disabled', true)
     .off('click');
   
-  $("#metadataSelect").prop('disabled', true);
-  $("#dr-activeFilterCheck").prop('disabled', true);
+  $("#dr-selectHeader").addClass("d-none");
+  
+  $("#dr-new")
+    .text("Create")
+    .off("click")
+    .on("click", function() {
+        clickCreateDRButton();
+    });
   
   $("#dr-cancel")
     .prop('disabled', false)
     .off('click')
     .on('click', function() {
-        $("#metadataSelect").prop('disabled', false);
-        $("#dr-activeFilterCheck").prop('disabled', false);
+        $('#dr-selectHeader').removeClass('d-none');
         disableEditDataRecord();
         $("#metadataSelect").change();
         $("#dr-cancel").prop('disabled', true);
+        $("#dr-edit")
+          .prop('disabled', false)
+          .off('click')
+          .on('click', function() { editDataRecord() });
+        $("#dr-new")
+          .text("New")
+          .off('click')
+          .on('click', function() {
+            clickNewDRButton();
+          });
     });
+  
+}
+
+function clickCreateDRButton() {
+  $("#updateAlert")
+    .removeClass("alert-primary alert-success alert-danger")
+    .addClass("alert-info")
+    .text('Create a new data record?')
+  $("#updateDataButton")
+    .off('click')
+    .prop('disabled', false)
+    .text('Create')
+    .on('click', function() { createNewDR() });
+  $("#updateDataCloseButton")
+    .text("Cancel")
+  $("#updateModal").modal();
+}
+
+function createNewDR() {
+  let drUpdate = makeDRObject();
+  
+  //console.log(JSON.stringify(drUpdate));
+  
+  $.ajax({
+    url: 'http://localhost:3000/api/v1/metadata',
+    contentType: 'application/json',
+    method: 'POST',
+    data: JSON.stringify(drUpdate),
+    dataType: 'json',
+    timeout: 3000,
+  }).done(function() {
+    $("#updateAlert")
+      .removeClass("alert-primary alert-danger alert-info")
+      .addClass("alert-success")
+      .text("Successfully added new data record.");
+  }).fail(function() {
+    $("#updateAlert")
+      .removeClass("alert-primary alert-success alert-info")
+      .addClass("alert-danger")
+      .text("Could not insert new record; check your data.");
+  }).always(function() {
+    $("#updateDataButton")
+      .off('click')
+      .prop('disabled', true);
+    $("#updateDataCloseButton")
+      .text("Close")
+  });
   
 }

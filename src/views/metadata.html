@@ -72,7 +72,7 @@
             <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
               aria-labelledby="v-pills-datarecord-tab">
               
-              <form>
+              <form id = "dr-selectHeader">
                 <div class="form-group">
                   <select class="form-control" id="metadataSelect">
                     <option>Loading...</option>
@@ -81,17 +81,18 @@
                 
                 <div class="form-group form-check">
                   <input type="checkbox" class="form-check-input" id="dr-activeFilterCheck" checked>
-                  <label class="form-check-label" for="dr-activeFilterCheck">Active Only?</label>
+                  <label class="form-check-label" for="dr-activeFilterCheck">Hide Inactive</label>
                 </div>
+                
+                <hr />
               </form>
               
-              <hr />
               
-              <p id="dr-narrative"></p>
+              <div id="dr-narrative" class="alert alert-info"></div>
               
               <form id="dataRecordForm">
                 <fieldset id="dataRecordFieldset" disabled>
-                  <div class="form-group row">
+                  <div class="form-row">
                     <label for="dr-samplePoint" class="col-sm-2 col-form-label">Sample Point</label>
                     <div class="col-sm-10">
                       <select class="form-control" id="dr-samplePoint">
@@ -100,7 +101,7 @@
                     </div>
                   </div>
                   
-                  <div class="form-group row">
+                  <div class="form-row">
                     <label for="dr-parameter" class="col-sm-2 col-form-label">Parameter</label>
                     <div class="col-sm-10">
                       <select class="form-control" id="dr-parameter">
@@ -109,7 +110,7 @@
                     </div>
                   </div>
                   
-                  <div class="form-group row">
+                  <div class="form-row">
                     <label for="dr-method" class="col-sm-2 col-form-label">Method</label>
                     <div class="col-sm-10">
                       <select class="form-control" id="dr-method">
@@ -118,7 +119,7 @@
                     </div>
                   </div>
                   
-                  <div class="form-group row">
+                  <div class="form-row">
                     <label for="dr-unit" class="col-sm-2 col-form-label">Unit</label>
                     <div class="col-sm-10">
                       <select class="form-control" id="dr-unit">
@@ -127,34 +128,38 @@
                     </div>
                   </div>
                   
-                  <div class="form-group row">
+                  <div class="form-row">
                     <label for="dr-frequency" class="col-sm-2 col-form-label">Frequency (minutes)</label>
                     <div class="col-sm-4">
-                      <input type="text" class="form-control" id="dr-frequency">
+                      <input type="number" class="form-control" id="dr-frequency">
                     </div>
 
                     <label for="dr-decimalpoints" class="col-sm-2 col-form-label">Decimal Points</label>
                     <div class="col-sm-4">
-                      <input type="text" class="form-control" id="dr-decimalpoints">
+                      <input type="number" class="form-control" id="dr-decimalpoints">
                     </div>
                   </div>
                   
-                  <div class="form-group row">
-                    <label for="dr-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-10">
+                  <div class="form-row">
+                    <label for="dr-active" class="col-sm-3 col-form-label">Active</label>
+                    <div class="col-sm-9">
                       <input type="checkbox" class="form-check-input" id="dr-active">
                     </div>
                   </div>
                   
-                  <div class="form-group row">
-                    <label for="dr-notes">Notes</label>
-                    <textarea class="form-control" id="dr-notes" rows="3"></textarea>
+                  <div class="form-row">
+                    <label for="dr-notes" class="col-sm-2 col-form-label">Notes</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="dr-notes" rows="3"></textarea>
+                    </div>
                   </div>
                   
                 </fieldset>
               </form>
               
-              <div class="form-group row">
+              <hr />
+              
+              <div class="form-row">
                 <div class="col-md-2">
                   <button id="dr-edit" type="button" class="btn btn-primary">Edit</button>
                 </div>
@@ -162,10 +167,10 @@
                   <button id="dr-update" type="button" class="btn btn-primary" disabled>Update</button>
                 </div>
                 <div class="col-md-2">
-                  <button id="dr-new" type="button" class="btn btn-secondary">New</button>
+                  <button id="dr-new" type="button" class="btn btn-secondary float-right">New</button>
                 </div>
                 <div class="col-md-2">
-                  <button id="dr-cancel" type="button" class="btn btn-secondary" disabled>Cancel</button>
+                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
                 </div>
               </div>
               
