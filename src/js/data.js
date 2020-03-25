@@ -57,7 +57,7 @@ $(document).ready(function() {
                 methodids,
                 startdtm,
                 enddtm, 
-                alqwuutils.utcoffset
+                alqwuutils.utcoffset*-1
             );
         } else {
             $("#downloadAlert")
@@ -301,6 +301,6 @@ function updateDates() {
         methodcurrent,
         startdtm,
         enddtm, 
-        alqwuutils.utcoffset
+        alqwuutils.utcoffset*-1
     );
 }

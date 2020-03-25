@@ -37,7 +37,8 @@ exports.formatDateForSQL = function(dt) {
     return  strDate + " " + strTime;
 }
 
-var utcoffset = -8;
+let config     = window.getConfig();
+let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 
-exports.utcoffset   = utcoffset;             // Difference between local and UTC
+exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds

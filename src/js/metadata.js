@@ -1,10 +1,11 @@
 
 
 var alqwuutils = require('./utils.js');
-var utcoffset = 8;
+let utcoffset  = alqwuutils.utcoffset;
 
 $(document).ready(function() {
   
+  console.log(utcoffset);
   
   $("#dr-samplePoint").select2({disabled: true});
   loadSamplePointList();

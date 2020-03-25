@@ -2,7 +2,7 @@
 var Papa = require('papaparse');
 var d3   = require('d3');
 var alqwuutils = require('./utils.js');
-let utcoffset = 8;  // hours to add to local time to get UTC
+let utcoffset = alqwuutils.utcoffset;  // hours to add to local time to get UTC
 
 // From CSV upload to column selection
 

@@ -2,10 +2,11 @@
 
 
 var alqwuutils = require('./utils.js');
-var utcoffset = 8;
+let utcoffset  = alqwuutils.utcoffset;
 
 $(document).ready(function() {
   
+  console.log(utcoffset);
   
   $("#dr-samplePoint").select2({disabled: true});
   loadSamplePointList();
@@ -431,9 +432,10 @@ exports.formatDateForSQL = function(dt) {
     return  strDate + " " + strTime;
 }
 
-var utcoffset = -8;
+let config     = window.getConfig();
+let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 
-exports.utcoffset   = utcoffset;             // Difference between local and UTC
+exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
 },{}]},{},[1]);

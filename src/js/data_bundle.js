@@ -36885,7 +36885,7 @@ $(document).ready(function() {
                 methodids,
                 startdtm,
                 enddtm, 
-                alqwuutils.utcoffset
+                alqwuutils.utcoffset*-1
             );
         } else {
             $("#downloadAlert")
@@ -37129,7 +37129,7 @@ function updateDates() {
         methodcurrent,
         startdtm,
         enddtm, 
-        alqwuutils.utcoffset
+        alqwuutils.utcoffset*-1
     );
 }
 
@@ -37138,7 +37138,7 @@ function updateDates() {
 var Papa = require('papaparse');
 var d3   = require('d3');
 var alqwuutils = require('./utils.js');
-let utcoffset = 8;  // hours to add to local time to get UTC
+let utcoffset = alqwuutils.utcoffset;  // hours to add to local time to get UTC
 
 // From CSV upload to column selection
 
@@ -37711,9 +37711,10 @@ exports.formatDateForSQL = function(dt) {
     return  strDate + " " + strTime;
 }
 
-var utcoffset = -8;
+let config     = window.getConfig();
+let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 
-exports.utcoffset   = utcoffset;             // Difference between local and UTC
+exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
 },{}]},{},[259]);

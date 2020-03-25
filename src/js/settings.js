@@ -1,5 +1,4 @@
 var alqwuutils = require('./utils.js');
-var utcoffset = 8;
 
 $(document).ready(function() {
   let config = window.getConfig();
@@ -8,6 +7,15 @@ $(document).ready(function() {
     fillServerSettingsForm(config.mssql);
   }
   
+  // Date/time events
+  $("#dt-utcoffset")
+    .val(config.utcoffset)
+    .on('input', () => {
+      config.utcoffset = $("#dt-utcoffset").val();
+      window.setConfig(config);
+    });
+  
+  // Server update events
   $("#server-update").on('click', function() {
     config.mssql = getServerSettingsFromForm();
     window.setConfig(config);
