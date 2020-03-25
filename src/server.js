@@ -7,11 +7,9 @@
     const app = express();
     app.use(express.json());
     app.allowRendererProcessReuse = true;
-    //app.use(express.urlencoded({ extended: true }));
     const port = 3000;
     
     const appRoutes = require('./routes/routes.js')(app)
-    
     
     app.listen(port, () => console.log(`Server listening on port ${port}!`))
 

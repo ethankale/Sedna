@@ -3,9 +3,9 @@
 var Connection = require('tedious').Connection;
 var TYPES      = require('tedious').TYPES;
 let Request    = require('tedious').Request;
-const mssql_config = require('./config.js')
+const mssql_config = require('./config.js');
 
-const sqlfunctions = require('./sqlexecutefunction.js')
+const sqlfunctions = require('./sqlexecutefunction.js');
 
 let controller = {
     

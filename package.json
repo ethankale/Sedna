@@ -1,6 +1,6 @@
 {
-  "name": "gdata_electron",
-  "productName": "gdata_electron",
+  "name": "alqwu",
+  "productName": "alqwu",
   "version": "0.0.1",
   "description": "A desktop application for managing hydrologic data",
   "main": "src/index.js",
@@ -25,7 +25,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "gdata_electron"
+            "name": "alqwu"
           }
         },
         {
@@ -53,7 +53,6 @@
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.17.1",
     "jquery": "^3.4.1",
-    "msnodesqlv8": "^0.8.6",
     "papaparse": "^5.1.1",
     "select2": "^4.0.13",
     "tedious": "^8.0.1"
