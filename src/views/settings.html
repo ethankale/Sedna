@@ -33,11 +33,13 @@
         <div class="col-9">
           <div class="tab-content" id="v-pills-tabContent">
             
-            <!-- Data Record (metadata) form -->
-            
+            <!-- Date/Time settings form -->
             <div class="tab-pane fade show active" id="v-pills-datetime" role="tabpanel" 
               aria-labelledby="v-pills-datetime-tab">
-            
+              
+              <h2>Date and Time Settings</h2>
+              <hr>
+              
               <form>
                  <div class="form-row">
                    <label for="dt-utcoffset" class="col-sm-2 col-form-label">UTC Offset</label>
@@ -46,11 +48,60 @@
                    </div>
                  </div>
               </form>
-            
             </div>
             
+            <!-- Server settings form -->
             <div class="tab-pane fade" id="v-pills-server" role="tabpanel" 
-              aria-labelledby="v-pills-server-tab">Server Connection</div>
+              aria-labelledby="v-pills-server-tab">
+              
+              <h2>Server Connection Settings</h2>
+              <div id="serverAlert" class="row alert alert-info" role="alert">
+                Change these values if you're having trouble connecting to the database.
+              </div>
+              <hr>
+              
+              <form>
+                 <div class="form-row">
+                   <label for="server-serverName" class="col-sm-4 col-form-label">Server Name</label>
+                   <div class="col-sm-8">
+                     <input type="text" class="form-control" id="server-serverName">
+                   </div>
+                 </div>
+              
+                 <div class="form-row">
+                   <label for="server-database" class="col-sm-4 col-form-label">Database</label>
+                   <div class="col-sm-8">
+                     <input type="text" class="form-control" id="server-database">
+                   </div>
+                 </div>
+              
+                 <div class="form-row">
+                   <label for="server-userName" class="col-sm-4 col-form-label">User Name</label>
+                   <div class="col-sm-8">
+                     <input type="text" class="form-control" id="server-userName">
+                   </div>
+                 </div>
+              
+                 <div class="form-row">
+                   <label for="server-password" class="col-sm-4 col-form-label">Password</label>
+                   <div class="col-sm-8">
+                     <input type="password" class="form-control" id="server-password">
+                   </div>
+                 </div>
+              </form>
+              
+              <hr>
+              
+              <div class="form-row">
+                <div class="col-md-6">
+                  <button id="server-update" type="button" class="btn btn-primary" disabled>Update</button>
+                </div>
+                <div class="col-md-6">
+                  <button id="server-test" type="button" class="btn btn-secondary float-right">Test</button>
+                </div>
+              </div>
+              
+            </div>
           </div>
         </div>
     </div>
@@ -68,5 +119,5 @@
   <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
   <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="../../node_modules/select2/dist/js/select2.min.js"></script>
-  <!--<script src="../js/metadata_bundle.js"></script>-->
+  <script src="../js/settings_bundle.js"></script>
 </html>

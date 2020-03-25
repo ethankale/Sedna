@@ -2,13 +2,14 @@
 "use strict";
 
 var Connection = require('tedious').Connection;
-const mssql_config = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
 
 
 let controller = {
     getSitesList: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
         connection.on('connect', function(err) {
@@ -21,6 +22,8 @@ let controller = {
     },
     
     getParamsBySite: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
         var statement = `SELECT SiteID, ParameterID, MethodID, Name, Method, maxdtm, mindtm, nmeasure
@@ -38,6 +41,8 @@ let controller = {
     },
     
     getMetadatasBySite: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
         var siteid    = req.query.siteid;

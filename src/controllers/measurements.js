@@ -4,12 +4,13 @@
 var Connection = require('tedious').Connection;
 let Request    = require('tedious').Request;
 var TYPES      = require('tedious').TYPES;
-const mssql_config = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
 
 let controller = {
     getMeasurements: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var returndata = [];
         var connection = new Connection(mssql_config);
         
@@ -45,6 +46,8 @@ let controller = {
     },
     
     getCountByDtmAndMetaid: function(req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var returndata = [];
         var connection = new Connection(mssql_config);
         
@@ -71,6 +74,8 @@ let controller = {
     },
     
     getDetails: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var returndata = [];
         var connection = new Connection(mssql_config);
         
@@ -116,7 +121,8 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
-        //console.log("Starting #" + req.body.loadnumber);
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         
         let connection     = new Connection(mssql_config);
         let bulkConnection = new Connection(mssql_config);
@@ -207,12 +213,9 @@ let controller = {
                 });
             });
             
-
-            
             connection.execSql(request);
           }
         });
-
     }
 };
 

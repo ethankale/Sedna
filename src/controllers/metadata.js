@@ -1,15 +1,16 @@
 "use strict";
 
-var Connection = require('tedious').Connection;
-var TYPES      = require('tedious').TYPES;
+let Connection = require('tedious').Connection;
+let TYPES      = require('tedious').TYPES;
 let Request    = require('tedious').Request;
-const mssql_config = require('./config.js');
 
 const sqlfunctions = require('./sqlexecutefunction.js');
 
 let controller = {
     
     getMetadataList: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
         var active    = req.query.active;
@@ -42,6 +43,8 @@ let controller = {
     },
     
     getMetadataDetails: function (req, res) {
+        let cfg = require('./config.js')
+        let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
         var metaid    = req.query.metadataid;
@@ -77,6 +80,8 @@ let controller = {
     },
     
     updateMetadata: function (req, res) {
+      let cfg = require('./config.js')
+      let mssql_config = cfg.getConfig().mssql;
       let connection     = new Connection(mssql_config);
       
       connection.on('connect', function(err) {
@@ -121,6 +126,8 @@ let controller = {
     },
     
     addMetadata: function (req, res) {
+      let cfg = require('./config.js')
+      let mssql_config = cfg.getConfig().mssql;
       let connection = new Connection(mssql_config);
       let lastid     = 0;
       
@@ -168,7 +175,5 @@ let controller = {
     }
 };
 
-
-
-
 module.exports = controller;
+

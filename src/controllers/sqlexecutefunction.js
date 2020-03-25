@@ -6,8 +6,10 @@ const executeStatement = function(statement, connection, res) {
   var request = new Request(statement, function(err, rowCount) {
     if (err) {
       console.log(err);
+      res.status(400).end();
     } else {
       console.log(rowCount + ' rows');
+      res.status(200).json(returndata);
     }
     connection.close();
   });
@@ -25,7 +27,6 @@ const executeStatement = function(statement, connection, res) {
   });
   
   request.on('requestCompleted', function(rowCounty, more, rows) {
-    res.json(returndata);
     returndata = [];
   });
   

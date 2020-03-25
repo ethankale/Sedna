@@ -7,11 +7,14 @@ const samplepoints = require('../controllers/samplepoints.js');
 const parameters   = require('../controllers/parameters.js');
 const methods      = require('../controllers/methods.js');
 const units        = require('../controllers/units.js');
+const test         = require('../controllers/test.js');
 
 module.exports = function (app) {
     app.get('/',  function(req, res) {
         res.json({ message: 'Alqwu API is working.' });
     });
+    
+    app.get('/api/v1/test', test.getTest);
     
     // Sites
     
