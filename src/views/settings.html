@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Gage Data</title>
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="../index.css">
+  </head>
+  <body>
+    
+    <!-- Begin main page content -->
+    <div class="container-fluid" role="main">
+      <h1>Settings</h1>
+      <p><a href="index.html">Home</a></p>
+      
+      <div class="row">
+        <!-- Navigation - switch between different tables/items to update -->
+        <div class="col-3">
+          <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <a class="nav-link active" id="v-pills-datetime-tab" data-toggle="pill" 
+              href="#v-pills-datetime" role="tab" aria-controls="v-pills-datetime" 
+              aria-selected="true">Date and Time Settings</a>
+            <a class="nav-link" id="v-pills-server-tab" data-toggle="pill" 
+              href="#v-pills-server" role="tab" aria-controls="v-pills-server" 
+              aria-selected="false">Server Connection</a>
+          </div>
+        </div>
+        
+        <!-- Content - forms that show details about each of the tables/items -->
+        <div class="col-9">
+          <div class="tab-content" id="v-pills-tabContent">
+            
+            <!-- Data Record (metadata) form -->
+            
+            <div class="tab-pane fade show active" id="v-pills-datetime" role="tabpanel" 
+              aria-labelledby="v-pills-datetime-tab">
+            
+              <form>
+                 <div class="form-row">
+                   <label for="dt-utcoffset" class="col-sm-2 col-form-label">UTC Offset</label>
+                   <div class="col-sm-2">
+                     <input type="number" class="form-control" id="dt-utcoffset">
+                   </div>
+                 </div>
+              </form>
+            
+            </div>
+            
+            <div class="tab-pane fade" id="v-pills-server" role="tabpanel" 
+              aria-labelledby="v-pills-server-tab">Server Connection</div>
+          </div>
+        </div>
+    </div>
+    
+    <footer class="footer fixed-bottom">
+      <div class="container-fluid">
+        <div class="row">
+
+        </div>
+      </div>
+    </footer>
+    
+  </body>
+  <script src="../../node_modules/jquery/dist/jquery.min.js"></script>
+  <script src="../../node_modules/@popperjs/core/dist/umd/popper.min.js"></script>
+  <script src="../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="../../node_modules/select2/dist/js/select2.min.js"></script>
+  <!--<script src="../js/metadata_bundle.js"></script>-->
+</html>
