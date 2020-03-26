@@ -2,7 +2,7 @@
 
 $(document).ready(function() {
   
-  $("#userSelect").select2({ width: 'resolve' });
+  $("#userSelect").select2({ width: '100%' });
   $("#userSelect").change(function() {
     disableEditUser();
     let userid = $("#userSelect :selected").val()

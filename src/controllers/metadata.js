@@ -28,7 +28,7 @@ let controller = {
           ON mt.MethodID = md.MethodID\r`
           
         if (typeof active != "undefined") {
-          statement = statement + " WHERE Active <> 0\r"
+          statement = statement + " WHERE md.Active <> 0\r"
         }
         
         statement = statement + " ORDER BY st.Code"

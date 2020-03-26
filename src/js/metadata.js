@@ -2,6 +2,7 @@
 
 let alqwuutils = require('./utils.js');
 let users      = require('./meta-user.js');
+let sites      = require('./meta-site.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 

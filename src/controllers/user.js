@@ -13,7 +13,8 @@ let controller = {
     let connection = new Connection(mssql_config);
     
     let statement = `SELECT UserID, Name
-      FROM [User] \r`
+      FROM [User]
+      ORDER BY Name\r`
     
     connection.on('connect', function(err) {
       if(err) {

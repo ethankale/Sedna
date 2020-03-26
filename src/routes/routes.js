@@ -18,13 +18,11 @@ module.exports = function (app) {
     app.get('/api/v1/test', test.getTest);
     
     // Sites
-    
-    // No params
     app.get('/api/v1/getsites', sites.getSitesList);
-    
-    // Parameter: siteid
     app.get('/api/v1/getParamsBySite', sites.getParamsBySite);
-    
+    app.get('/api/v1/site', sites.getSiteDetails);
+    app.put('/api/v1/site', sites.updateSite);
+    app.post('/api/v1/site', sites.addSite);
     
     // Measurements
     
