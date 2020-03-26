@@ -88,8 +88,8 @@ let controller = {
         
         let active = req.body.active;
           
-        let statement = `UPDATE Metadata
-          SET SamplePointID = @samplePointID,
+        let statement = `UPDATE Metadata SET 
+            SamplePointID = @samplePointID,
             ParameterID = @parameterID,
             MethodID = @methodID,
             UnitID = @unitID,
@@ -129,6 +129,7 @@ let controller = {
       let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
       let connection = new Connection(mssql_config);
+      
       let lastid     = 0;
       
       console.log(req.body);

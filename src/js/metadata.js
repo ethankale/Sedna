@@ -1,11 +1,13 @@
 
 
-var alqwuutils = require('./utils.js');
+let alqwuutils = require('./utils.js');
+let users      = require('./meta-user.js');
+
 let utcoffset  = alqwuutils.utcoffset;
 
 $(document).ready(function() {
   
-  console.log(utcoffset);
+  //console.log(utcoffset);
   
   $("#dr-samplePoint").select2({disabled: true});
   loadSamplePointList();

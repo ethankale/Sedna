@@ -7,6 +7,7 @@ const samplepoints = require('../controllers/samplepoints.js');
 const parameters   = require('../controllers/parameters.js');
 const methods      = require('../controllers/methods.js');
 const units        = require('../controllers/units.js');
+const user         = require('../controllers/user.js');
 const test         = require('../controllers/test.js');
 
 module.exports = function (app) {
@@ -77,4 +78,11 @@ module.exports = function (app) {
     // Units
     
     app.get('/api/v1/unitList', units.getUnitList);
+    
+    // Users
+    app.get('/api/v1/user', user.getUser);
+    app.put('/api/v1/user', user.updateUser);
+    app.post('/api/v1/user', user.addUser);
+    app.get('/api/v1/userList', user.getUserList);
+    
 };
