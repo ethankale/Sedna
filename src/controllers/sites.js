@@ -76,6 +76,7 @@ let controller = {
     },
     
     updateSite: function(req, res) {
+      console.log(req.body);
       let mssql_config = cfg.getConfig().mssql;
       let connection = new Connection(mssql_config);
       
@@ -87,7 +88,8 @@ let controller = {
         Address     = @address,
         City        = @city,
         ZipCode     = @zip,
-        Description = @description
+        Description = @description,
+        Active      = @active
         WHERE SiteID = @siteid\r`;
       
       connection.on('connect', function(err) {
@@ -117,6 +119,7 @@ let controller = {
         request.addParameter('city', TYPES.VarChar, req.body.city);
         request.addParameter('zip', TYPES.VarChar, req.body.zip);
         request.addParameter('description', TYPES.VarChar, req.body.description);
+        request.addParameter('active', TYPES.Bit, req.body.active)
         
         connection.execSql(request);
       });
@@ -129,8 +132,8 @@ let controller = {
       let lastid = 0;
       
       let statement = `INSERT INTO [Site]
-        (Code, Name, Address, City, ZipCode, Description)
-        VALUES (@code, @name, @address, @city, @zip, @description);
+        (Code, Name, Address, City, ZipCode, Description, Active)
+        VALUES (@code, @name, @address, @city, @zip, @description, @active);
         SELECT SCOPE_IDENTITY() AS LastID;\r`;
       
       connection.on('connect', function(err) {
@@ -155,6 +158,7 @@ let controller = {
         request.addParameter('city', TYPES.VarChar, req.body.city);
         request.addParameter('zip', TYPES.VarChar, req.body.zip);
         request.addParameter('description', TYPES.VarChar, req.body.description);
+        request.addParameter('active', TYPES.Bit, req.body.active);
         
         connection.execSql(request);
       });

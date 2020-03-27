@@ -10,6 +10,11 @@ $(document).ready(function() {
     fillSiteDetails(siteid);
   });
   
+  $("#site-activeFilterCheck").change(function() {
+    let active = $("#site-activeFilterCheck").prop('checked');
+    loadSiteList(active);
+  });
+  
   $("#site-edit").click(function() {
     editSite();
   });
@@ -18,7 +23,8 @@ $(document).ready(function() {
     clickNewSiteButton();
   });
   
-  loadSiteList();
+  let active = $("#site-activeFilterCheck").prop('checked');
+  loadSiteList(active);
   
 });
 
@@ -96,8 +102,11 @@ function updateSite() {
   });
 }
 
-function loadSiteList(siteid) {
-  $.ajax({url: 'http://localhost:3000/api/v1/getsites'
+function loadSiteList(active, siteid) {
+  
+  let requestParams = active ? '?active=1' : '';
+  
+  $.ajax({url: `http://localhost:3000/api/v1/getsites${requestParams}`
   }).done(function(data) {
     let options = '';
     
@@ -137,12 +146,16 @@ function fillSiteDetails(siteid) {
     let city        = data[0].City;
     let zip         = data[0].ZipCode;
     let description = data[0].Description;
+    let active      = data[0].Active == 1 ? true : false;
     let samplepts   = data[0].SamplePointCount;
     let metadatas   = data[0].MetadataCount;
     
+    let narrativeSP   = samplepts == 1 ? "sample point" : "sample points"
+    let narrativeMeta = metadatas == 1 ? "data record" : "data records"
+    
     let narrative   = `This site has 
-      <strong>${samplepts}</strong> associated sample points with
-      <strong>${metadatas}</strong> associated data records.`
+      <strong>${samplepts}</strong> associated ${narrativeSP} with
+      <strong>${metadatas}</strong> associated ${narrativeMeta}.`
     
     $("#site-code").val(code);
     $("#site-name").val(sitename);
@@ -150,6 +163,7 @@ function fillSiteDetails(siteid) {
     $("#site-city").val(city);
     $("#site-zip").val(zip);
     $("#site-description").val(description);
+    $("#site-active").prop('checked', active);
     
     $("#site-narrative")
       .removeClass("alert-primary alert-success alert-danger alert-info")
@@ -179,6 +193,9 @@ function makeSiteObject() {
   site.city        = $("#site-city").val();
   site.zip         = $("#site-zip").val();
   site.description = $("#site-description").val();
+  site.active      = $("#site-active").prop('checked') ? 1 : 0;
+  
+  console.log(site);
   
   return site;
 }
@@ -190,6 +207,7 @@ function clickNewSiteButton() {
   $("#site-city").val("");
   $("#site-zip").val("");
   $("#site-description").val("");
+  $("#site-active").val(false);
   $("#siteFieldset").prop('disabled', false);
   $("#site-narrative")
     .removeClass("alert-primary alert-success alert-danger")
@@ -235,7 +253,6 @@ function clickCreateSiteButton() {
 
 function createNewSite() {
   let site = makeSiteObject();
-  console.log(site);
   $.ajax({
     url: 'http://localhost:3000/api/v1/site',
     contentType: 'application/json',
@@ -251,7 +268,8 @@ function createNewSite() {
       .text("Successfully added new site.");
     cancelNewSite();
     
-    loadSiteList(data);
+    let active = $("#site-activeFilterCheck").prop('checked');
+    loadSiteList(active, data);
     
   }).fail(function() {
     $("#updateAlert")
