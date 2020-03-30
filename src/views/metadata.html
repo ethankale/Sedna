@@ -68,6 +68,10 @@
               href="#v-pills-site" role="tab" aria-controls="v-pills-site" 
               aria-selected="true">Site</a>
             
+            <a class="nav-link" id="v-pills-sample-point-tab" data-toggle="pill" 
+              href="#v-pills-sample-point" role="tab" aria-controls="v-pills-sample-point" 
+              aria-selected="true">Sample Point</a>
+            
             <a class="nav-link" id="v-pills-user-tab" data-toggle="pill" 
               href="#v-pills-user" role="tab" aria-controls="v-pills-user" 
               aria-selected="true">User</a>
@@ -285,6 +289,101 @@
                 </div>
                 <div class="col-md-2">
                   <button id="site-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
+                </div>
+              </div>
+              
+            </div>
+            
+            <!-- Sample Point form -->
+            <div class="tab-pane fade" id="v-pills-sample-point" role="tabpanel" 
+              aria-labelledby="v-pills-sample-point-tab">
+              
+              <form id = "sp-selectHeader">
+                <div class="form-group">
+                  <select class="form-control" id="spSelect" v-model="samplePointID">
+                    <option v-for="sp in sps" v-bind:value="sp.SamplePointID">
+                      {{ sp.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="sample-point-activeFilterCheck" checked>
+                  <label class="form-check-label" for="sample-point-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr />
+              </form>
+              
+              <div id="sample-point-narrative" class="alert alert-info">Loading...</div>
+              
+              <form id="sample-pointForm">
+                <fieldset id="sample-pointFieldset" disabled>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-code" class="col-sm-2 col-form-label">Code</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-code">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-name" class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-name">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-address" class="col-sm-2 col-form-label">Address</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-address">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-city" class="col-sm-2 col-form-label">City</label>
+                    <div class="col-sm-4">
+                      <input type="text" class="form-control" id="sample-point-city">
+                    </div>
+
+                    <label for="sample-point-zip" class="col-sm-2 col-form-label">Zip</label>
+                    <div class="col-sm-4">
+                      <input type="text" class="form-control" id="sample-point-zip">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-10">
+                      <input type="checkbox" class="form-check-input" id="sample-point-active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="sample-point-description" rows="5"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+              
+              <hr />
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="sample-point-edit" type="button" class="btn btn-primary">Edit</button>
+                </div>
+                <div class="col-md-6">
+                  <button id="sample-point-update" type="button" class="btn btn-primary" disabled>Update</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="sample-point-new" type="button" class="btn btn-secondary float-right">New</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="sample-point-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
                 </div>
               </div>
               

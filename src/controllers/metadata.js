@@ -132,7 +132,7 @@ let controller = {
       
       let lastid     = 0;
       
-      console.log(req.body);
+      //console.log(req.body);
       
       connection.on('connect', function(err) {
         

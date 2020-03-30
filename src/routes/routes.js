@@ -58,9 +58,8 @@ module.exports = function (app) {
     
     
     // Sample Points
-    
-    // No params yet; eventually active
     app.get('/api/v1/samplePointList', samplepoints.getSamplePointList);
+    app.get('/api/v1/samplePoint', samplepoints.getSamplePointDetails);
     
     
     // Parameters
