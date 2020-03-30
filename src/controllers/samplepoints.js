@@ -95,6 +95,209 @@ let controller = {
       
       connection.execSql(request);
     });
+  },
+  
+  updateSamplePoint: function (req, res) {
+    let cfg = require('./config.js')
+    let mssql_config = cfg.getConfig().mssql;
+    let connection     = new Connection(mssql_config);
+    
+    connection.on('connect', function(err) {
+      
+      let statement = `UPDATE SamplePoint SET 
+        SiteID =                   @SiteID,
+        Name =                     @Name,
+        Description =              @Description,
+        Latitude =                 @Latitude,
+        Longitude =                @Longitude,
+        ElevationFeet =            @ElevationFeet,
+        ElevationDatum =           @ElevationDatum,
+        ElevationReference =       @ElevationReference,
+        LatLongAccuracyFeet =      @LatLongAccuracyFeet,
+        LatLongDate =              @LatLongDate,
+        LatLongDetails =           @LatLongDetails,
+        ElevationAccuracyFeet =    @ElevationAccuracyFeet,
+        ElevationDate =            @ElevationDate,
+        ElevationDetails =         @ElevationDetails,
+        WellType =                 @WellType,
+        WellCompletionType =       @WellCompletionType,
+        WellIntervalTopFeet =      @WellIntervalTopFeet,
+        WellIntervalBottomFeet =   @WellIntervalBottomFeet,
+        WellInnerDiameterInches =  @WellInnerDiameterInches,
+        WellOuterDiameterInches =  @WellOuterDiameterInches,
+        WellStickupFeet =          @WellStickupFeet,
+        WellStickupDate =          @WellStickupDate,
+        WellDrilledBy =            @WellDrilledBy,
+        WellEcologyTagID =         @WellEcologyTagID,
+        WellEcologyStartCardID =   @WellEcologyStartCardID,
+        AddedOn =                  @AddedOn,
+        RemovedOn =                @RemovedOn,
+        Active =                   @Active
+        WHERE SamplePointID = @SamplePointID`
+      
+       var request = new Request(statement, function(err, rowCount) {
+         if (err) {
+           res.status(400).end();
+           console.log(err);
+         } else {
+           res.status(200).json("Success");
+         }
+         connection.close();
+       });
+      
+      request.addParameter('SamplePointID',             TYPES.Int,          req.body.SamplePointID)
+      request.addParameter('SiteID',                    TYPES.Int,          req.body.SiteID)
+      request.addParameter('Name',                      TYPES.VarChar,      req.body.Name)
+      request.addParameter('Description',               TYPES.VarChar,      req.body.Description)
+      request.addParameter('Latitude',                  TYPES.Numeric,      req.body.Latitude)
+      request.addParameter('Longitude',                 TYPES.Numeric,      req.body.Longitude)
+      request.addParameter('ElevationFeet',             TYPES.Numeric,      req.body.ElevationFeet)
+      request.addParameter('ElevationDatum',            TYPES.VarChar,      req.body.ElevationDatum)
+      request.addParameter('ElevationReference',        TYPES.VarChar,      req.body.ElevationReference)
+      request.addParameter('LatLongAccuracyFeet',       TYPES.SmallInt,     req.body.LatLongAccuracyFeet)
+      request.addParameter('LatLongDate',               TYPES.DateTime2,    req.body.LatLongDate)
+      request.addParameter('LatLongDetails',            TYPES.VarChar,      req.body.LatLongDetails)
+      request.addParameter('ElevationAccuracyFeet',     TYPES.SmallInt,     req.body.ElevationAccuracyFeet)
+      request.addParameter('ElevationDate',             TYPES.DateTime2,    req.body.ElevationDate)
+      request.addParameter('ElevationDetails',          TYPES.VarChar,      req.body.ElevationDetails)
+      request.addParameter('WellType',                  TYPES.VarChar,      req.body.WellType)
+      request.addParameter('WellCompletionType',        TYPES.VarChar,      req.body.WellCompletionType)
+      request.addParameter('WellIntervalTopFeet',       TYPES.Numeric,      req.body.WellIntervalTopFeet)
+      request.addParameter('WellIntervalBottomFeet',    TYPES.Numeric,      req.body.WellIntervalBottomFeet)
+      request.addParameter('WellInnerDiameterInches',   TYPES.Numeric,      req.body.WellInnerDiameterInches)
+      request.addParameter('WellOuterDiameterInches',   TYPES.Numeric,      req.body.WellOuterDiameterInches)
+      request.addParameter('WellStickupFeet',           TYPES.Numeric,      req.body.WellStickupFeet)
+      request.addParameter('WellStickupDate',           TYPES.DateTime2,    req.body.WellStickupDate)
+      request.addParameter('WellDrilledBy',             TYPES.VarChar,      req.body.WellDrilledBy)
+      request.addParameter('WellEcologyTagID',          TYPES.VarChar,      req.body.WellEcologyTagID)
+      request.addParameter('WellEcologyStartCardID',    TYPES.VarChar,      req.body.WellEcologyStartCardID)
+      request.addParameter('AddedOn',                   TYPES.DateTime2,    req.body.AddedOn)
+      request.addParameter('RemovedOn',                 TYPES.DateTime2,    req.body.RemovedOn)
+      request.addParameter('Active',                    TYPES.Bit,          req.body.Active)
+      
+      connection.execSql(request);
+      
+    });
+  },
+  
+  addSamplePoint: function (req, res) {
+    let cfg = require('./config.js')
+    let mssql_config = cfg.getConfig().mssql;
+    let connection = new Connection(mssql_config);
+    
+    let lastid     = 0;
+    
+    connection.on('connect', function(err) {
+      
+      let active = req.body.active;
+        
+      let statement = `INSERT INTO Metadata
+          (SiteID, 
+          Name, 
+          Description, 
+          Latitude, 
+          Longitude,
+          ElevationFeet, 
+          ElevationDatum, 
+          ElevationReference,
+          LatLongAccuracyFeet, 
+          LatLongDate, 
+          LatLongDetails,
+          ElevationAccuracyFeet, 
+          ElevationDate, 
+          ElevationDetails,
+          WellType, 
+          WellCompletionType, 
+          WellIntervalTopFeet, 
+          WellIntervalBottomFeet, 
+          WellInnerDiameterInches, 
+          WellOuterDiameterInches, 
+          WellStickupFeet, 
+          WellStickupDate,
+          WellDrilledBy, 
+          WellEcologyTagID, 
+          WellEcologyStartCardID, 
+          AddedOn, 
+          RemovedOn, 
+          Active)
+        VALUES 
+          (@SiteID,
+          @Name,
+          @Description,
+          @Latitude,
+          @Longitude,
+          @ElevationFeet,
+          @ElevationDatum,
+          @ElevationReference,
+          @LatLongAccuracyFeet,
+          @LatLongDate,
+          @LatLongDetails,
+          @ElevationAccuracyFeet,
+          @ElevationDate,
+          @ElevationDetails,
+          @WellType,
+          @WellCompletionType,
+          @WellIntervalTopFeet,
+          @WellIntervalBottomFeet,
+          @WellInnerDiameterInches,
+          @WellOuterDiameterInches,
+          @WellStickupFeet,
+          @WellStickupDate,
+          @WellDrilledBy,
+          @WellEcologyTagID,
+          @WellEcologyStartCardID,
+          @AddedOn,
+          @RemovedOn,
+          @Active);
+        SELECT SCOPE_IDENTITY() AS LastID;`
+      
+      var request = new Request(statement, function(err, rowCount) {
+        if (err) {
+          res.status(400).end();
+          console.log(err);
+        } else {
+          res.status(200).json(lastid);
+        }
+        connection.close();
+      });
+      
+      request.on('row', function(columns) {
+        lastid = columns[0].value;
+      });
+      
+      request.addParameter('SiteID',                    TYPES.Int,          req.body.SiteID)
+      request.addParameter('Name',                      TYPES.VarChar,      req.body.Name)
+      request.addParameter('Description',               TYPES.VarChar,      req.body.Description)
+      request.addParameter('Latitude',                  TYPES.Numeric,      req.body.Latitude)
+      request.addParameter('Longitude',                 TYPES.Numeric,      req.body.Longitude)
+      request.addParameter('ElevationFeet',             TYPES.Numeric,      req.body.ElevationFeet)
+      request.addParameter('ElevationDatum',            TYPES.VarChar,      req.body.ElevationDatum)
+      request.addParameter('ElevationReference',        TYPES.VarChar,      req.body.ElevationReference)
+      request.addParameter('LatLongAccuracyFeet',       TYPES.SmallInt,     req.body.LatLongAccuracyFeet)
+      request.addParameter('LatLongDate',               TYPES.DateTime2,    req.body.LatLongDate)
+      request.addParameter('LatLongDetails',            TYPES.VarChar,      req.body.LatLongDetails)
+      request.addParameter('ElevationAccuracyFeet',     TYPES.SmallInt,     req.body.ElevationAccuracyFeet)
+      request.addParameter('ElevationDate',             TYPES.DateTime2,    req.body.ElevationDate)
+      request.addParameter('ElevationDetails',          TYPES.VarChar,      req.body.ElevationDetails)
+      request.addParameter('WellType',                  TYPES.VarChar,      req.body.WellType)
+      request.addParameter('WellCompletionType',        TYPES.VarChar,      req.body.WellCompletionType)
+      request.addParameter('WellIntervalTopFeet',       TYPES.Numeric,      req.body.WellIntervalTopFeet)
+      request.addParameter('WellIntervalBottomFeet',    TYPES.Numeric,      req.body.WellIntervalBottomFeet)
+      request.addParameter('WellInnerDiameterInches',   TYPES.Numeric,      req.body.WellInnerDiameterInches)
+      request.addParameter('WellOuterDiameterInches',   TYPES.Numeric,      req.body.WellOuterDiameterInches)
+      request.addParameter('WellStickupFeet',           TYPES.Numeric,      req.body.WellStickupFeet)
+      request.addParameter('WellStickupDate',           TYPES.DateTime2,    req.body.WellStickupDate)
+      request.addParameter('WellDrilledBy',             TYPES.VarChar,      req.body.WellDrilledBy)
+      request.addParameter('WellEcologyTagID',          TYPES.VarChar,      req.body.WellEcologyTagID)
+      request.addParameter('WellEcologyStartCardID',    TYPES.VarChar,      req.body.WellEcologyStartCardID)
+      request.addParameter('AddedOn',                   TYPES.DateTime2,    req.body.AddedOn)
+      request.addParameter('RemovedOn',                 TYPES.DateTime2,    req.body.RemovedOn)
+      request.addParameter('Active',                    TYPES.Bit,          req.body.Active)
+      
+      
+      connection.execSql(request);
+      
+    });
   }
   
 };

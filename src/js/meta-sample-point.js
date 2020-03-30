@@ -26,8 +26,35 @@ var vm = new Vue({
     notice: 'Vue is working!',
     spID: 2,
     currentSP: {
-      SamplePointID: 2, 
-      Name: 'Loading...'
+      SamplePointID:            null,
+      SiteID:                   null,
+      Name:                     null,
+      Description:              null,
+      Latitude:                 null,
+      Longitude:                null,
+      ElevationFeet:            null,
+      ElevationDatum:           null,
+      ElevationReference:       null,
+      LatLongAccuracyFeet:      null,
+      LatLongDate:              null,
+      LatLongDetails:           null,
+      ElevationAccuracyFeet:    null,
+      ElevationDate:            null,
+      ElevationDetails:         null,
+      WellType:                 null,
+      WellCompletionType:       null,
+      WellIntervalTopFeet:      null,
+      WellIntervalBottomFeet:   null,
+      WellInnerDiameterInches:  null,
+      WellOuterDiameterInches:  null,
+      WellStickupFeet:          null,
+      WellStickupDate:          null,
+      WellDrilledBy:            null,
+      WellEcologyTagID:         null,
+      WellEcologyStartCardID:   null,
+      AddedOn:                  null,
+      RemovedOn:                null,
+      Active:                   null
     },
     sps: []
   },
@@ -46,14 +73,23 @@ var vm = new Vue({
   },
   methods: {
     getCurrentSP: function(SamplePointID) {
-      let self = this;
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,
         method:'GET',
         timeout: 3000
       }).done(function(data) {
-        self.currentSP = data;
-        console.log(self.currentSP);
+        this.currentSP = data;
+      }).fail(function(err) {
+        console.log(err);
+      });
+    },
+    updateSP: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,
+        method:'GET',
+        timeout: 3000
+      }).done(function(data) {
+        this.currentSP = data;
       }).fail(function(err) {
         console.log(err);
       });
