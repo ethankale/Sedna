@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+  
+    <!-- REMOVE THIS! -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -300,11 +303,13 @@
               
               <form id = "sp-selectHeader">
                 <div class="form-group">
-                  <select class="form-control" id="spSelect" v-model="samplePointID">
-                    <option v-for="sp in sps" v-bind:value="sp.SamplePointID">
+                  <select class="form-control" id="spSelect" 
+                    v-model="spID" v-select="spID">
+                    <option v-for="sp in sps" v-bind:value="sp.SamplePointID" v-bind:key="sp.SamplePointID">
                       {{ sp.Name }}
                     </option>
                   </select>
+                  
                 </div>
                 
                 <div class="form-group form-check">
@@ -315,7 +320,9 @@
                 <hr />
               </form>
               
-              <div id="sample-point-narrative" class="alert alert-info">Loading...</div>
+              <div id="sample-point-narrative" class="alert alert-info"> 
+                Selected: {{ spID }}
+              </div>
               
               <form id="sample-pointForm">
                 <fieldset id="sample-pointFieldset" disabled>

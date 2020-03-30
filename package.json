@@ -56,7 +56,8 @@
     "papaparse": "^5.1.1",
     "select2": "^4.0.13",
     "tedious": "^8.0.1",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "vue-select": "^3.9.5"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.49",
@@ -70,5 +71,4 @@
   "browser": {
     "vue": "vue/dist/vue.common.js"
   }
-  
 }
