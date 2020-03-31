@@ -12268,7 +12268,6 @@ $(document).ready(function() {
 var vm = new Vue({
   el: '#v-pills-sample-point',
   data: {
-    notice: 'Vue is working!',
     spID: 2,
     sps: [],
     sites: [],
@@ -12375,7 +12374,6 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        //this.currentSP = data;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -12401,7 +12399,22 @@ var vm = new Vue({
     },
     
     saveNewSP: function() {
-      
+      $.ajax({
+        url: `http://localhost:3000/api/v1/samplePoint`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentSP),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Sample Point!";
+        this.spID = data;
+        this.currentSP.SamplePointID = data;
+        this.creatingNew = false;
+      }).fail((err) => {
+        console.log(err);
+        this.notificationText = "Could not add the Sample Point.  Please double-check the values.";
+      });
     },
     
     cancelNewSP: function() {

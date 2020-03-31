@@ -197,9 +197,7 @@ let controller = {
     
     connection.on('connect', function(err) {
       
-      let active = req.body.active;
-        
-      let statement = `INSERT INTO Metadata
+      let statement = `INSERT INTO SamplePoint
           (SiteID, 
           Name, 
           Description, 
@@ -273,12 +271,17 @@ let controller = {
         lastid = columns[0].value;
       });
       
+      let active = typeof req.body.active == 'undefined' ? false : req.body.active;
+      
       request.addParameter('SiteID',                    TYPES.Int,          req.body.SiteID)
       request.addParameter('Name',                      TYPES.VarChar,      req.body.Name)
       request.addParameter('Description',               TYPES.VarChar,      req.body.Description)
-      request.addParameter('Latitude',                  TYPES.Numeric,      req.body.Latitude)
-      request.addParameter('Longitude',                 TYPES.Numeric,      req.body.Longitude)
-      request.addParameter('ElevationFeet',             TYPES.Numeric,      req.body.ElevationFeet)
+      request.addParameter('Latitude',                  TYPES.Numeric,      req.body.Latitude,
+        {precision: 9, scale: 6})
+      request.addParameter('Longitude',                 TYPES.Numeric,      req.body.Longitude,
+        {precision: 9, scale: 6})
+      request.addParameter('ElevationFeet',             TYPES.Numeric,      req.body.ElevationFeet,
+        {precision: 8, scale: 2})
       request.addParameter('ElevationDatum',            TYPES.VarChar,      req.body.ElevationDatum)
       request.addParameter('ElevationReference',        TYPES.VarChar,      req.body.ElevationReference)
       request.addParameter('LatLongAccuracyFeet',       TYPES.SmallInt,     req.body.LatLongAccuracyFeet)
@@ -289,18 +292,23 @@ let controller = {
       request.addParameter('ElevationDetails',          TYPES.VarChar,      req.body.ElevationDetails)
       request.addParameter('WellType',                  TYPES.VarChar,      req.body.WellType)
       request.addParameter('WellCompletionType',        TYPES.VarChar,      req.body.WellCompletionType)
-      request.addParameter('WellIntervalTopFeet',       TYPES.Numeric,      req.body.WellIntervalTopFeet)
-      request.addParameter('WellIntervalBottomFeet',    TYPES.Numeric,      req.body.WellIntervalBottomFeet)
-      request.addParameter('WellInnerDiameterInches',   TYPES.Numeric,      req.body.WellInnerDiameterInches)
-      request.addParameter('WellOuterDiameterInches',   TYPES.Numeric,      req.body.WellOuterDiameterInches)
-      request.addParameter('WellStickupFeet',           TYPES.Numeric,      req.body.WellStickupFeet)
+      request.addParameter('WellIntervalTopFeet',       TYPES.Numeric,      req.body.WellIntervalTopFeet,
+        {precision: 6, scale: 2})
+      request.addParameter('WellIntervalBottomFeet',    TYPES.Numeric,      req.body.WellIntervalBottomFeet,
+        {precision: 6, scale: 2})
+      request.addParameter('WellInnerDiameterInches',   TYPES.Numeric,      req.body.WellInnerDiameterInches,
+        {precision: 4, scale: 2})
+      request.addParameter('WellOuterDiameterInches',   TYPES.Numeric,      req.body.WellOuterDiameterInches,
+        {precision: 4, scale: 2})
+      request.addParameter('WellStickupFeet',           TYPES.Numeric,      req.body.WellStickupFeet,
+        {precision: 4, scale: 2})
       request.addParameter('WellStickupDate',           TYPES.DateTime2,    req.body.WellStickupDate)
       request.addParameter('WellDrilledBy',             TYPES.VarChar,      req.body.WellDrilledBy)
       request.addParameter('WellEcologyTagID',          TYPES.VarChar,      req.body.WellEcologyTagID)
       request.addParameter('WellEcologyStartCardID',    TYPES.VarChar,      req.body.WellEcologyStartCardID)
       request.addParameter('AddedOn',                   TYPES.DateTime2,    req.body.AddedOn)
       request.addParameter('RemovedOn',                 TYPES.DateTime2,    req.body.RemovedOn)
-      request.addParameter('Active',                    TYPES.Bit,          req.body.Active)
+      request.addParameter('Active',                    TYPES.Bit,          active)
       
       connection.execSql(request);
       

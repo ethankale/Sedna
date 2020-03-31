@@ -34,3 +34,13 @@ WellEcologyStartCardID varchar(15),
 AddedOn datetime2(0) NULL,
 RemovedOn datetime2(0) NULL,
 Active bit DEFAULT 1 NOT NULL
+
+ALTER TABLE SamplePoint
+DROP CONSTRAINT SamplePoint_Site_fk;
+
+ALTER TABLE SamplePoint
+ADD CONSTRAINT SamplePoint_Site_fk FOREIGN KEY (SiteID)
+REFERENCES Site (SiteID)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
