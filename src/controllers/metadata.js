@@ -109,15 +109,15 @@ let controller = {
           connection.close();
         });
         
-        request.addParameter('metadataID', TYPES.Int, req.body.metadataID)
-        request.addParameter('samplePointID', TYPES.Int, req.body.samplePointID)
-        request.addParameter('parameterID', TYPES.Int, req.body.parameterID)
-        request.addParameter('methodID', TYPES.Int, req.body.methodID)
-        request.addParameter('unitID', TYPES.Int, req.body.unitID)
-        request.addParameter('frequency', TYPES.Int, req.body.frequency)
-        request.addParameter('decimals', TYPES.Int, req.body.decimals)
-        request.addParameter('notes', TYPES.VarChar, req.body.notes)
-        request.addParameter('active', TYPES.Bit, active)
+        request.addParameter('metadataID',      TYPES.Int, req.body.metadataID)
+        request.addParameter('samplePointID',   TYPES.Int, req.body.samplePointID)
+        request.addParameter('parameterID',     TYPES.Int, req.body.parameterID)
+        request.addParameter('methodID',        TYPES.Int, req.body.methodID)
+        request.addParameter('unitID',          TYPES.Int, req.body.unitID)
+        request.addParameter('frequency',       TYPES.Int, req.body.frequency)
+        request.addParameter('decimals',        TYPES.Int, req.body.decimals)
+        request.addParameter('notes',           TYPES.VarChar, req.body.notes)
+        request.addParameter('active',          TYPES.Bit, active)
         
         connection.execSql(request);
         
@@ -161,14 +161,14 @@ let controller = {
           lastid = columns[0].value;
         });
         
-        request.addParameter('samplePointID', TYPES.Int, req.body.samplePointID)
-        request.addParameter('parameterID', TYPES.Int, req.body.parameterID)
-        request.addParameter('methodID', TYPES.Int, req.body.methodID)
-        request.addParameter('unitID', TYPES.Int, req.body.unitID)
-        request.addParameter('frequency', TYPES.Int, req.body.frequency)
-        request.addParameter('decimals', TYPES.Int, req.body.decimals)
-        request.addParameter('notes', TYPES.VarChar, req.body.notes)
-        request.addParameter('active', TYPES.Bit, active)
+        request.addParameter('samplePointID',   TYPES.Int, req.body.samplePointID)
+        request.addParameter('parameterID',     TYPES.Int, req.body.parameterID)
+        request.addParameter('methodID',        TYPES.Int, req.body.methodID)
+        request.addParameter('unitID',          TYPES.Int, req.body.unitID)
+        request.addParameter('frequency',       TYPES.Int, req.body.frequency)
+        request.addParameter('decimals',        TYPES.Int, req.body.decimals)
+        request.addParameter('notes',           TYPES.VarChar, req.body.notes)
+        request.addParameter('active',          TYPES.Bit, active)
         
         connection.execSql(request);
         

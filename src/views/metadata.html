@@ -304,73 +304,249 @@
               <form id = "sp-selectHeader">
                 <div class="form-group">
                   <select class="form-control" id="spSelect" 
-                    v-model="spID" v-select="spID">
-                    <option v-for="sp in sps" v-bind:value="sp.SamplePointID" v-bind:key="sp.SamplePointID">
+                    v-model="spID" 
+                    v-select="spID"
+                    v-on:change="getCurrentSP(spID)">
+                    <option 
+                      v-for="sp in sps" 
+                      v-bind:value="sp.SamplePointID" 
+                      v-bind:key="sp.SamplePointID">
                       {{ sp.Name }}
                     </option>
                   </select>
-                  
                 </div>
-                
+                <!--
                 <div class="form-group form-check">
                   <input type="checkbox" class="form-check-input" id="sample-point-activeFilterCheck" checked>
                   <label class="form-check-label" for="sample-point-activeFilterCheck">Hide Inactive</label>
                 </div>
+                -->
                 
                 <hr />
               </form>
               
               <div id="sample-point-narrative" class="alert alert-info"> 
-                Selected: {{ spID }}
+                {{ notificationText }}
               </div>
               
               <form id="sample-pointForm">
-                <fieldset id="sample-pointFieldset" disabled>
+                <fieldset id="sample-pointFieldset" :disabled="locked">
                   
                   <div class="form-group row">
-                    <label for="sample-point-code" class="col-sm-2 col-form-label">Code</label>
+                    <label for="sample-point-code" class="col-sm-2 col-form-label">Site</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="sample-point-code">
+                      <select class="form-control" id="siteSelect" 
+                        v-model="currentSP.SiteID" v-select="currentSP.SiteID">
+                        <option v-for="site in sites" v-bind:value="site.SiteID" v-bind:key="site.SiteID">
+                          {{ site.Code + ': ' + site.Name }}
+                        </option>
+                      </select>
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="sample-point-name" class="col-sm-2 col-form-label">Name</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="sample-point-name">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="sample-point-address" class="col-sm-2 col-form-label">Address</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" id="sample-point-address">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="sample-point-city" class="col-sm-2 col-form-label">City</label>
-                    <div class="col-sm-4">
-                      <input type="text" class="form-control" id="sample-point-city">
-                    </div>
-
-                    <label for="sample-point-zip" class="col-sm-2 col-form-label">Zip</label>
-                    <div class="col-sm-4">
-                      <input type="text" class="form-control" id="sample-point-zip">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="sample-point-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-10">
-                      <input type="checkbox" class="form-check-input" id="sample-point-active">
+                      <input type="text" class="form-control" id="sample-point-name"
+                        v-model="currentSP.Name">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="sample-point-description" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
-                      <textarea class="form-control" id="sample-point-description" rows="5"></textarea>
+                      <textarea class="form-control" id="sample-point-description" rows="5"
+                        v-model="currentSP.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-10">
+                      <input type="checkbox" class="form-check-input" id="site-active" 
+                        v-model="currentSP.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-AddedOn" class="col-sm-2 col-form-label">Added</label>
+                    <div class="col-sm-4">
+                      <input type="date" class="form-control" id="sample-point-AddedOn"
+                        v-model="currentSP.AddedOn">
+                    </div>
+
+                    <label for="sample-point-removedOn" class="col-sm-2 col-form-label">Removed</label>
+                    <div class="col-sm-4">
+                      <input type="date" class="form-control" id="sample-point-removedOn"
+                        v-model="currentSP.RemovedOn">
+                    </div>
+                  </div>
+                  
+                  <hr>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-lat" class="col-sm-2 col-form-label">Latitude</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="sample-point-lat"
+                        v-model="currentSP.Latitude">
+                    </div>
+
+                    <label for="sample-point-lon" class="col-sm-2 col-form-label">Longitude</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="sample-point-long"
+                        v-model="currentSP.Longitude">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-ll-accuracy" class="col-sm-2 col-form-label">
+                      Lat/Long Accuracy (feet)</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="sample-point-ll-accuracy"
+                        v-model="currentSP.LatLongAccuracyFeet">
+                    </div>
+
+                    <label for="sample-point-ll-date" class="col-sm-2 col-form-label">Lat/Long Date</label>
+                    <div class="col-sm-4">
+                      <input type="date" class="form-control" id="sample-point-ll-date"
+                        v-model="currentSP.LatLongDate">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-ll-notes" class="col-sm-2 col-form-label">Lat/Long Notes</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="sample-point-ll-notes" rows="3"
+                        v-model="currentSP.LatLongDetails"></textarea>
+                    </div>
+                  </div>
+                  
+                  <hr>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-elev" class="col-sm-2 col-form-label">Elevation (feet)</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="sample-point-elev"
+                        v-model="currentSP.ElevationFeet">
+                    </div>
+
+                    <label for="sample-point-elev-datum" class="col-sm-2 col-form-label">Elevation Datum</label>
+                    <div class="col-sm-4">
+                      <input type="text" class="form-control" id="sample-point-elev-datum"
+                        v-model="currentSP.ElevationDatum">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-elev-accuracy" class="col-sm-2 col-form-label">Elevation Accuracy (feet)</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="sample-point-elev-accuracy"
+                        v-model="currentSP.ElevationAccuracyFeet">
+                    </div>
+
+                    <label for="sample-point-elev-date" class="col-sm-2 col-form-label">Elevation Date</label>
+                    <div class="col-sm-4">
+                      <input type="date" class="form-control" id="sample-point-elev-date"
+                        v-model="currentSP.ElevationDate">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-elev-notes" class="col-sm-2 col-form-label">Elevation Notes</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="sample-point-elev-notes" rows="3"
+                        v-model="currentSP.ElevationDetails"></textarea>
+                    </div>
+                  </div>
+                  
+                  <hr>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellType" class="col-sm-2 col-form-label">Well Type</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-wellType"
+                        v-model="currentSP.WellType">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellCompletionType" class="col-sm-2 col-form-label">
+                      Well Completion Type</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-wellCompletionType"
+                        v-model="currentSP.WellCompletionType">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellTopInterval" class="col-sm-3 col-form-label">
+                      Well Interval Top (feet)</label>
+                    <div class="col-sm-3">
+                      <input type="number" class="form-control" id="sample-point-wellTopInterval"
+                        v-model="currentSP.WellIntervalTopFeet">
+                    </div>
+
+                    <label for="sample-point-wellBottomInterval" class="col-sm-3 col-form-label">
+                      Well Interval Bottom (feet)</label>
+                    <div class="col-sm-3">
+                      <input type="number" class="form-control" id="sample-point-wellBottomInterval"
+                        v-model="currentSP.WellIntervalBottomFeet">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellInnerDiameter" class="col-sm-3 col-form-label">
+                      Well Inner Diameter (inches)</label>
+                    <div class="col-sm-3">
+                      <input type="number" class="form-control" id="sample-point-wellInnerDiameter"
+                        v-model="currentSP.WellInnerDiameterInches">
+                    </div>
+
+                    <label for="sample-point-wellOuterDiameter" class="col-sm-3 col-form-label">
+                      Well Outer Diameter (inches)</label>
+                    <div class="col-sm-3">
+                      <input type="number" class="form-control" id="sample-point-wellOuterDiameter"
+                        v-model="currentSP.WellOuterDiameterInches">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellStickup" class="col-sm-3 col-form-label">
+                      Well Stickup (feet)</label>
+                    <div class="col-sm-3">
+                      <input type="number" class="form-control" id="sample-point-wellStickup"
+                        v-model="currentSP.WellStickupFeet">
+                    </div>
+
+                    <label for="sample-point-WellStickupDate" class="col-sm-3 col-form-label">
+                      Well Stickup Date</label>
+                    <div class="col-sm-3">
+                      <input type="date" class="form-control" id="sample-point-wellStickupDate"
+                        v-model="currentSP.WellStickupDate">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellDrilledBy" class="col-sm-2 col-form-label">
+                      Well Drilled By</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="sample-point-wellDrilledBy"
+                        v-model="currentSP.WellDrilledBy">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="sample-point-wellTagID" class="col-sm-3 col-form-label">Ecology Well Tag ID</label>
+                    <div class="col-sm-3">
+                      <input type="text" class="form-control" id="sample-point-wellTagID"
+                        v-model="currentSP.WellEcologyTagID">
+                    </div>
+
+                    <label for="sample-point-StartCardID" class="col-sm-3 col-form-label">
+                      Ecology Start Card ID</label>
+                    <div class="col-sm-3">
+                      <input type="text" class="form-control" id="sample-point-StartCardID"
+                        v-model="currentSP.WellEcologyStartCardID">
                     </div>
                   </div>
                   
@@ -381,10 +557,12 @@
               
               <div class="form-row">
                 <div class="col-md-2">
-                  <button id="sample-point-edit" type="button" class="btn btn-primary">Edit</button>
+                  <button id="sample-point-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()"> {{ editButtonText }}</button>
                 </div>
                 <div class="col-md-6">
-                  <button id="sample-point-update" type="button" class="btn btn-primary" disabled>Update</button>
+                  <button id="sample-point-update" type="button" class="btn btn-primary" 
+                    @click="updateSP()" :disabled="locked">Update</button>
                 </div>
                 <div class="col-md-2">
                   <button id="sample-point-new" type="button" class="btn btn-secondary float-right">New</button>

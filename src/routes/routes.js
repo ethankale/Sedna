@@ -60,20 +60,16 @@ module.exports = function (app) {
     // Sample Points
     app.get('/api/v1/samplePointList', samplepoints.getSamplePointList);
     app.get('/api/v1/samplePoint', samplepoints.getSamplePointDetails);
-    
+    app.put('/api/v1/samplePoint', samplepoints.updateSamplePoint);
+    app.post('/api/v1/samplePoint', samplepoints.addSamplePoint);
     
     // Parameters
-    
     app.get('/api/v1/parameterList', parameters.getParameterList);
     
-    
     // Methods
-    
     app.get('/api/v1/methodList', methods.getMethodList);
     
-    
     // Units
-    
     app.get('/api/v1/unitList', units.getUnitList);
     
     // Users

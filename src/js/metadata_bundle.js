@@ -12253,9 +12253,6 @@ Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
     $(el).select2().on("select2:select", (e) => {
-      // v-model looks for
-      //  - an event named "change"
-      //  - a value with property path "$event.target.value"
       el.dispatchEvent(new Event('change', { target: e.target }));
     });
   },
@@ -12263,6 +12260,7 @@ Vue.directive('select', {
 
 $(document).ready(function() {
   $("#spSelect").select2({ width: '100%' });
+  $("#siteSelect").select2({ width: '100%' });
 });
 
 //Vue.component('v-select', vSelect)
@@ -12272,14 +12270,50 @@ var vm = new Vue({
   data: {
     notice: 'Vue is working!',
     spID: 2,
+    sps: [],
+    sites: [],
+    locked: true,
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
     currentSP: {
-      SamplePointID: 2, 
-      Name: 'Loading...'
-    },
-    sps: []
+      SamplePointID:            null,
+      SiteID:                   null,
+      Name:                     null,
+      Description:              null,
+      Latitude:                 null,
+      Longitude:                null,
+      ElevationFeet:            null,
+      ElevationDatum:           null,
+      ElevationReference:       null,
+      LatLongAccuracyFeet:      null,
+      LatLongDate:              null,
+      LatLongDetails:           null,
+      ElevationAccuracyFeet:    null,
+      ElevationDate:            null,
+      ElevationDetails:         null,
+      WellType:                 null,
+      WellCompletionType:       null,
+      WellIntervalTopFeet:      null,
+      WellIntervalBottomFeet:   null,
+      WellInnerDiameterInches:  null,
+      WellOuterDiameterInches:  null,
+      WellStickupFeet:          null,
+      WellStickupDate:          null,
+      WellDrilledBy:            null,
+      WellEcologyTagID:         null,
+      WellEcologyStartCardID:   null,
+      AddedOn:                  null,
+      RemovedOn:                null,
+      Active:                   null
+    }
+  },
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Lock';
+    }
   },
   mounted: function () {
     let self = this;
+    
     $.ajax({
       url: `http://localhost:3000/api/v1/samplePointList`,
       method:'GET',
@@ -12287,23 +12321,63 @@ var vm = new Vue({
     }).done(function(data) {
       self.sps = data;
       self.getCurrentSP(data[0].SamplePointID);
+      self.spID = data[0].SamplePointID;
+    }).fail(function(err) {
+      console.log(err);
+    });
+    
+    $.ajax({
+      url: `http://localhost:3000/api/v1/getsites`,
+      method:'GET',
+      timeout: 3000
+    }).done(function(data) {
+      self.sites = data;
     }).fail(function(err) {
       console.log(err);
     });
   },
   methods: {
     getCurrentSP: function(SamplePointID) {
-      let self = this;
+      this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,
         method:'GET',
         timeout: 3000
-      }).done(function(data) {
-        self.currentSP = data;
-        console.log(self.currentSP);
-      }).fail(function(err) {
+      }).done((data) => {
+        this.currentSP = data;
+      }).fail((err) => {
         console.log(err);
+        this.notificationText = "Could not load the selected Sample Point.";
       });
+    },
+    
+    updateSP: function() {
+      console.log(this.currentSP);
+      console.log(JSON.stringify(this.currentSP));
+      $.ajax({
+        url: `http://localhost:3000/api/v1/samplePoint`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentSP),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        //this.currentSP = data;
+        this.notificationText = "Successfully updated!";
+      }).fail((err) => {
+        console.log(err);
+        this.notificationText = "Could not update the Sample Point.  Please double-check the values.";
+      });
+    },
+    
+    toggleLocked: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.editButtonText = "Lock";
+      } else {
+        this.locked = true;
+        this.editButtonText = "Edit";
+      };
     }
   }
     
