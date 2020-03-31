@@ -13,7 +13,7 @@ Vue.directive('select', {
 
 $(document).ready(function() {
   $("#spSelect").select2({ width: '100%' });
-  $("#siteSelect").select2({ width: '100%' });
+  $("#sample-point-siteSelect").select2({ width: '100%' });
 });
 
 //Vue.component('v-select', vSelect)
@@ -26,6 +26,7 @@ var vm = new Vue({
     sps: [],
     sites: [],
     locked: true,
+    creatingNew: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
     currentSP: {
       SamplePointID:            null,
@@ -59,9 +60,20 @@ var vm = new Vue({
       Active:                   null
     }
   },
+  watch: {
+    'currentSP.SiteID': function () {
+      Vue.nextTick(function() {
+        $('#sample-point-siteSelect').change();
+      });
+    }
+  },
   computed: {
     editButtonText: function() {
       return this.locked ? 'Edit' : 'Lock';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
     }
   },
   mounted: function () {
@@ -98,9 +110,12 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentSP = data;
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.";
       }).fail((err) => {
         console.log(err);
         this.notificationText = "Could not load the selected Sample Point.";
+      }).always(() => {
+        
       });
     },
     
@@ -121,15 +136,37 @@ var vm = new Vue({
       });
     },
     
-    toggleLocked: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.editButtonText = "Lock";
+    newSPClick: function() {
+      if (this.creatingNew) {
+        this.saveNewSP();
       } else {
-        this.locked = true;
-        this.editButtonText = "Edit";
+        this.editNewSP();
       };
+    },
+    
+    editNewSP: function() {
+      for (const prop in this.currentSP) {
+        this.currentSP[prop] = null;
+      };
+      this.currentSP.Name = 'Default';
+      this.creatingNew = true;
+      this.locked = false;
+    },
+    
+    saveNewSP: function() {
+      
+    },
+    
+    cancelNewSP: function() {
+      this.getCurrentSP(this.spID);
+      this.creatingNew = false;
+      this.locked = true;
+    },
+    
+    toggleLocked: function() {
+      this.locked = this.locked ? false : true;
     }
+    
   }
     
 })

@@ -301,7 +301,7 @@
             <div class="tab-pane fade" id="v-pills-sample-point" role="tabpanel" 
               aria-labelledby="v-pills-sample-point-tab">
               
-              <form id = "sp-selectHeader">
+              <form id="sp-selectHeader" v-show="!creatingNew">
                 <div class="form-group">
                   <select class="form-control" id="spSelect" 
                     v-model="spID" 
@@ -322,22 +322,52 @@
                 </div>
                 -->
                 
-                <hr />
+                <hr>
               </form>
+              
               
               <div id="sample-point-narrative" class="alert alert-info"> 
                 {{ notificationText }}
               </div>
               
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="sample-point-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                
+                <div class="col-md-6">
+                  <button id="sample-point-update" type="button" class="btn btn-primary" 
+                    @click="updateSP()" :disabled="locked || creatingNew">Update</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="sample-point-new" type="button" class="btn btn-secondary float-right"
+                    @click="newSPClick()"> {{ newButtonText }}</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="sample-point-cancel" type="button" class="btn btn-secondary float-right" 
+                    @click="cancelNewSP()" :disabled="!creatingNew">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
               <form id="sample-pointForm">
                 <fieldset id="sample-pointFieldset" :disabled="locked">
                   
                   <div class="form-group row">
-                    <label for="sample-point-code" class="col-sm-2 col-form-label">Site</label>
+                    <label for="sample-point-siteSelect" class="col-sm-2 col-form-label">Site</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="siteSelect" 
-                        v-model="currentSP.SiteID" v-select="currentSP.SiteID">
-                        <option v-for="site in sites" v-bind:value="site.SiteID" v-bind:key="site.SiteID">
+                      <select class="form-control" id="sample-point-siteSelect" 
+                        v-model="currentSP.SiteID" 
+                        v-select="currentSP.SiteID"
+                        :disabled="locked">
+                        <option 
+                          v-for="site in sites" 
+                          v-bind:value="site.SiteID" 
+                          v-bind:key="site.SiteID">
                           {{ site.Code + ': ' + site.Name }}
                         </option>
                       </select>
@@ -552,25 +582,6 @@
                   
                 </fieldset>
               </form>
-              
-              <hr />
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="sample-point-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-6">
-                  <button id="sample-point-update" type="button" class="btn btn-primary" 
-                    @click="updateSP()" :disabled="locked">Update</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="sample-point-new" type="button" class="btn btn-secondary float-right">New</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="sample-point-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
-                </div>
-              </div>
               
             </div>
             
