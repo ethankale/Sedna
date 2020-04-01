@@ -326,7 +326,8 @@
               </form>
               
               
-              <div id="sample-point-narrative" class="alert alert-info"> 
+              <div id="sample-point-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
                 {{ notificationText }}
               </div>
               
@@ -343,7 +344,7 @@
                 
                 <div class="col-md-2">
                   <button id="sample-point-new" type="button" class="btn btn-secondary float-right"
-                    @click="newSPClick()"> {{ newButtonText }}</button>
+                    @click="newSPClick()" :disabled="dirty"> {{ newButtonText }}</button>
                 </div>
                 
                 <div class="col-md-2">
@@ -543,14 +544,14 @@
                   <div class="form-group row">
                     <label for="sample-point-wellStickup" class="col-sm-3 col-form-label">
                       Well Stickup (feet)</label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-2">
                       <input type="number" class="form-control" id="sample-point-wellStickup"
                         v-model="currentSP.WellStickupFeet">
                     </div>
 
                     <label for="sample-point-WellStickupDate" class="col-sm-3 col-form-label">
                       Well Stickup Date</label>
-                    <div class="col-sm-3">
+                    <div class="col-sm-4">
                       <input type="date" class="form-control" id="sample-point-wellStickupDate"
                         v-model="currentSP.WellStickupDate">
                     </div>

@@ -12273,6 +12273,8 @@ var vm = new Vue({
     sites: [],
     locked: true,
     creatingNew: false,
+    dirty: false,
+    error: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
     currentSP: {
       SamplePointID:            null,
@@ -12309,8 +12311,23 @@ var vm = new Vue({
   watch: {
     'currentSP.SiteID': function () {
       Vue.nextTick(function() {
+        let isDirty = this.dirty;
         $('#sample-point-siteSelect').change();
+        this.dirty = isDirty;
       });
+    },
+    
+    currentSP: {
+      handler(newVal, oldVal) {
+        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
+        if ((oldVal.SamplePointID == newVal.SamplePointID) && 
+            (newVal.SamplePointID != null) &&
+            (oldVal.SamplePointID != null)) {
+          this.dirty = true;
+          this.notificationText = "Changes made; click 'Update' to save to the database."
+        }
+      },
+      deep: true
     }
   },
   computed: {
@@ -12325,17 +12342,7 @@ var vm = new Vue({
   mounted: function () {
     let self = this;
     
-    $.ajax({
-      url: `http://localhost:3000/api/v1/samplePointList`,
-      method:'GET',
-      timeout: 3000
-    }).done(function(data) {
-      self.sps = data;
-      self.getCurrentSP(data[0].SamplePointID);
-      self.spID = data[0].SamplePointID;
-    }).fail(function(err) {
-      console.log(err);
-    });
+    self.updateSamplePointList();
     
     $.ajax({
       url: `http://localhost:3000/api/v1/getsites`,
@@ -12348,6 +12355,24 @@ var vm = new Vue({
     });
   },
   methods: {
+    updateSamplePointList: function(spID) {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/samplePointList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.sps = data;
+        if (typeof sp === 'undefined') {
+          this.getCurrentSP(data[0].SamplePointID);
+          this.spID = data[0].SamplePointID;
+        } else {
+          this.spID = spID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
     getCurrentSP: function(SamplePointID) {
       this.locked = true;
       $.ajax({
@@ -12356,9 +12381,12 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentSP = data;
+        this.dirty = false;
+        this.error = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.";
       }).fail((err) => {
         console.log(err);
+        this.error = true;
         this.notificationText = "Could not load the selected Sample Point.";
       }).always(() => {
         
@@ -12374,9 +12402,12 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
+        this.dirty = false;
+        this.error = false;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
+        this.error = true;
         this.notificationText = "Could not update the Sample Point.  Please double-check the values.";
       });
     },
@@ -12396,6 +12427,7 @@ var vm = new Vue({
       this.currentSP.Name = 'Default';
       this.creatingNew = true;
       this.locked = false;
+      this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Sample Point."
     },
     
     saveNewSP: function() {
@@ -12409,10 +12441,14 @@ var vm = new Vue({
       }).done((data) => {
         this.notificationText = "Successfully added new Sample Point!";
         this.spID = data;
+        this.updateSamplePointList(this.spID);
         this.currentSP.SamplePointID = data;
         this.creatingNew = false;
+        this.dirty = false;
+        this.error = false;
       }).fail((err) => {
         console.log(err);
+        this.error = true;
         this.notificationText = "Could not add the Sample Point.  Please double-check the values.";
       });
     },
@@ -12421,14 +12457,13 @@ var vm = new Vue({
       this.getCurrentSP(this.spID);
       this.creatingNew = false;
       this.locked = true;
+      this.error = false;
     },
     
     toggleLocked: function() {
       this.locked = this.locked ? false : true;
     }
-    
   }
-    
 })
 
 
