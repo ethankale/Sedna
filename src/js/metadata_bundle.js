@@ -12356,13 +12356,14 @@ var vm = new Vue({
   },
   methods: {
     updateSamplePointList: function(spID) {
+      let active = $("#sample-point-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
-        url: `http://localhost:3000/api/v1/samplePointList`,
+        url: `http://localhost:3000/api/v1/samplePointList${active}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.sps = data;
-        if (typeof sp === 'undefined') {
+        if (typeof spID === 'undefined') {
           this.getCurrentSP(data[0].SamplePointID);
           this.spID = data[0].SamplePointID;
         } else {

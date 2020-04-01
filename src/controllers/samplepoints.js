@@ -10,13 +10,21 @@ let controller = {
   getSamplePointList: function (req, res) {
     let cfg = require('./config.js')
     let mssql_config = cfg.getConfig().mssql;
-    var connection = new Connection(mssql_config);
+    let connection = new Connection(mssql_config);
     
-    var statement = `SELECT SamplePointID, st.Code + ': ' + st.Name + ' (' + sp.Name + ')' as Name
+    let active    = req.query.active;
+    
+    let statement = `SELECT SamplePointID, st.Code + ': ' + st.Name + ' (' + sp.Name + ')' as Name
       FROM SamplePoint as sp
       INNER JOIN Site as st
-      ON sp.SiteID = st.SiteID
-      ORDER BY st.Code ASC`
+      ON sp.SiteID = st.SiteID`
+    if (typeof active != 'undefined') {
+      active = active == 1 ? 1 : 0;
+      statement += " WHERE sp.Active = " + active + " AND st.Active = " + active;
+    };
+    statement += ' ORDER BY st.Code ASC;'
+    
+    console.log(statement);
     
     connection.on('connect', function(err) {
       if(err) {
@@ -145,6 +153,8 @@ let controller = {
          connection.close();
        });
       
+      let active = typeof req.body.active == 'undefined' ? false : req.body.active;
+      
       request.addParameter('SamplePointID',             TYPES.Int,          req.body.SamplePointID)
       request.addParameter('SiteID',                    TYPES.Int,          req.body.SiteID)
       request.addParameter('Name',                      TYPES.VarChar,      req.body.Name)
@@ -181,7 +191,7 @@ let controller = {
       request.addParameter('WellEcologyStartCardID',    TYPES.VarChar,      req.body.WellEcologyStartCardID)
       request.addParameter('AddedOn',                   TYPES.DateTime2,    req.body.AddedOn)
       request.addParameter('RemovedOn',                 TYPES.DateTime2,    req.body.RemovedOn)
-      request.addParameter('Active',                    TYPES.Bit,          req.body.Active)
+      request.addParameter('Active',                    TYPES.Bit,          active)
       
       connection.execSql(request);
       
