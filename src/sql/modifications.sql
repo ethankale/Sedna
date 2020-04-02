@@ -8,10 +8,10 @@ ALTER TABLE Site
 ADD Active bit DEFAULT 1;
 
 UPDATE Site
-SET Active = 1
+SET Active = 1;
 
 ALTER TABLE Site
-ALTER COLUMN Active bit NOT NULL
+ALTER COLUMN Active bit NOT NULL;
 
 ALTER TABLE SamplePoint
 ADD LatLongAccuracyFeet smallint NULL,
@@ -44,3 +44,12 @@ REFERENCES Site (SiteID)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
 
+
+ALTER TABLE EquipmentModel
+ADD Active bit DEFAULT 1;
+
+UPDATE EquipmentModel
+SET Active = 1;
+
+ALTER TABLE EquipmentModel
+ALTER COLUMN Active bit NOT NULL;

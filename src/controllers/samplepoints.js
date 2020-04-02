@@ -24,8 +24,6 @@ let controller = {
     };
     statement += ' ORDER BY st.Code ASC;'
     
-    console.log(statement);
-    
     connection.on('connect', function(err) {
       if(err) {
         console.log('Error: ', err)

@@ -1,6 +1,5 @@
 
 let Vue = require('vue')
-//let vSelect = require('vue-select');
 
 Vue.directive('select', {
   twoWay: true,
@@ -178,7 +177,8 @@ var vm = new Vue({
       for (const prop in this.currentSP) {
         this.currentSP[prop] = null;
       };
-      this.currentSP.Name = 'Default';
+      this.currentSP.Name   = 'Default';
+      this.currentSP.Active = true;
       this.creatingNew = true;
       this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Sample Point."
