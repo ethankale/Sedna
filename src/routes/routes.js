@@ -1,5 +1,6 @@
 "use strict";
 
+const equipment      = require('../controllers/equipment.js');
 const equipmentModel = require('../controllers/equipmentModel.js');
 const measurements   = require('../controllers/measurements.js');
 const metadata       = require('../controllers/metadata.js');
@@ -18,6 +19,12 @@ module.exports = function (app) {
     
     app.get('/api/v1/test', test.getTest);
 
+    
+    // Equipment
+    app.get('/api/v1/equipmentList', equipment.getEquipmentList);
+    app.get('/api/v1/equipment',     equipment.getEquipmentDetails);
+    app.put('/api/v1/equipment',     equipment.updateEquipment);
+    app.post('/api/v1/equipment',    equipment.addEquipment);
     
     // Equipment Models
     app.get('/api/v1/equipmentModelList', equipmentModel.getEquipmentModelList);

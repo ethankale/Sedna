@@ -1,17 +1,20 @@
 ALTER TABLE Metadata 
 ADD DecimalPoints tinyint DEFAULT 2;
+GO
 
 CREATE UNIQUE INDEX measurement_unique_idx
 ON Measurement (CollectedDtm, MetadataID);
+GO
 
 ALTER TABLE Site
 ADD Active bit DEFAULT 1;
-
+GO
 UPDATE Site
 SET Active = 1;
-
+GO
 ALTER TABLE Site
 ALTER COLUMN Active bit NOT NULL;
+GO
 
 ALTER TABLE SamplePoint
 ADD LatLongAccuracyFeet smallint NULL,
@@ -34,22 +37,35 @@ WellEcologyStartCardID varchar(15),
 AddedOn datetime2(0) NULL,
 RemovedOn datetime2(0) NULL,
 Active bit DEFAULT 1 NOT NULL
+GO
 
 ALTER TABLE SamplePoint
 DROP CONSTRAINT SamplePoint_Site_fk;
+GO
 
 ALTER TABLE SamplePoint
 ADD CONSTRAINT SamplePoint_Site_fk FOREIGN KEY (SiteID)
 REFERENCES Site (SiteID)
 ON DELETE CASCADE
 ON UPDATE CASCADE;
-
+GO
 
 ALTER TABLE EquipmentModel
 ADD Active bit DEFAULT 1;
-
+GO
 UPDATE EquipmentModel
 SET Active = 1;
-
+GO
 ALTER TABLE EquipmentModel
 ALTER COLUMN Active bit NOT NULL;
+GO
+
+ALTER TABLE Equipment
+ADD Active bit DEFAULT 1;
+GO
+UPDATE Equipment
+SET Active = 1;
+GO
+ALTER TABLE Equipment
+ALTER COLUMN Active bit NOT NULL;
+GO

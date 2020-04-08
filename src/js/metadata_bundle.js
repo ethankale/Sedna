@@ -12268,7 +12268,6 @@ var vm = new Vue({
   data: {
     emID: null,
     ems: [],
-    sites: [],
     locked: true,
     creatingNew: false,
     dirty: false,
@@ -12327,10 +12326,8 @@ var vm = new Vue({
         if (typeof emID === 'undefined') {
           this.getCurrentEM(data[0].EquipmentModelID);
           this.emID = data[0].EquipmentModelID;
-          console.log("emID undefined");
         // Subsequent updates
         } else {
-          console.log("emID = " + emID);
           this.emID = emID;
         }
       }).fail((err) => {
@@ -12434,6 +12431,214 @@ var vm = new Vue({
 
 
 },{"vue":4}],7:[function(require,module,exports){
+
+let Vue = require('vue')
+
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
+$(document).ready(function() {
+  $("#eqSelect").select2({ width: '100%' });
+  $("#equipment-modelSelect").select2({ width: '100%' });
+});
+
+//Vue.component('v-select', vSelect)
+
+var vm = new Vue({
+  el: '#v-pills-equipment',
+  data: {
+    eqID: null,
+    eqs: [],
+    models: [],
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Equipment.`,
+    currentEQ: {
+      EquipmentID:         null,
+      EquipmentModelID:    null,
+      SerialNumber:        null,
+      LastCalibrationDate: null,
+      Notes:               null,
+      Active:              null
+    },
+  },
+  
+  watch: {
+    
+    'currentEQ.EquipmentModelID': function () {
+      Vue.nextTick(function() {
+        //let isDirty = this.dirty;
+        $('#equipment-modelSelect').change();
+        //this.dirty = isDirty;
+      });
+    },
+    
+    currentEQ: {
+      handler(newVal, oldVal) {
+        //console.log(`Old ID: ${oldVal.EquipmentID}; New ID: ${newVal.EquipmentID}`)
+        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
+        if ((oldVal.EquipmentID == newVal.EquipmentID) && 
+            (newVal.EquipmentID != null) &&
+            (oldVal.EquipmentID != null)) {
+          this.dirty = true;
+          this.notificationText = "Changes made; click 'Update' to save to the database."
+        }
+      },
+      deep: true
+    }
+  },
+  
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Lock';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  
+  mounted: function () {
+    let self = this;
+    this.updateEquipmentList();
+    
+    $.ajax({
+      url: `http://localhost:3000/api/v1/equipmentModelList`,
+      method:'GET',
+      timeout: 3000
+    }).done(function(data) {
+      self.models = data;
+    }).fail(function(err) {
+      console.log(err);
+    });
+  },
+  
+  methods: {
+    updateEquipmentList: function(eqID) {
+      let active = $("#equipment-activeFilterCheck").prop('checked') ? '?active=1': '';
+      $.ajax({
+        url: `http://localhost:3000/api/v1/equipmentList${active}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.eqs = data;
+        // Initial load
+        if (typeof eqID === 'undefined') {
+          this.getCurrentEQ(data[0].EquipmentID);
+          this.eqID = data[0].EquipmentID;
+        // Subsequent updates
+        } else {
+          this.eqID = eqID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentEQ: function(EquipmentID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/equipment?equipmentid=${EquipmentID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentEQ = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Equipment .`;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Equipment .";
+      }).always(() => {
+        
+      });
+    },
+    
+    updateEQ: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/equipment`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentEQ),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Successfully updated!";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Equipment.  Please double-check the values.";
+      });
+    },
+    
+    newEQClick: function() {
+      if (this.creatingNew) {
+        this.saveNewEQ();
+      } else {
+        this.editNewEQ();
+      };
+    },
+    
+    editNewEQ: function() {
+      for (const prop in this.currentEQ) {
+        this.currentEQ[prop] = null;
+      };
+      this.currentEQ.Active = true;
+      this.creatingNew = true;
+      this.locked = false;
+      this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Equipment ."
+    },
+    
+    saveNewEQ: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/equipment`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentEQ),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Equipment !";
+        this.eqID = data;
+        this.updateEquipmentList(this.eqID);
+        this.currentEQ.EquipmentID = data;
+        this.creatingNew = false;
+        this.dirty = false;
+        this.error = false;
+        this.updateEQ();  //This is exclusively to set Dirty to false.  Need a better way.
+      }).fail((err) => {
+        console.log(err.status + ": " + err.responseJSON);
+        this.error = true;
+        this.notificationText = "Could not add the Equipment .  Please double-check the values.";
+      });
+    },
+    
+    cancelNewEQ: function() {
+      this.getCurrentEQ(this.eqID);
+      this.creatingNew = false;
+      this.locked = true;
+      this.error = false;
+    },
+    
+    toggleLocked: function() {
+      this.locked = this.locked ? false : true;
+    }
+  }
+})
+
+
+},{"vue":4}],8:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -12657,7 +12862,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],8:[function(require,module,exports){
+},{"vue":4}],9:[function(require,module,exports){
 
 
 $(document).ready(function() {
@@ -12963,7 +13168,7 @@ function cancelNewSite() {
       .text("Review or edit sites.")
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 
 
 $(document).ready(function() {
@@ -13223,13 +13428,14 @@ function cancelNewUser() {
       .text("Review or edit users.")
 }
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let users          = require('./meta-user.js');
 let sites          = require('./meta-site.js');
 let samplepoint    = require('./meta-sample-point.js');
 let equipmentmodel = require('./meta-equipment-model.js');
+let equipment      = require('./meta-equipment.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 
@@ -13621,7 +13827,7 @@ function createNewDR() {
   });
 }
 
-},{"./meta-equipment-model.js":6,"./meta-sample-point.js":7,"./meta-site.js":8,"./meta-user.js":9,"./utils.js":11}],11:[function(require,module,exports){
+},{"./meta-equipment-model.js":6,"./meta-equipment.js":7,"./meta-sample-point.js":8,"./meta-site.js":9,"./meta-user.js":10,"./utils.js":12}],12:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()
@@ -13667,4 +13873,4 @@ let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
-},{}]},{},[10]);
+},{}]},{},[11]);

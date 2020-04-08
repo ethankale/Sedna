@@ -21,7 +21,6 @@ var vm = new Vue({
   data: {
     emID: null,
     ems: [],
-    sites: [],
     locked: true,
     creatingNew: false,
     dirty: false,
