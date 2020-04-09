@@ -50,33 +50,39 @@ let controller = {
         var metaid    = req.query.metadataid;
         var utcoffset = req.query.utcoffset;
         
-        var statement = `SELECT COUNT(ms.MeasurementID) as MeasurementCount,
-          DATEADD(hour, ${utcoffset}*-1, MIN(ms.CollectedDtm)) as MinDate, 
-          DATEADD(hour, ${utcoffset}*-1, MAX(ms.CollectedDtm)) as MaxDate,
-          md.[MetadataID]
-          ,[ParameterID]
-          ,[UnitID]
-          ,[SamplePointID]
-          ,[Notes]
-          ,[MethodID]
-          ,[Active]
-          ,[FrequencyMinutes]
-          ,[DecimalPoints]
-          FROM Metadata as md
-          LEFT JOIN Measurement as ms
-          on md.MetadataID = ms.MetadataID
-          WHERE md.MetadataID = ${metaid}
-          GROUP BY md.MetadataID, md.ParameterID, md.UnitID, md.SamplePointID, 
-            md.Notes, md.MethodID, md.Active, md.FrequencyMinutes, md.DecimalPoints`
-        
-        connection.on('connect', function(err) {
-          if(err) {
-            console.log('Error: ', err)
-            res.json("Error executing SQL statement; check your parameters.")
-          } else {
-            sqlfunctions.executeSelect(statement, connection, res);
-          }
-        });
+        if (typeof metaid != 'undefined' && typeof utcoffset != 'undefined') {
+            
+            var statement = `SELECT COUNT(ms.MeasurementID) as MeasurementCount,
+              DATEADD(hour, ${utcoffset}*-1, MIN(ms.CollectedDtm)) as MinDate, 
+              DATEADD(hour, ${utcoffset}*-1, MAX(ms.CollectedDtm)) as MaxDate,
+              md.[MetadataID]
+              ,[ParameterID]
+              ,[UnitID]
+              ,[SamplePointID]
+              ,[Notes]
+              ,[MethodID]
+              ,[Active]
+              ,[FrequencyMinutes]
+              ,[DecimalPoints]
+              FROM Metadata as md
+              LEFT JOIN Measurement as ms
+              on md.MetadataID = ms.MetadataID
+              WHERE md.MetadataID = ${metaid}
+              GROUP BY md.MetadataID, md.ParameterID, md.UnitID, md.SamplePointID, 
+                md.Notes, md.MethodID, md.Active, md.FrequencyMinutes, md.DecimalPoints`
+            
+            connection.on('connect', function(err) {
+              if(err) {
+                console.log('Error: ', err)
+                res.json("Error executing SQL statement; check your parameters.")
+              } else {
+                sqlfunctions.executeSelect(statement, connection, res);
+              }
+            });
+        } else {
+          res.status(400).json("Must supply both metadataid and utcoffset.");
+          
+        }
     },
     
     updateMetadata: function (req, res) {
@@ -86,7 +92,7 @@ let controller = {
       
       connection.on('connect', function(err) {
         
-        let active = req.body.active;
+        let active = req.body.Active;
           
         let statement = `UPDATE Metadata SET 
             SamplePointID = @samplePointID,
@@ -109,15 +115,15 @@ let controller = {
           connection.close();
         });
         
-        request.addParameter('metadataID',      TYPES.Int, req.body.metadataID)
-        request.addParameter('samplePointID',   TYPES.Int, req.body.samplePointID)
-        request.addParameter('parameterID',     TYPES.Int, req.body.parameterID)
-        request.addParameter('methodID',        TYPES.Int, req.body.methodID)
-        request.addParameter('unitID',          TYPES.Int, req.body.unitID)
-        request.addParameter('frequency',       TYPES.Int, req.body.frequency)
-        request.addParameter('decimals',        TYPES.Int, req.body.decimals)
-        request.addParameter('notes',           TYPES.VarChar, req.body.notes)
-        request.addParameter('active',          TYPES.Bit, active)
+        request.addParameter('metadataID',    TYPES.Int, req.body.MetadataID)
+        request.addParameter('samplePointID', TYPES.Int, req.body.SamplePointID)
+        request.addParameter('parameterID',   TYPES.Int, req.body.ParameterID)
+        request.addParameter('methodID',      TYPES.Int, req.body.MethodID)
+        request.addParameter('unitID',        TYPES.Int, req.body.UnitID)
+        request.addParameter('frequency',     TYPES.Int, req.body.FrequencyMinutes)
+        request.addParameter('decimals',      TYPES.Int, req.body.DecimalPoints)
+        request.addParameter('notes',         TYPES.VarChar, req.body.Notes)
+        request.addParameter('active',        TYPES.Bit, active)
         
         connection.execSql(request);
         

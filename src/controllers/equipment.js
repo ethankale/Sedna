@@ -14,11 +14,25 @@ let controller = {
     
     let active    = req.query.active;
     
-    let statement = `SELECT TOP (1000) [EquipmentID],
-      em.Name + ' - ' + eq.[SerialNumber] + ' (' + Coalesce(em.Manufacturer, '') + ')' as Name
-      FROM [Equipment] AS eq
-      LEFT JOIN EquipmentModel AS em
-      ON eq.EquipmentModelID = em.EquipmentModelID`;
+    let statement = `SELECT TOP (1000) eq.[EquipmentID],
+        em.Name + ' - ' + eq.[SerialNumber] + ' (' + Coalesce(em.Manufacturer, '') + ')' as Name,
+        activeDeployments.SiteCode, activeDeployments.SiteName
+        FROM [Equipment] AS eq
+        LEFT JOIN EquipmentModel AS em
+        ON eq.EquipmentModelID = em.EquipmentModelID
+        LEFT JOIN EquipmentDeployment as ed
+        ON ed.EquipmentID = eq.EquipmentID
+        LEFT JOIN (
+            SELECT EquipmentDeploymentID, ed.EquipmentID, ed.MetadataID, st.Code as SiteCode, st.Name as SiteName
+            FROM EquipmentDeployment as ed
+            LEFT JOIN Metadata as md
+            ON md.MetadataID = ed.MetadataID
+            LEFT JOIN SamplePoint as sp
+            ON md.SamplePointID = sp.SamplePointID
+            LEFT JOIN Site as st
+            ON sp.SiteID = st.SiteID
+            WHERE md.Active = 1) as activeDeployments
+        ON eq.EquipmentID = activeDeployments.EquipmentID`;
     
     if (typeof active != 'undefined') {
       active = active >= 1 ? 1 : 0;
@@ -169,7 +183,7 @@ let controller = {
         request.addParameter('EquipmentModelID',    TYPES.Int, req.body.EquipmentModelID);
         request.addParameter('SerialNumber',        TYPES.VarChar, SerialNumber);
         request.addParameter('LastCalibrationDate', TYPES.DateTime2, req.body.LastCalibrationDate);
-        request.addParameter('Notes',               TYPES.VarChar, req.body.Description);
+        request.addParameter('Notes',               TYPES.VarChar, req.body.Notes);
         request.addParameter('Active',              TYPES.Bit,     active);
         
         connection.execSql(request);

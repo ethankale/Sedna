@@ -302,15 +302,23 @@
             <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
               aria-labelledby="v-pills-datarecord-tab">
               
-              <form id = "dr-selectHeader">
+              <form id = "dr-selectHeader" v-show="!creatingNew">
                 <div class="form-group">
-                  <select class="form-control" id="metadataSelect">
-                    <option>Loading...</option>
+                  <select class="form-control" id="metadataSelect" 
+                    v-model="drID" 
+                    v-select="drID"
+                    v-on:change="getCurrentDR(drID)">
+                    <option 
+                      v-for="dr in drs" 
+                      v-bind:value="dr.MetadataID" 
+                      v-bind:key="dr.MetadataID">
+                      {{ dr.Metaname }}</option>
                   </select>
                 </div>
                 
                 <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="dr-activeFilterCheck" checked>
+                  <input type="checkbox" class="form-check-input" id="dr-activeFilterCheck" checked
+                    v-on:change="updateMetadataList()">
                   <label class="form-check-label" for="dr-activeFilterCheck">Hide Inactive</label>
                 </div>
                 
@@ -318,15 +326,49 @@
               </form>
               
               
-              <div id="dr-narrative" class="alert alert-info"></div>
+              <div id="dr-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="dr-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                
+                <div class="col-md-6">
+                  <button id="dr-update" type="button" class="btn btn-primary" 
+                    @click="updateDR()" :disabled="locked || creatingNew">Update</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="dr-new" type="button" class="btn btn-secondary float-right"
+                    @click="newDRClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" 
+                    @click="cancelNewDR()" :disabled="!creatingNew">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
               
               <form id="dataRecordForm">
-                <fieldset id="dataRecordFieldset" disabled>
+                <fieldset id="dataRecordFieldset" :disabled="locked">
+                  
                   <div class="form-row">
                     <label for="dr-samplePoint" class="col-sm-2 col-form-label">Sample Point</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="dr-samplePoint">
-                        <option>Loading...</option>
+                      <select class="form-control" id="dr-samplePoint" 
+                        v-model="currentDR.SamplePointID" 
+                        v-select="currentDR.SamplePointID"
+                        :disabled="locked">
+                        <option 
+                          v-for="sp in sps" 
+                          v-bind:value="sp.SamplePointID" 
+                          v-bind:key="sp.SamplePointID">
+                          {{ sp.Name }}</option>
                       </select>
                     </div>
                   </div>
@@ -334,8 +376,15 @@
                   <div class="form-row">
                     <label for="dr-parameter" class="col-sm-2 col-form-label">Parameter</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="dr-parameter">
-                        <option>Loading...</option>
+                      <select class="form-control" id="dr-parameter" 
+                        v-model="currentDR.ParameterID" 
+                        v-select="currentDR.ParameterID"
+                        :disabled="locked">
+                        <option 
+                          v-for="param in params" 
+                          v-bind:value="param.ParameterID" 
+                          v-bind:key="param.ParameterID">
+                          {{ param.Name }}</option>
                       </select>
                     </div>
                   </div>
@@ -343,8 +392,15 @@
                   <div class="form-row">
                     <label for="dr-method" class="col-sm-2 col-form-label">Method</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="dr-method">
-                        <option>Loading...</option>
+                      <select class="form-control" id="dr-method" 
+                        v-model="currentDR.MethodID" 
+                        v-select="currentDR.MethodID"
+                        :disabled="locked">
+                        <option 
+                          v-for="method in methods" 
+                          v-bind:value="method.MethodID" 
+                          v-bind:key="method.MethodID">
+                          {{ method.Name }}</option>
                       </select>
                     </div>
                   </div>
@@ -352,8 +408,15 @@
                   <div class="form-row">
                     <label for="dr-unit" class="col-sm-2 col-form-label">Unit</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="dr-unit">
-                        <option>Loading...</option>
+                      <select class="form-control" id="dr-unit" 
+                        v-model="currentDR.UnitID" 
+                        v-select="currentDR.UnitID"
+                        :disabled="locked">
+                        <option 
+                          v-for="unit in units" 
+                          v-bind:value="unit.UnitID" 
+                          v-bind:key="unit.UnitID">
+                          {{ unit.Symbol }}</option>
                       </select>
                     </div>
                   </div>
@@ -361,48 +424,35 @@
                   <div class="form-row">
                     <label for="dr-frequency" class="col-sm-2 col-form-label">Frequency (minutes)</label>
                     <div class="col-sm-4">
-                      <input type="number" class="form-control" id="dr-frequency">
+                      <input type="number" class="form-control" id="dr-frequency"
+                        v-model="currentDR.FrequencyMinutes">
                     </div>
 
                     <label for="dr-decimalpoints" class="col-sm-2 col-form-label">Decimal Points</label>
                     <div class="col-sm-4">
-                      <input type="number" class="form-control" id="dr-decimalpoints">
+                      <input type="number" class="form-control" id="dr-decimalpoints"
+                        v-model="currentDR.DecimalPoints">
                     </div>
                   </div>
                   
                   <div class="form-row">
                     <label for="dr-active" class="col-sm-3 col-form-label">Active</label>
                     <div class="col-sm-9">
-                      <input type="checkbox" class="form-check-input" id="dr-active">
+                      <input type="checkbox" class="form-check-input" id="dr-active"
+                        v-model="currentDR.Active">
                     </div>
                   </div>
                   
                   <div class="form-row">
                     <label for="dr-notes" class="col-sm-2 col-form-label">Notes</label>
                     <div class="col-sm-10">
-                      <textarea class="form-control" id="dr-notes" rows="3"></textarea>
+                      <textarea class="form-control" id="dr-notes" rows="3"
+                        v-model="currentDR.Notes"></textarea>
                     </div>
                   </div>
                   
                 </fieldset>
               </form>
-              
-              <hr />
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="dr-edit" type="button" class="btn btn-primary">Edit</button>
-                </div>
-                <div class="col-md-6">
-                  <button id="dr-update" type="button" class="btn btn-primary" disabled>Update</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="dr-new" type="button" class="btn btn-secondary float-right">New</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
-                </div>
-              </div>
               
             </div>
             

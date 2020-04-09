@@ -1,392 +1,236 @@
 
 let alqwuutils     = require('./utils.js');
+let Vue = require('vue')
 
 let utcoffset  = alqwuutils.utcoffset;
 
-$(document).ready(function() {
-  
-  //console.log(utcoffset);
-  
-  $("#dr-samplePoint").select2({disabled: true});
-  loadSamplePointList();
-  
-  $("#dr-parameter").select2({disabled: true});
-  loadParameterList();
-  
-  $("#dr-method").select2({disabled: true});
-  loadMethodList();
-  
-  $("#dr-unit").select2({disabled: true});
-  loadUnitList();
-  
-  $("#metadataSelect").select2();
-  $("#metadataSelect").change(function() {
-    disableEditDataRecord();
-    let metaid = $("#metadataSelect :selected").val()
-    fillMetadataDetails(metaid);
-  });
-  
-  $("#dr-edit").click(function() {
-    editDataRecord();
-  });
-  
-  $("#dr-activeFilterCheck").change(function() {
-    let active = $("#dr-activeFilterCheck").prop('checked');
-    loadMetadataList(active);
-  });
-  
-  let active = $("#dr-activeFilterCheck").prop('checked');
-  loadMetadataList(active);
-  
-  $("#dr-new").click(function() {
-    clickNewDRButton();
-  });
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
 });
 
-function loadMetadataList(active, metaid) {
-  let requestParams = '';
-  if (active) {
-    requestParams = '?active=1';
-  };
-  
-  $.ajax({url: `http://localhost:3000/api/v1/metadataList${requestParams}`
-  }).done(function(data) {
-    let options = '';
-    
-    data.forEach(metadata => {
-      options += `<option 
-        value=${metadata.MetadataID}>
-        ${metadata.Metaname}
-        </option>`
-    });
-    
-    $('#metadataSelect').empty().append(options);
-    
-    if (typeof metaid == 'undefined') {
-      $("#metadataSelect").change();
-    } else {
-      $("#metadataSelect").val(metaid).change();
+$(document).ready(function() {
+  $("#metadataSelect").select2( { width: '100%' });
+  $("#dr-samplePoint").select2( { width: '100%', disabled: true });
+  $("#dr-parameter").select2(   { width: '100%', disabled: true });
+  $("#dr-method").select2(      { width: '100%', disabled: true });
+  $("#dr-unit").select2(        { width: '100%', disabled: true });
+});
+
+var vm = new Vue({
+  el: '#v-pills-datarecord',
+  data: {
+    drID: 2,
+    drs: [],
+    sps: [],
+    params: [],
+    methods: [],
+    units: [],
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Data Record.",
+    currentDR: {
+      MetadataID:       null,
+      ParameterID:      null,
+      MethodID:         null,
+      UnitID:           null,
+      SamplePointID:    null,
+      FrequencyMinutes: null,
+      DecimalPoints:    null,
+      Notes:            null,
+      Active:           null
     }
-  });
-}
-
-function fillMetadataDetails(metaid) {
-  $.ajax({url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${metaid}&utcoffset=${utcoffset}`
-    }).done(function(data) {
+  },
+  watch: {
+    'currentDR.SamplePointID': function () {
+      Vue.nextTick(function() {
+        let isDirty = this.dirty;
+        $('#dr-samplePoint').change();
+        this.dirty = isDirty;
+      });
+    },
+    'currentDR.ParameterID': function () {
+      Vue.nextTick(function() {
+        let isDirty = this.dirty;
+        $('#dr-parameter').change();
+        this.dirty = isDirty;
+      });
+    },
+    'currentDR.MethodID': function () {
+      Vue.nextTick(function() {
+        let isDirty = this.dirty;
+        $('#dr-method').change();
+        this.dirty = isDirty;
+      });
+    },
+    'currentDR.UnitID': function () {
+      Vue.nextTick(function() {
+        let isDirty = this.dirty;
+        $('#dr-unit').change();
+        this.dirty = isDirty;
+      });
+    },
+    
+    currentDR: {
+      handler(newVal, oldVal) {
+        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
+        if ((oldVal.MetadataID == newVal.MetadataID) && 
+            (newVal.MetadataID != null) &&
+            (oldVal.MetadataID != null)) {
+          this.dirty = true;
+          this.notificationText = "Changes made; click 'Update' to save to the database."
+        }
+      },
+      deep: true
+    }
+  },
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Lock';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  mounted: function () {
+    let self = this;
+    
+    self.updateMetadataList();
+    
+    let lists     = ["sps", "params", "methods", "units"]
+    let endpoints = ["samplePointList", "parameterList", 
+                     "methodList", "unitList"]
+    
+    for (let i=0; i<lists.length; i++) {
       
-      let spID     = data[0].SamplePointID;
-      let prID     = data[0].ParameterID;
-      let mtID     = data[0].MethodID;
-      let utID     = data[0].UnitID;
-      let freq     = data[0].FrequencyMinutes;
-      let decimals = data[0].DecimalPoints;
-      let active   = data[0].Active;
-      let notes    = data[0].Notes;
-      
-      let mindate  = new Date(data[0].MinDate);
-      let maxdate  = new Date(data[0].MaxDate);
-      let nmeasure = data[0].MeasurementCount;
-      
-      $("#dr-samplePoint").val(spID).change();
-      $("#dr-parameter").val(prID).change();
-      $("#dr-method").val(mtID).change();
-      $("#dr-unit").val(utID).change();
-      
-      $("#dr-frequency").val(freq);
-      $("#dr-decimalpoints").val(decimals);
-      $("#dr-active").prop('checked', active);
-      $("#dr-notes").val(notes);
-      
-      let narrative = `This data record has <strong>${nmeasure}</strong> measurements`
-      if (nmeasure > 0) {
-          narrative +=  ` between <strong>${mindate.toDateString()}</strong> 
-            and <strong>${maxdate.toDateString()}</strong>.`;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/${endpoints[i]}`,
+        method:'GET',
+        timeout: 3000
+      }).done(function(data) {
+        self[lists[i]] = data;
+      }).fail(function(err) {
+        console.log(err);
+      });
+    };
+  },
+  methods: {
+    updateMetadataList: function(drID) {
+      let active = $("#dr-activeFilterCheck").prop('checked') ? '?active=1': '';
+      $.ajax({
+        url: `http://localhost:3000/api/v1/metadataList${active}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.drs = data;
+        if (typeof drID === 'undefined') {
+          this.getCurrentDR(data[0].MetadataID);
+          this.drID = data[0].MetadataID;
+        } else {
+          this.drID = drID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentDR: function(MetadataID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${MetadataID}&utcoffset=${utcoffset}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentDR = data[0];
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Data Record.";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Data Record.";
+      }).always(() => {
+      });
+    },
+    
+    updateDR: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/metadata`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentDR),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Successfully updated!";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Data Record.  Please double-check the values.";
+      });
+    },
+    
+    newDRClick: function() {
+      if (this.creatingNew) {
+        this.saveNewDR();
       } else {
-          narrative += ".";
-      }
-      
-      $("#dr-narrative").html(narrative);
-      
-    });
-};
-
-function loadSamplePointList() {
-  $.ajax({url: 'http://localhost:3000/api/v1/samplePointList'
-  }).done(function(data){
-    let options = `<option 
-        value=-1>
-        None
-        </option>`;
+        this.editNewDR();
+      };
+    },
     
-    data.forEach(sp => {
-      options += `<option 
-        value=${sp.SamplePointID}>
-        ${sp.Name}
-        </option>`
-    });
+    editNewDR: function() {
+      for (const prop in this.currentDR) {
+        this.currentDR[prop] = null;
+      };
+      this.currentDR.Name   = 'Default';
+      this.currentDR.Active = true;
+      this.creatingNew = true;
+      this.locked = false;
+      this.notificationText = "Fill in fields below.  'Save' to create new Data Record."
+    },
     
-    $('#dr-samplePoint').empty().append(options);
-  });
-};
-
-function loadParameterList() {
-  $.ajax({url: 'http://localhost:3000/api/v1/parameterList'
-  }).done(function(data){
-    let options = `<option 
-        value=-1>
-        None
-        </option>`;
+    saveNewDR: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/metadata`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentDR),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Data Record!";
+        this.drID = data;
+        this.updateMetadataList(this.drID);
+        this.currentDR.MetadataID = data;
+        this.creatingNew = false;
+        this.dirty = false;
+        this.error = false;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not add the Data Record.  Please double-check the values.";
+      });
+    },
     
-    data.forEach(param => {
-      options += `<option 
-        value=${param.ParameterID}>
-        ${param.Name}
-        </option>`
-    });
+    cancelNewDR: function() {
+      this.getCurrentDR(this.drID);
+      this.creatingNew = false;
+      this.locked = true;
+      this.error = false;
+    },
     
-    $('#dr-parameter').empty().append(options);
-  });
-};
+    toggleLocked: function() {
+      this.locked = this.locked ? false : true;
+    }
+  }
+})
 
-function loadMethodList() {
-  $.ajax({url: 'http://localhost:3000/api/v1/methodList'
-  }).done(function(data){
-    let options = `<option 
-        value=-1>
-        None
-        </option>`;
-    
-    data.forEach(method => {
-      options += `<option 
-        value=${method.MethodID}>
-        ${method.Name}
-        </option>`
-    });
-    
-    $('#dr-method').empty().append(options);
-  });
-};
-
-function loadUnitList() {
-  $.ajax({url: 'http://localhost:3000/api/v1/unitList'
-  }).done(function(data){
-    let options = `<option 
-        value=-1>
-        None
-        </option>`;
-    
-    data.forEach(unit => {
-      options += `<option 
-        value=${unit.UnitID}>
-        ${unit.Symbol}
-        </option>`
-    });
-    
-    $('#dr-unit').empty().append(options);
-  });
-};
-
-function editDataRecord() {
-  $("#dr-samplePoint").prop('disabled', false);
-  $("#dr-parameter").prop('disabled', false);
-  $("#dr-method").prop('disabled', false);
-  $("#dr-unit").prop('disabled', false);
-  $("#dataRecordFieldset").prop('disabled', false);
-  $("#dr-edit")
-    .text("Lock")
-    .off('click')
-    .on('click', function() {disableEditDataRecord()});
-  $("#dr-update")
-    .prop('disabled', false)
-    .on('click', function() { clickDRUpdateButton() });
-}
-
-function disableEditDataRecord() {
-  $("#dr-samplePoint").prop('disabled', true);
-  $("#dr-parameter").prop('disabled', true);
-  $("#dr-method").prop('disabled', true);
-  $("#dr-unit").prop('disabled', true);
-  $("#dataRecordFieldset").prop('disabled', true);
-  $("#dr-edit")
-    .text("Edit")
-    .off('click')
-    .on('click', function() { editDataRecord() });
-  $("#dr-update")
-    .prop('disabled', true)
-    .off('click');
-}
-
-function clickDRUpdateButton() {
-  $("#updateAlert")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text('Update the currently selected data?')
-  $("#updateDataButton")
-    .off('click')
-    .prop('disabled', false)
-    .text('Update Data')
-    .on('click', function() { updateDataRecord() });
-  $("#updateDataCloseButton")
-    .text("Cancel")
-  $("#updateModal").modal();
-};
-
-function makeDRObject() {
-  let drUpdate = {};
-  
-  drUpdate.metadataID    = $("#metadataSelect").val();
-  drUpdate.samplePointID = $("#dr-samplePoint").val();
-  drUpdate.parameterID   = $("#dr-parameter").val();
-  drUpdate.methodID      = $("#dr-method").val();
-  drUpdate.unitID        = $("#dr-unit").val();
-  drUpdate.frequency     = $("#dr-frequency").val();
-  drUpdate.decimals      = $("#dr-decimalpoints").val();
-  drUpdate.active        = $("#dr-active").prop('checked');
-  drUpdate.notes         = $("#dr-notes").val();
-  
-  return drUpdate;
-}
-
-function updateDataRecord() {
-  let drUpdate = makeDRObject();
-  
-  //console.log(JSON.stringify(drUpdate));
-  
-  $.ajax({
-    url: 'http://localhost:3000/api/v1/metadata',
-    contentType: 'application/json',
-    method: 'PUT',
-    data: JSON.stringify(drUpdate),
-    dataType: 'json',
-    timeout: 3000,
-  }).done(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-danger alert-info")
-      .addClass("alert-success")
-      .text("Successfully updated.");
-  }).fail(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-success alert-info")
-      .addClass("alert-danger")
-      .text("Update failed; check your data.");
-  }).always(function() {
-    $("#updateDataButton")
-      .off('click')
-      .prop('disabled', true);
-    $("#updateDataCloseButton")
-      .text("Close")
-  });
-  
-}
-
-function clickNewDRButton() {
-  $("#dr-samplePoint")
-    .prop('disabled', false)
-    .val(-1)
-    .change();
-  $("#dr-parameter")
-    .prop('disabled', false)
-    .val(-1)
-    .change();
-  $("#dr-method")
-    .prop('disabled', false)
-    .val(-1)
-    .change();
-  $("#dr-unit")
-    .prop('disabled', false)
-    .val(-1)
-    .change();
-  $("#dataRecordFieldset").prop('disabled', false);
-  $("#dr-frequency").val(15);
-  $("#dr-decimalpoints").val(2);
-  $("#dr-notes").val('');
-  $("#dr-narrative").text('Fill in the values below to create a new data record.')
-  
-  $("#dr-edit")
-    .prop('disabled', true)
-    .off('click');
-  $("#dr-update")
-    .prop('disabled', true)
-    .off('click');
-  
-  $("#dr-selectHeader").addClass("d-none");
-  
-  $("#dr-new")
-    .text("Create")
-    .off("click")
-    .on("click", function() {
-        clickCreateDRButton();
-    });
-  
-  $("#dr-cancel")
-    .prop('disabled', false)
-    .off('click')
-    .on('click', function() { cancelNewDR() });
-}
-
-function cancelNewDR() {
-    $('#dr-selectHeader').removeClass('d-none');
-    disableEditDataRecord();
-    $("#metadataSelect").change();
-    $("#dr-cancel").prop('disabled', true);
-    $("#dr-edit")
-      .prop('disabled', false)
-      .off('click')
-      .on('click', function() { editDataRecord() });
-    $("#dr-new")
-      .text("New")
-      .off('click')
-      .on('click', function() { clickNewDRButton(); });
-}
-
-function clickCreateDRButton() {
-  $("#updateAlert")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text('Create a new data record?')
-  $("#updateDataButton")
-    .off('click')
-    .prop('disabled', false)
-    .text('Create')
-    .on('click', function() { createNewDR() });
-  $("#updateDataCloseButton")
-    .text("Cancel")
-  $("#updateModal").modal();
-}
-
-function createNewDR() {
-  let drUpdate = makeDRObject();
-  
-  //console.log(JSON.stringify(drUpdate));
-  
-  $.ajax({
-    url: 'http://localhost:3000/api/v1/metadata',
-    contentType: 'application/json',
-    method: 'POST',
-    data: JSON.stringify(drUpdate),
-    dataType: 'json',
-    timeout: 3000,
-  }).done(function(data) {
-    //console.log(data);
-    $("#updateAlert")
-      .removeClass("alert-primary alert-danger alert-info")
-      .addClass("alert-success")
-      .text("Successfully added new data record.");
-    cancelNewDR();
-    
-    let active = $("#dr-activeFilterCheck").prop('checked');
-    loadMetadataList(active, data);
-    
-  }).fail(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-success alert-info")
-      .addClass("alert-danger")
-      .text("Could not insert new record; check your data.");
-  }).always(function() {
-    $("#updateDataButton")
-      .off('click')
-      .prop('disabled', true);
-    $("#updateDataCloseButton")
-      .text("Close")
-  });
-}

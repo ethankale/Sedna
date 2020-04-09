@@ -1,16 +1,17 @@
 "use strict";
 
-const equipment      = require('../controllers/equipment.js');
-const equipmentModel = require('../controllers/equipmentModel.js');
-const measurements   = require('../controllers/measurements.js');
-const metadata       = require('../controllers/metadata.js');
-const methods        = require('../controllers/methods.js');
-const parameters     = require('../controllers/parameters.js');
-const samplepoints   = require('../controllers/samplepoints.js');
-const test           = require('../controllers/test.js');
-const sites          = require('../controllers/sites.js');
-const units          = require('../controllers/units.js');
-const user           = require('../controllers/user.js');
+const equipment           = require('../controllers/equipment.js');
+const equipmentModel      = require('../controllers/equipmentModel.js');
+const equipmentDeployment = require('../controllers/equipmentDeployment.js');
+const metadata            = require('../controllers/metadata.js');
+const measurements        = require('../controllers/measurements.js');
+const methods             = require('../controllers/methods.js');
+const parameters          = require('../controllers/parameters.js');
+const samplepoints        = require('../controllers/samplepoints.js');
+const test                = require('../controllers/test.js');
+const sites               = require('../controllers/sites.js');
+const units               = require('../controllers/units.js');
+const user                = require('../controllers/user.js');
 
 module.exports = function (app) {
     app.get('/',  function(req, res) {
@@ -19,6 +20,12 @@ module.exports = function (app) {
     
     app.get('/api/v1/test', test.getTest);
 
+    
+    // Equipment Deployments
+    app.get('/api/v1/equipmentDeploymentList', equipmentDeployment.getEquipmentDeploymentList);
+    app.get('/api/v1/equipmentDeployment',     equipmentDeployment.getEquipmentDeploymentDetails);
+    app.put('/api/v1/equipmentDeployment',     equipmentDeployment.updateEquipmentDeployment);
+    app.post('/api/v1/equipmentDeployment',    equipmentDeployment.addEquipmentDeployment);
     
     // Equipment
     app.get('/api/v1/equipmentList', equipment.getEquipmentList);
@@ -42,7 +49,7 @@ module.exports = function (app) {
     // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
     
-    // Metadata
+    // Metadata (or Data Record)
     // Parameter: siteid
     app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
     // Parameter: active
