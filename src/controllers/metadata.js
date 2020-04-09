@@ -142,7 +142,7 @@ let controller = {
       
       connection.on('connect', function(err) {
         
-        let active = req.body.active;
+        let active = req.body.Active;
           
         let statement = `INSERT INTO Metadata
           (SamplePointID, ParameterID, MethodID, UnitID,
@@ -167,13 +167,13 @@ let controller = {
           lastid = columns[0].value;
         });
         
-        request.addParameter('samplePointID',   TYPES.Int, req.body.samplePointID)
-        request.addParameter('parameterID',     TYPES.Int, req.body.parameterID)
-        request.addParameter('methodID',        TYPES.Int, req.body.methodID)
-        request.addParameter('unitID',          TYPES.Int, req.body.unitID)
-        request.addParameter('frequency',       TYPES.Int, req.body.frequency)
-        request.addParameter('decimals',        TYPES.Int, req.body.decimals)
-        request.addParameter('notes',           TYPES.VarChar, req.body.notes)
+        request.addParameter('samplePointID',   TYPES.Int, req.body.SamplePointID)
+        request.addParameter('parameterID',     TYPES.Int, req.body.ParameterID)
+        request.addParameter('methodID',        TYPES.Int, req.body.MethodID)
+        request.addParameter('unitID',          TYPES.Int, req.body.UnitID)
+        request.addParameter('frequency',       TYPES.Int, req.body.FrequencyMinutes)
+        request.addParameter('decimals',        TYPES.Int, req.body.DecimalPoints)
+        request.addParameter('notes',           TYPES.VarChar, req.body.Notes)
         request.addParameter('active',          TYPES.Bit, active)
         
         connection.execSql(request);
