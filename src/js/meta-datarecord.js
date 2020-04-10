@@ -34,7 +34,7 @@ var vm = new Vue({
     equipment: [],
     locked: true,
     creatingNew: false,
-    changingMetas: false,
+    changingMetas: 0,
     dirty: false,
     error: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Data Record.",
@@ -72,26 +72,10 @@ var vm = new Vue({
         $('#dr-unit').change();
       });
     },
-    
-    currentDR: {
-      handler(newVal, oldVal) {
-        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
-        if ((oldVal.MetadataID == newVal.MetadataID) && 
-            (newVal.MetadataID != null) &&
-            (oldVal.MetadataID != null) &&
-            (this.changingMetas == false)) {
-          this.dirty = true;
-          this.notificationText = "Changes made; click 'Update' to save to the database."
-        } else {
-          this.changingMetas = false;
-        }
-      },
-      deep: true
-    }
   },
   computed: {
     editButtonText: function() {
-      return this.locked ? 'Edit' : 'Lock';
+      return this.locked ? 'Edit' : 'Save';
     },
     
     newButtonText: function() {
@@ -122,7 +106,8 @@ var vm = new Vue({
   },
   methods: {
     updateMetadataList: function(drID) {
-      this.changingMetas = true;
+      this.changingMetas += 1;
+      console.log("updateMetadataList; " + this.changingLookups);
       let active = $("#dr-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
         url: `http://localhost:3000/api/v1/metadataList${active}`,
@@ -149,6 +134,7 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentDR = data[0];
+        console.log("getCurrentDR");
         this.getEquipmentDeployments(this.currentDR.MetadataID);
         this.dirty = false;
         this.error = false;
@@ -172,6 +158,7 @@ var vm = new Vue({
       }).done((data) => {
         this.dirty = false;
         this.error = false;
+        this.locked = true;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -192,7 +179,6 @@ var vm = new Vue({
       for (const prop in this.currentDR) {
         this.currentDR[prop] = null;
       };
-      this.currentDR.Name   = 'Default';
       this.currentDR.Active = true;
       this.creatingNew = true;
       this.locked = false;
@@ -213,8 +199,9 @@ var vm = new Vue({
         this.updateMetadataList(this.drID);
         this.currentDR.MetadataID = data;
         this.creatingNew = false;
-        this.dirty = false;
-        this.error = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = true;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -223,29 +210,62 @@ var vm = new Vue({
     },
     
     getEquipmentDeployments: function(metaid) {
+      this.changingLookups += 1;
+      console.log("getEquipmentDeployments; " + this.changingLookups);
       let url = `http://localhost:3000/api/v1/equipmentDeploymentList?MetadataID=${metaid}`;
-      let self = this;
+      
       $.ajax({
         url: url,
         method:'GET',
         timeout: 3000
-      }).done(function(data) {
-        self.currentDR.equipDeployments = data;
-      }).fail(function(err) {
+      }).done((data) => {
+        // Using Vue.set instead of just assigning so that Vue knows a change was made.
+        Vue.set(this.currentDR, 'equipDeployments', data);
+      }).fail((err) => {
         console.log(err);
+      }).always(() => {
+        this.changingLookups = this.changingLookups < 1 ? 0 : this.changingLookups-1;
       });
     },
     
-    cancelNewDR: function() {
-      this.getCurrentDR(this.drID);
-      this.creatingNew = false;
-      this.locked = true;
-      this.error = false;
+    addEquipment: function() {
+      let EquipmentID = $("#dr-equipmentSelect").val();
+      let MetadataID = this.currentDR.MetadataID;
+      let deployment = {'EquipmentID': EquipmentID, 'MetadataID': MetadataID};
+      $.ajax({
+        url: 'http://localhost:3000/api/v1/equipmentDeployment',
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(deployment),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.getEquipmentDeployments(MetadataID);
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not add Equipment.";
+      });
     },
     
-    toggleLocked: function() {
-      this.locked = this.locked ? false : true;
-    }
+    cancelDR: function() {
+      this.getCurrentDR(this.drID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditDR: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateDR();
+      }
+    },
   }
 })
 

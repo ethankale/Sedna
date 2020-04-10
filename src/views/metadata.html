@@ -513,22 +513,17 @@
               <div class="form-row">
                 <div class="col-md-2">
                   <button id="dr-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                    @click="clickEditDR()" :disabled="creatingNew"> {{ editButtonText }}</button>
                 </div>
                 
-                <div class="col-md-6">
-                  <button id="dr-update" type="button" class="btn btn-primary" 
-                    @click="updateDR()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="dr-new" type="button" class="btn btn-secondary float-right"
+                <div class="col-md-8">
+                  <button id="dr-new" type="button" class="btn btn-secondary"
                     @click="newDRClick()" :disabled="dirty"> {{ newButtonText }}</button>
                 </div>
                 
                 <div class="col-md-2">
                   <button id="dr-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewDR()" :disabled="!creatingNew">Cancel</button>
+                    @click="cancelDR()" :disabled="locked">Cancel</button>
                 </div>
               </div>
               
@@ -636,23 +631,32 @@
                   <h3>Equipment</h3>
                   
                   <div class="form-group form-row">
-                    <select class="form-control" id="dr-equipmentSelect"
-                        :disabled="locked">
-                      <option 
-                        v-for="equip in equipment" 
-                        v-bind:value="equip.EquipmentID" 
-                        v-bind:key="equip.EquipmentID">
-                        {{ equip.Name }}</option>
-                    </select>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="dr-equipmentSelect"
+                          :disabled="locked">
+                        <option 
+                          v-for="equip in equipment" 
+                          v-bind:value="equip.EquipmentID" 
+                          v-bind:key="equip.EquipmentID">
+                          {{ equip.Name }}</option>
+                      </select>
+                    </div>
+                    <div class="col-sm-2">
+                      <button class="btn btn-primary btn-sm float-right">+</button>
+                    </div>
                   </div>
                   
                   <div class="form-row"
                     v-for="equip in currentDR.equipDeployments">
-                    <p class="col-sm-10">{{ 
-                      equip.EquipmentName + ' - ' +
-                      equip.SerialNumber + 
-                      ' (' + equip.Manufacturer + ')' }}</p>
-                    <button class="btn btn-secondary float-right">Remove</button>
+                    <div class="col-sm-10">
+                      <p>{{ 
+                        equip.EquipmentName + ' - ' +
+                        equip.SerialNumber + 
+                        ' (' + equip.Manufacturer + ')' }}</p>
+                    </div>
+                    <div class="col-sm-2">
+                      <button class="btn btn-danger btn-sm float-right">X</button>
+                    </div>
                   </div>
                     
                   
