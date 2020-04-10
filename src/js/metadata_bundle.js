@@ -12279,6 +12279,7 @@ var vm = new Vue({
     units: [],
     locked: true,
     creatingNew: false,
+    changingMetas: false,
     dirty: false,
     error: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Data Record.",
@@ -12297,41 +12298,38 @@ var vm = new Vue({
   watch: {
     'currentDR.SamplePointID': function () {
       Vue.nextTick(function() {
-        let isDirty = this.dirty;
         $('#dr-samplePoint').change();
-        this.dirty = isDirty;
       });
     },
     'currentDR.ParameterID': function () {
       Vue.nextTick(function() {
-        let isDirty = this.dirty;
         $('#dr-parameter').change();
-        this.dirty = isDirty;
       });
     },
     'currentDR.MethodID': function () {
       Vue.nextTick(function() {
-        let isDirty = this.dirty;
         $('#dr-method').change();
-        this.dirty = isDirty;
       });
     },
     'currentDR.UnitID': function () {
       Vue.nextTick(function() {
-        let isDirty = this.dirty;
         $('#dr-unit').change();
-        this.dirty = isDirty;
       });
     },
     
     currentDR: {
       handler(newVal, oldVal) {
         // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
+        console.log(oldVal.MetadataID);
+        console.log(newVal.MetadataID);
         if ((oldVal.MetadataID == newVal.MetadataID) && 
             (newVal.MetadataID != null) &&
-            (oldVal.MetadataID != null)) {
+            (oldVal.MetadataID != null) &&
+            (this.changingMetas == false)) {
           this.dirty = true;
           this.notificationText = "Changes made; click 'Update' to save to the database."
+        } else {
+          this.changingMetas = false;
         }
       },
       deep: true
@@ -12370,6 +12368,7 @@ var vm = new Vue({
   },
   methods: {
     updateMetadataList: function(drID) {
+      this.changingMetas = true;
       let active = $("#dr-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
         url: `http://localhost:3000/api/v1/metadataList${active}`,
@@ -12904,6 +12903,7 @@ var vm = new Vue({
     sites: [],
     locked: true,
     creatingNew: false,
+    changingSPs: false,
     dirty: false,
     error: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
@@ -12942,20 +12942,23 @@ var vm = new Vue({
   watch: {
     'currentSP.SiteID': function () {
       Vue.nextTick(function() {
-        let isDirty = this.dirty;
         $('#sample-point-siteSelect').change();
-        this.dirty = isDirty;
       });
     },
     
     currentSP: {
       handler(newVal, oldVal) {
         // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
+        // console.log(oldVal.SamplePointID);
+        // console.log(newVal.SamplePointID);
         if ((oldVal.SamplePointID == newVal.SamplePointID) && 
             (newVal.SamplePointID != null) &&
-            (oldVal.SamplePointID != null)) {
+            (oldVal.SamplePointID != null) &&
+            (this.changingSPs == false)) {
           this.dirty = true;
           this.notificationText = "Changes made; click 'Update' to save to the database."
+        } else {
+          this.changingSPs = false;
         }
       },
       deep: true
@@ -12987,6 +12990,7 @@ var vm = new Vue({
   },
   methods: {
     updateSamplePointList: function(spID) {
+      this.changingSPs = true;
       let active = $("#sample-point-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePointList${active}`,
