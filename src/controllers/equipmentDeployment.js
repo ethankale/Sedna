@@ -14,21 +14,7 @@ let controller = {
     
     // let active    = req.query.active;
     
-    let statement = `SELECT EquipmentDeploymentID, ed.EquipmentID, 
-        ed.MetadataID, eq.SerialNumber, em.Manufacturer, 
-        em.Name as EquipmentName, st.Code as SiteCode, st.Name as SiteName
-    FROM EquipmentDeployment as ed
-    LEFT JOIN Equipment as eq
-      ON eq.EquipmentID = ed.EquipmentID
-    LEFT JOIN EquipmentModel as em
-      ON eq.EquipmentModelID = em.EquipmentModelID
-    LEFT JOIN Metadata as md
-      ON md.MetadataID = ed.MetadataID
-      AND md.Active = 1
-    LEFT JOIN SamplePoint as sp
-      ON md.SamplePointID = sp.SamplePointID
-    LEFT JOIN Site as st
-      ON sp.SiteID = st.SiteID`;
+
     
     // if (typeof active != 'undefined') {
       // active = active >= 1 ? 1 : 0;
@@ -39,7 +25,47 @@ let controller = {
       if(err) {
         console.log('Error: ', err)
       } else {
-        sqlfunctions.executeSelect(statement, connection, res);
+        let statement = `SELECT EquipmentDeploymentID, ed.EquipmentID, 
+            ed.MetadataID, eq.SerialNumber, em.Manufacturer, 
+            em.Name as EquipmentName, st.Code as SiteCode, st.Name as SiteName
+        FROM EquipmentDeployment as ed
+        LEFT JOIN Equipment as eq
+          ON eq.EquipmentID = ed.EquipmentID
+        LEFT JOIN EquipmentModel as em
+          ON eq.EquipmentModelID = em.EquipmentModelID
+        LEFT JOIN Metadata as md
+          ON md.MetadataID = ed.MetadataID
+          AND md.Active = 1
+        LEFT JOIN SamplePoint as sp
+          ON md.SamplePointID = sp.SamplePointID
+        LEFT JOIN Site as st
+          ON sp.SiteID = st.SiteID
+        WHERE ed.MetadataID = ISNULL(@MetadataID, ed.MetadataID)`;
+        
+        let eds = [];
+        
+        let request = new Request(statement, function(err, rowCount) {
+          if (err) {
+            res.status(400).end();
+            console.log(err);
+          } else {
+            res.status(200).json(eds);
+          }
+          connection.close();
+        });
+        
+        request.on('row', function(columns) {
+          let equipmentDeployment = {};
+          columns.forEach(function(column) {
+            equipmentDeployment[[column.metadata.colName]] = column.value;
+          });
+          eds.push(equipmentDeployment);
+        });
+        
+        let metadataid = typeof req.query.MetadataID == 'undefined' ? null : req.query.MetadataID;
+        request.addParameter('MetadataID', TYPES.Int, metadataid)
+        
+        connection.execSql(request);
       }
     });
   },
@@ -171,8 +197,34 @@ let controller = {
     } else {
       res.status(400).json('Must provide at least a serial number with one character.')
     };
-  }
+  },
   
+  deleteEquipmentDeployment: function (req, res) {
+    let cfg = require('./config.js')
+    let mssql_config = cfg.getConfig().mssql;
+    let connection     = new Connection(mssql_config);
+    
+    connection.on('connect', function(err) {
+      
+      let statement = `DELETE EquipmentDeployment 
+       WHERE EquipmentDeploymentID = @EquipmentDeploymentID`
+      
+       var request = new Request(statement, function(err, rowCount) {
+         if (err) {
+           res.status(400).end();
+           console.log(err);
+         } else {
+           res.status(200).json("Success");
+         }
+         connection.close();
+       });
+      
+      request.addParameter('EquipmentDeploymentID', TYPES.Int,       req.body.EquipmentDeploymentID);
+      
+      connection.execSql(request);
+      
+    });
+  },
 };
 
 module.exports = controller;

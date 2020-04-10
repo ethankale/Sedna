@@ -14,7 +14,8 @@ let controller = {
     
     let active    = req.query.active;
     
-    let statement = `SELECT TOP (1000) eq.[EquipmentID],
+    let statement = `SELECT 
+        eq.[EquipmentID],
         em.Name + ' - ' + eq.[SerialNumber] + ' (' + Coalesce(em.Manufacturer, '') + ')' as Name,
         activeDeployments.SiteCode, activeDeployments.SiteName
         FROM [Equipment] AS eq
@@ -32,7 +33,7 @@ let controller = {
             LEFT JOIN Site as st
             ON sp.SiteID = st.SiteID
             WHERE md.Active = 1) as activeDeployments
-        ON eq.EquipmentID = activeDeployments.EquipmentID`;
+        ON ed.EquipmentDeploymentID = activeDeployments.EquipmentDeploymentID`;
     
     if (typeof active != 'undefined') {
       active = active >= 1 ? 1 : 0;

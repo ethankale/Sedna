@@ -51,9 +51,20 @@
         <div class="col-3">
           <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
             
+                        
+            <a class="nav-link" id="v-pills-site-tab" data-toggle="pill" 
+              href="#v-pills-site" role="tab" aria-controls="v-pills-site" 
+              aria-selected="true">Site</a>
+            
+            <a class="nav-link" id="v-pills-sample-point-tab" data-toggle="pill" 
+              href="#v-pills-sample-point" role="tab" aria-controls="v-pills-sample-point" 
+              aria-selected="true">Sample Point</a>
+            
             <a class="nav-link active" id="v-pills-datarecord-tab" data-toggle="pill" 
               href="#v-pills-datarecord" role="tab" aria-controls="v-pills-datarecord" 
               aria-selected="true">Data Record</a>
+            
+            <hr>
             
             <a class="nav-link" id="v-pills-equipment-tab" data-toggle="pill" 
               href="#v-pills-equipment" role="tab" aria-controls="v-pills-equipment" 
@@ -63,21 +74,17 @@
               href="#v-pills-equipmentModel" role="tab" aria-controls="v-pills-equipmentModel" 
               aria-selected="false">Equipment Model</a>
             
-            <a class="nav-link" id="v-pills-method-tab" data-toggle="pill" 
-              href="#v-pills-method" role="tab" aria-controls="v-pills-method" 
-              aria-selected="false">Method</a>
+            <hr>
             
             <a class="nav-link" id="v-pills-parameter-tab" data-toggle="pill" 
               href="#v-pills-parameter" role="tab" aria-controls="v-pills-parameter" 
               aria-selected="false">Parameter</a>
+              
+            <a class="nav-link" id="v-pills-method-tab" data-toggle="pill" 
+              href="#v-pills-method" role="tab" aria-controls="v-pills-method" 
+              aria-selected="false">Method</a>
             
-            <a class="nav-link" id="v-pills-site-tab" data-toggle="pill" 
-              href="#v-pills-site" role="tab" aria-controls="v-pills-site" 
-              aria-selected="true">Site</a>
-            
-            <a class="nav-link" id="v-pills-sample-point-tab" data-toggle="pill" 
-              href="#v-pills-sample-point" role="tab" aria-controls="v-pills-sample-point" 
-              aria-selected="true">Sample Point</a>
+            <hr>
             
             <a class="nav-link" id="v-pills-user-tab" data-toggle="pill" 
               href="#v-pills-user" role="tab" aria-controls="v-pills-user" 
@@ -89,379 +96,7 @@
         <!-- Content - forms that show details about each of the tables/items -->
         <div class="col-9">
           <div class="tab-content" id="v-pills-tabContent">
-            
-            <!-- Equipment form -->
-            <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 
-              aria-labelledby="v-pills-equipment-tab">
-              
-              <form id="eq-selectHeader" v-show="!creatingNew">
-                <div class="form-group">
-                  <select class="form-control" id="eqSelect" 
-                    v-model="eqID" 
-                    v-select="eqID"
-                    v-on:change="getCurrentEQ(eqID)">
-                    <option 
-                      v-for="eq in eqs" 
-                      v-bind:value="eq.EquipmentID" 
-                      v-bind:key="eq.EquipmentID">
-                      {{ eq.Name }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="equipment-activeFilterCheck" checked
-                    v-on:change="updateEquipmentList(eqID)">
-                  <label class="form-check-label" for="equipment-activeFilterCheck">Hide Inactive</label>
-                </div>
-                
-                <hr>
-              </form>
-              
-              <div id="equipment-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
-                {{ notificationText }}
-              </div>
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="equipment-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-6">
-                  <button id="equipment-update" type="button" class="btn btn-primary" 
-                    @click="updateEQ()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipment-new" type="button" class="btn btn-secondary float-right"
-                    @click="newEQClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipment-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewEQ()" :disabled="!creatingNew">Cancel</button>
-                </div>
-              </div>
-              
-              <hr>
-              
-              <form id="equipmentForm">
-                <fieldset id="equipmentFieldset" :disabled="locked">
-                  
-                  <div class="form-group row">
-                    <label for="equipment-modelSelect" class="col-sm-2 col-form-label">Model</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="equipment-modelSelect" 
-                        v-model="currentEQ.EquipmentModelID" 
-                        v-select="currentEQ.EquipmentModelID"
-                        :disabled="locked">
-                        <option 
-                          v-for="model in models" 
-                          v-bind:value="model.EquipmentModelID" 
-                          v-bind:key="model.EquipmentModelID">
-                          {{ model.Name }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipment-serialNumber" class="col-sm-2 col-form-label">Serial Number</label>
-                    <div class="col-sm-4">
-                      <input type="text" class="form-control" id="equipment-serialNumber"
-                        v-model="currentEQ.SerialNumber">
-                    </div>
 
-                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-4">
-                      <input type="checkbox" class="form-check-input" id="site-active" 
-                        v-model="currentEQ.Active">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipment-lastCalibrationDate" class="col-sm-2 col-form-label">
-                      Last Calibrated On</label>
-                    <div class="col-sm-10">
-                      <input type="date" class="form-control" id="equipment-lastCalibrationDate"
-                        v-model="currentEQ.LastCalibrationDate">
-                    </div>
-                  </div>
-                  
-                </fieldset>
-              </form>
-            </div>
-            
-            <!-- Equipment Model form -->
-            <div class="tab-pane fade" id="v-pills-equipmentModel" role="tabpanel" 
-              aria-labelledby="v-pills-equipmentModel-tab">
-              
-              <form id="em-selectHeader" v-show="!creatingNew">
-                <div class="form-group">
-                  <select class="form-control" id="emSelect" 
-                    v-model="emID" 
-                    v-select="emID"
-                    v-on:change="getCurrentEM(emID)">
-                    <option 
-                      v-for="em in ems" 
-                      v-bind:value="em.EquipmentModelID" 
-                      v-bind:key="em.EquipmentModelID">
-                      {{ em.Name }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="equipmentModel-activeFilterCheck" checked
-                    v-on:change="updateEquipmentModelList(emID)">
-                  <label class="form-check-label" for="equipmentModel-activeFilterCheck">Hide Inactive</label>
-                </div>
-                
-                <hr>
-              </form>
-              
-              <div id="equipmentModel-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
-                {{ notificationText }}
-              </div>
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="equipmentModel-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-6">
-                  <button id="equipmentModel-update" type="button" class="btn btn-primary" 
-                    @click="updateEM()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipmentModel-new" type="button" class="btn btn-secondary float-right"
-                    @click="newEMClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipmentModel-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewEM()" :disabled="!creatingNew">Cancel</button>
-                </div>
-              </div>
-              
-              <hr>
-              
-              <form id="equipmentModelForm">
-                <fieldset id="equipmentModelFieldset" :disabled="locked">
-                  
-                  <div class="form-group row"
-                    v-show="!creatingNew">
-                    <label for="equipmentModel-deployedCount" class="col-sm-2 col-form-label">Inventory</label>
-                    <div class="col-sm-10">
-                      <p id="equipmentModel-deployedCount"> {{ currentEM.EquipmentCount }} </p>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-10">
-                      <input type="checkbox" class="form-check-input" id="site-active" 
-                        v-model="currentEM.Active">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-name" class="col-sm-2 col-form-label">Name</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" id="equipmentModel-name"
-                        v-model="currentEM.Name">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-manufacturer" class="col-sm-2 col-form-label">Manufacturer</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" id="equipmentModel-manufacturer"
-                        v-model="currentEM.Manufacturer">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-description" class="col-sm-2 col-form-label">Description</label>
-                    <div class="col-sm-10">
-                      <textarea class="form-control" id="equipmentModel-description" rows="5"
-                        v-model="currentEM.Description"></textarea>
-                    </div>
-                  </div>
-                  
-                </fieldset>
-              </form>
-            </div>
-            
-            <!-- Data Record (metadata) form -->
-            <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
-              aria-labelledby="v-pills-datarecord-tab">
-              
-              <form id = "dr-selectHeader" v-show="!creatingNew">
-                <div class="form-group">
-                  <select class="form-control" id="metadataSelect" 
-                    v-model="drID" 
-                    v-select="drID"
-                    v-on:change="getCurrentDR(drID)">
-                    <option 
-                      v-for="dr in drs" 
-                      v-bind:value="dr.MetadataID" 
-                      v-bind:key="dr.MetadataID">
-                      {{ dr.Metaname }}</option>
-                  </select>
-                </div>
-                
-                <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="dr-activeFilterCheck" checked
-                    v-on:change="updateMetadataList()">
-                  <label class="form-check-label" for="dr-activeFilterCheck">Hide Inactive</label>
-                </div>
-                
-                <hr />
-              </form>
-              
-              
-              <div id="dr-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
-                {{ notificationText }}</div>
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="dr-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-6">
-                  <button id="dr-update" type="button" class="btn btn-primary" 
-                    @click="updateDR()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="dr-new" type="button" class="btn btn-secondary float-right"
-                    @click="newDRClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewDR()" :disabled="!creatingNew">Cancel</button>
-                </div>
-              </div>
-              
-              <hr>
-              
-              <form id="dataRecordForm">
-                <fieldset id="dataRecordFieldset" :disabled="locked">
-                  
-                  <div class="form-row">
-                    <label for="dr-samplePoint" class="col-sm-2 col-form-label">Sample Point</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="dr-samplePoint" 
-                        v-model="currentDR.SamplePointID" 
-                        v-select="currentDR.SamplePointID"
-                        :disabled="locked">
-                        <option 
-                          v-for="sp in sps" 
-                          v-bind:value="sp.SamplePointID" 
-                          v-bind:key="sp.SamplePointID">
-                          {{ sp.Name }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-parameter" class="col-sm-2 col-form-label">Parameter</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="dr-parameter" 
-                        v-model="currentDR.ParameterID" 
-                        v-select="currentDR.ParameterID"
-                        :disabled="locked">
-                        <option 
-                          v-for="param in params" 
-                          v-bind:value="param.ParameterID" 
-                          v-bind:key="param.ParameterID">
-                          {{ param.Name }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-method" class="col-sm-2 col-form-label">Method</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="dr-method" 
-                        v-model="currentDR.MethodID" 
-                        v-select="currentDR.MethodID"
-                        :disabled="locked">
-                        <option 
-                          v-for="method in methods" 
-                          v-bind:value="method.MethodID" 
-                          v-bind:key="method.MethodID">
-                          {{ method.Name }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-unit" class="col-sm-2 col-form-label">Unit</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="dr-unit" 
-                        v-model="currentDR.UnitID" 
-                        v-select="currentDR.UnitID"
-                        :disabled="locked">
-                        <option 
-                          v-for="unit in units" 
-                          v-bind:value="unit.UnitID" 
-                          v-bind:key="unit.UnitID">
-                          {{ unit.Symbol }}</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-frequency" class="col-sm-2 col-form-label">Frequency (minutes)</label>
-                    <div class="col-sm-4">
-                      <input type="number" class="form-control" id="dr-frequency"
-                        v-model="currentDR.FrequencyMinutes">
-                    </div>
-
-                    <label for="dr-decimalpoints" class="col-sm-2 col-form-label">Decimal Points</label>
-                    <div class="col-sm-4">
-                      <input type="number" class="form-control" id="dr-decimalpoints"
-                        v-model="currentDR.DecimalPoints">
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-active" class="col-sm-3 col-form-label">Active</label>
-                    <div class="col-sm-9">
-                      <input type="checkbox" class="form-check-input" id="dr-active"
-                        v-model="currentDR.Active">
-                    </div>
-                  </div>
-                  
-                  <div class="form-row">
-                    <label for="dr-notes" class="col-sm-2 col-form-label">Notes</label>
-                    <div class="col-sm-10">
-                      <textarea class="form-control" id="dr-notes" rows="3"
-                        v-model="currentDR.Notes"></textarea>
-                    </div>
-                  </div>
-                  
-                </fieldset>
-              </form>
-              
-            </div>
-            
-            <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
-              aria-labelledby="v-pills-method-tab">Method</div>
-            
-            <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
-              aria-labelledby="v-pills-parameter-tab">Parameter</div>
-            
             <!-- Site form -->
             <div class="tab-pane fade" id="v-pills-site" role="tabpanel" 
               aria-labelledby="v-pills-site-tab">
@@ -842,6 +477,408 @@
               </form>
               
             </div>
+            
+            <!-- Data Record (metadata) form -->
+            <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
+              aria-labelledby="v-pills-datarecord-tab">
+              
+              <form id = "dr-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="metadataSelect" 
+                    v-model="drID" 
+                    v-select="drID"
+                    v-on:change="getCurrentDR(drID)">
+                    <option 
+                      v-for="dr in drs" 
+                      v-bind:value="dr.MetadataID" 
+                      v-bind:key="dr.MetadataID">
+                      {{ dr.Metaname }}</option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="dr-activeFilterCheck" checked
+                    v-on:change="updateMetadataList()">
+                  <label class="form-check-label" for="dr-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr />
+              </form>
+              
+              
+              <div id="dr-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="dr-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                
+                <div class="col-md-6">
+                  <button id="dr-update" type="button" class="btn btn-primary" 
+                    @click="updateDR()" :disabled="locked || creatingNew">Update</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="dr-new" type="button" class="btn btn-secondary float-right"
+                    @click="newDRClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" 
+                    @click="cancelNewDR()" :disabled="!creatingNew">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="dataRecordForm">
+                <fieldset id="dataRecordFieldset" :disabled="locked">
+                  
+                  <div class="form-row">
+                    <label for="dr-samplePoint" class="col-sm-2 col-form-label">Sample Point</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="dr-samplePoint" 
+                        v-model="currentDR.SamplePointID" 
+                        v-select="currentDR.SamplePointID"
+                        :disabled="locked">
+                        <option 
+                          v-for="sp in sps" 
+                          v-bind:value="sp.SamplePointID" 
+                          v-bind:key="sp.SamplePointID">
+                          {{ sp.Name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-parameter" class="col-sm-2 col-form-label">Parameter</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="dr-parameter" 
+                        v-model="currentDR.ParameterID" 
+                        v-select="currentDR.ParameterID"
+                        :disabled="locked">
+                        <option 
+                          v-for="param in params" 
+                          v-bind:value="param.ParameterID" 
+                          v-bind:key="param.ParameterID">
+                          {{ param.Name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-method" class="col-sm-2 col-form-label">Method</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="dr-method" 
+                        v-model="currentDR.MethodID" 
+                        v-select="currentDR.MethodID"
+                        :disabled="locked">
+                        <option 
+                          v-for="method in methods" 
+                          v-bind:value="method.MethodID" 
+                          v-bind:key="method.MethodID">
+                          {{ method.Name }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-unit" class="col-sm-2 col-form-label">Unit</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="dr-unit" 
+                        v-model="currentDR.UnitID" 
+                        v-select="currentDR.UnitID"
+                        :disabled="locked">
+                        <option 
+                          v-for="unit in units" 
+                          v-bind:value="unit.UnitID" 
+                          v-bind:key="unit.UnitID">
+                          {{ unit.Symbol }}</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-frequency" class="col-sm-2 col-form-label">Frequency (minutes)</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="dr-frequency"
+                        v-model="currentDR.FrequencyMinutes">
+                    </div>
+
+                    <label for="dr-decimalpoints" class="col-sm-2 col-form-label">Decimal Points</label>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" id="dr-decimalpoints"
+                        v-model="currentDR.DecimalPoints">
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-active" class="col-sm-3 col-form-label">Active</label>
+                    <div class="col-sm-9">
+                      <input type="checkbox" class="form-check-input" id="dr-active"
+                        v-model="currentDR.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-row">
+                    <label for="dr-notes" class="col-sm-2 col-form-label">Notes</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="dr-notes" rows="3"
+                        v-model="currentDR.Notes"></textarea>
+                    </div>
+                  </div>
+                  
+                  <hr>
+                  
+                  <h3>Equipment</h3>
+                  
+                  <div class="form-group form-row">
+                    <select class="form-control" id="dr-equipmentSelect"
+                        :disabled="locked">
+                      <option 
+                        v-for="equip in equipment" 
+                        v-bind:value="equip.EquipmentID" 
+                        v-bind:key="equip.EquipmentID">
+                        {{ equip.Name }}</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-row"
+                    v-for="equip in currentDR.equipDeployments">
+                    <p class="col-sm-10">{{ 
+                      equip.EquipmentName + ' - ' +
+                      equip.SerialNumber + 
+                      ' (' + equip.Manufacturer + ')' }}</p>
+                    <button class="btn btn-secondary float-right">Remove</button>
+                  </div>
+                    
+                  
+                </fieldset>
+              </form>
+              
+            </div>
+            
+            
+            <!-- Equipment form -->
+            <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 
+              aria-labelledby="v-pills-equipment-tab">
+              
+              <form id="eq-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="eqSelect" 
+                    v-model="eqID" 
+                    v-select="eqID"
+                    v-on:change="getCurrentEQ(eqID)">
+                    <option 
+                      v-for="eq in eqs" 
+                      v-bind:value="eq.EquipmentID" 
+                      v-bind:key="eq.EquipmentID">
+                      {{ eq.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="equipment-activeFilterCheck" checked
+                    v-on:change="updateEquipmentList(eqID)">
+                  <label class="form-check-label" for="equipment-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="equipment-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}
+              </div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="equipment-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                
+                <div class="col-md-6">
+                  <button id="equipment-update" type="button" class="btn btn-primary" 
+                    @click="updateEQ()" :disabled="locked || creatingNew">Update</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="equipment-new" type="button" class="btn btn-secondary float-right"
+                    @click="newEQClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="equipment-cancel" type="button" class="btn btn-secondary float-right" 
+                    @click="cancelNewEQ()" :disabled="!creatingNew">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="equipmentForm">
+                <fieldset id="equipmentFieldset" :disabled="locked">
+                  
+                  <div class="form-group row">
+                    <label for="equipment-modelSelect" class="col-sm-2 col-form-label">Model</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="equipment-modelSelect" 
+                        v-model="currentEQ.EquipmentModelID" 
+                        v-select="currentEQ.EquipmentModelID"
+                        :disabled="locked">
+                        <option 
+                          v-for="model in models" 
+                          v-bind:value="model.EquipmentModelID" 
+                          v-bind:key="model.EquipmentModelID">
+                          {{ model.Name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipment-serialNumber" class="col-sm-2 col-form-label">Serial Number</label>
+                    <div class="col-sm-4">
+                      <input type="text" class="form-control" id="equipment-serialNumber"
+                        v-model="currentEQ.SerialNumber">
+                    </div>
+
+                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-4">
+                      <input type="checkbox" class="form-check-input" id="site-active" 
+                        v-model="currentEQ.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipment-lastCalibrationDate" class="col-sm-2 col-form-label">
+                      Last Calibrated On</label>
+                    <div class="col-sm-10">
+                      <input type="date" class="form-control" id="equipment-lastCalibrationDate"
+                        v-model="currentEQ.LastCalibrationDate">
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
+            
+            <!-- Equipment Model form -->
+            <div class="tab-pane fade" id="v-pills-equipmentModel" role="tabpanel" 
+              aria-labelledby="v-pills-equipmentModel-tab">
+              
+              <form id="em-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="emSelect" 
+                    v-model="emID" 
+                    v-select="emID"
+                    v-on:change="getCurrentEM(emID)">
+                    <option 
+                      v-for="em in ems" 
+                      v-bind:value="em.EquipmentModelID" 
+                      v-bind:key="em.EquipmentModelID">
+                      {{ em.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="equipmentModel-activeFilterCheck" checked
+                    v-on:change="updateEquipmentModelList(emID)">
+                  <label class="form-check-label" for="equipmentModel-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="equipmentModel-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}
+              </div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="equipmentModel-edit" type="button" class="btn btn-primary"
+                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                
+                <div class="col-md-6">
+                  <button id="equipmentModel-update" type="button" class="btn btn-primary" 
+                    @click="updateEM()" :disabled="locked || creatingNew">Update</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="equipmentModel-new" type="button" class="btn btn-secondary float-right"
+                    @click="newEMClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                
+                <div class="col-md-2">
+                  <button id="equipmentModel-cancel" type="button" class="btn btn-secondary float-right" 
+                    @click="cancelNewEM()" :disabled="!creatingNew">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="equipmentModelForm">
+                <fieldset id="equipmentModelFieldset" :disabled="locked">
+                  
+                  <div class="form-group row"
+                    v-show="!creatingNew">
+                    <label for="equipmentModel-deployedCount" class="col-sm-2 col-form-label">Inventory</label>
+                    <div class="col-sm-10">
+                      <p id="equipmentModel-deployedCount"> {{ currentEM.EquipmentCount }} </p>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-10">
+                      <input type="checkbox" class="form-check-input" id="site-active" 
+                        v-model="currentEM.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-name" class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="equipmentModel-name"
+                        v-model="currentEM.Name">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-manufacturer" class="col-sm-2 col-form-label">Manufacturer</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="equipmentModel-manufacturer"
+                        v-model="currentEM.Manufacturer">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="equipmentModel-description" rows="5"
+                        v-model="currentEM.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
+            
+            
+            <!-- Parameter -->
+            <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
+              aria-labelledby="v-pills-parameter-tab">Parameter</div>
+            
+            <!-- Method -->
+            <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
+              aria-labelledby="v-pills-method-tab">Method</div>
+            
             
             <!-- User form -->
             <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 

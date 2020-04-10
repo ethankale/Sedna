@@ -14,11 +14,12 @@ Vue.directive('select', {
 });
 
 $(document).ready(function() {
-  $("#metadataSelect").select2( { width: '100%' });
-  $("#dr-samplePoint").select2( { width: '100%', disabled: true });
-  $("#dr-parameter").select2(   { width: '100%', disabled: true });
-  $("#dr-method").select2(      { width: '100%', disabled: true });
-  $("#dr-unit").select2(        { width: '100%', disabled: true });
+  $("#metadataSelect").select2(     { width: '100%' });
+  $("#dr-samplePoint").select2(     { width: '100%', disabled: true });
+  $("#dr-parameter").select2(       { width: '100%', disabled: true });
+  $("#dr-method").select2(          { width: '100%', disabled: true });
+  $("#dr-unit").select2(            { width: '100%', disabled: true });
+  $("#dr-equipmentSelect").select2( { width: '100%', disabled: true });
 });
 
 var vm = new Vue({
@@ -30,6 +31,7 @@ var vm = new Vue({
     params: [],
     methods: [],
     units: [],
+    equipment: [],
     locked: true,
     creatingNew: false,
     changingMetas: false,
@@ -45,7 +47,8 @@ var vm = new Vue({
       FrequencyMinutes: null,
       DecimalPoints:    null,
       Notes:            null,
-      Active:           null
+      Active:           null,
+      equipDeployments: []
     }
   },
   watch: {
@@ -73,8 +76,6 @@ var vm = new Vue({
     currentDR: {
       handler(newVal, oldVal) {
         // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
-        console.log(oldVal.MetadataID);
-        console.log(newVal.MetadataID);
         if ((oldVal.MetadataID == newVal.MetadataID) && 
             (newVal.MetadataID != null) &&
             (oldVal.MetadataID != null) &&
@@ -102,9 +103,9 @@ var vm = new Vue({
     
     self.updateMetadataList();
     
-    let lists     = ["sps", "params", "methods", "units"]
+    let lists     = ["sps", "params", "methods", "units", "equipment"]
     let endpoints = ["samplePointList", "parameterList", 
-                     "methodList", "unitList"]
+                     "methodList", "unitList", "equipmentList"]
     
     for (let i=0; i<lists.length; i++) {
       
@@ -148,6 +149,7 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentDR = data[0];
+        this.getEquipmentDeployments(this.currentDR.MetadataID);
         this.dirty = false;
         this.error = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Data Record.";
@@ -217,6 +219,20 @@ var vm = new Vue({
         console.log(err);
         this.error = true;
         this.notificationText = "Could not add the Data Record.  Please double-check the values.";
+      });
+    },
+    
+    getEquipmentDeployments: function(metaid) {
+      let url = `http://localhost:3000/api/v1/equipmentDeploymentList?MetadataID=${metaid}`;
+      let self = this;
+      $.ajax({
+        url: url,
+        method:'GET',
+        timeout: 3000
+      }).done(function(data) {
+        self.currentDR.equipDeployments = data;
+      }).fail(function(err) {
+        console.log(err);
       });
     },
     
