@@ -2,7 +2,7 @@
 "use strict";
 
 let { Connection, TYPES, Request} = require('tedious');
-let cfg        = require('./config.js')
+let cfg = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js')
 

@@ -12536,7 +12536,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":13,"vue":4}],7:[function(require,module,exports){
+},{"./utils.js":14,"vue":4}],7:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -12932,6 +12932,180 @@ var vm = new Vue({
 
 },{"vue":4}],9:[function(require,module,exports){
 
+let alqwuutils     = require('./utils.js');
+let Vue = require('vue')
+
+let utcoffset  = alqwuutils.utcoffset;
+
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
+$(document).ready(function() {
+  $("#paramSelect").select2({ width: '100%' });
+});
+
+var vm = new Vue({
+  el: '#v-pills-parameter',
+  data: {
+    params: [],
+    ParameterID: 0,
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Parameter.",
+    currentParameter: {
+      ParameterID: null,
+      Name:        null,
+      CAS:         null,
+      Description: null
+    }
+  },
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Save';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  mounted: function () {
+    let self = this;
+    
+    self.updateParameterList();
+  },
+  methods: {
+    updateParameterList: function(ParameterID) {
+      let active = $("#parameter-activeFilterCheck").prop('checked') ? '?active=1': '';
+      $.ajax({
+        url: `http://localhost:3000/api/v1/parameterList${active}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.params = data;
+        if (typeof ParameterID === 'undefined') {
+          this.getCurrentParameter(data[0].ParameterID);
+          this.ParameterID = data[0].ParameterID;
+        } else {
+          this.ParameterID = ParameterID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentParameter: function(ParameterID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/parameter?ParameterID=${ParameterID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentParameter = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Parameter.";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Parameter.";
+      }).always(() => {
+      });
+    },
+    
+    updateParameter: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/parameter`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentParameter),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = true;
+        this.notificationText = "Successfully updated!";
+        this.updateParameterList(this.ParameterID);
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Parameter.  Please double-check the values.";
+      });
+    },
+    
+    newParameterClick: function() {
+      if (this.creatingNew) {
+        this.saveNewParameter();
+      } else {
+        this.editNewParameter();
+      };
+    },
+    
+    editNewParameter: function() {
+      for (const prop in this.currentParameter) {
+        this.currentParameter[prop] = null;
+      };
+      this.creatingNew        = true;
+      this.locked             = false;
+      this.notificationText   = "Fill in fields below.  'Save' to create new Parameter."
+    },
+    
+    saveNewParameter: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/parameter`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentParameter),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Parameter!";
+        this.ParameterID = data;
+        this.updateParameterList(this.ParameterID);
+        this.currentParameter.ParameterID = data;
+        this.creatingNew = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = true;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not add the Parameter.  Please double-check the values.";
+      });
+    },
+    
+    cancelParameter: function() {
+      this.getCurrentParameter(this.ParameterID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditParameter: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateParameter();
+      }
+    },
+  }
+})
+
+
+},{"./utils.js":14,"vue":4}],10:[function(require,module,exports){
+
 let Vue = require('vue')
 
 Vue.directive('select', {
@@ -13159,7 +13333,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],10:[function(require,module,exports){
+},{"vue":4}],11:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13176,7 +13350,7 @@ Vue.directive('select', {
 });
 
 $(document).ready(function() {
-  $("#siteSelect").select2(     { width: '100%' });
+  $("#siteSelect").select2({ width: '100%' });
 });
 
 var vm = new Vue({
@@ -13188,7 +13362,7 @@ var vm = new Vue({
     creatingNew: false,
     dirty: false,
     error: false,
-    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Data Record.",
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Site.",
     currentSite: {
       SiteID:           null,
       Code:             null,
@@ -13291,7 +13465,7 @@ var vm = new Vue({
       this.currentSite.Active = true;
       this.creatingNew        = true;
       this.locked             = false;
-      this.notificationText   = "Fill in fields below.  'Save' to create new Data Record."
+      this.notificationText   = "Fill in fields below.  'Save' to create new Site."
     },
     
     saveNewSite: function() {
@@ -13340,7 +13514,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":13,"vue":4}],11:[function(require,module,exports){
+},{"./utils.js":14,"vue":4}],12:[function(require,module,exports){
 
 
 $(document).ready(function() {
@@ -13600,7 +13774,7 @@ function cancelNewUser() {
       .text("Review or edit users.")
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let datarecord     = require('./meta-datarecord.js');
@@ -13609,10 +13783,11 @@ let sites          = require('./meta-site.js');
 let samplepoint    = require('./meta-sample-point.js');
 let equipmentmodel = require('./meta-equipment-model.js');
 let equipment      = require('./meta-equipment.js');
+let parameter      = require('./meta-parameter.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 
-},{"./meta-datarecord.js":6,"./meta-equipment-model.js":7,"./meta-equipment.js":8,"./meta-sample-point.js":9,"./meta-site.js":10,"./meta-user.js":11,"./utils.js":13}],13:[function(require,module,exports){
+},{"./meta-datarecord.js":6,"./meta-equipment-model.js":7,"./meta-equipment.js":8,"./meta-parameter.js":9,"./meta-sample-point.js":10,"./meta-site.js":11,"./meta-user.js":12,"./utils.js":14}],14:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()
@@ -13658,4 +13833,4 @@ let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
-},{}]},{},[12]);
+},{}]},{},[13]);

@@ -1,8 +1,6 @@
 "use strict";
 
-var Connection = require('tedious').Connection;
-let TYPES      = require('tedious').TYPES;
-let Request    = require('tedious').Request;
+let { Connection, TYPES, Request} = require('tedious');
 
 const sqlfunctions = require('./sqlexecutefunction.js')
 

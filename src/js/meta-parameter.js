@@ -14,30 +14,24 @@ Vue.directive('select', {
 });
 
 $(document).ready(function() {
-  $("#siteSelect").select2({ width: '100%' });
+  $("#paramSelect").select2({ width: '100%' });
 });
 
 var vm = new Vue({
-  el: '#v-pills-site',
+  el: '#v-pills-parameter',
   data: {
-    sites: [],
-    siteID: 0,
+    params: [],
+    ParameterID: 0,
     locked: true,
     creatingNew: false,
     dirty: false,
     error: false,
-    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Site.",
-    currentSite: {
-      SiteID:           null,
-      Code:             null,
-      Name:             null,
-      Address:          null,
-      City:             null,
-      ZipCode:          null,
-      Active:           null,
-      Description:      null,
-      SamplePointCount: 0,
-      MetadataCount:    0
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Parameter.",
+    currentParameter: {
+      ParameterID: null,
+      Name:        null,
+      CAS:         null,
+      Description: null
     }
   },
   computed: {
@@ -52,53 +46,53 @@ var vm = new Vue({
   mounted: function () {
     let self = this;
     
-    self.updateSiteList();
+    self.updateParameterList();
   },
   methods: {
-    updateSiteList: function(siteID) {
-      let active = $("#site-activeFilterCheck").prop('checked') ? '?active=1': '';
+    updateParameterList: function(ParameterID) {
+      let active = $("#parameter-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
-        url: `http://localhost:3000/api/v1/getsites${active}`,
+        url: `http://localhost:3000/api/v1/parameterList${active}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.sites = data;
-        if (typeof siteID === 'undefined') {
-          this.getCurrentSite(data[0].SiteID);
-          this.siteID = data[0].SiteID;
+        this.params = data;
+        if (typeof ParameterID === 'undefined') {
+          this.getCurrentParameter(data[0].ParameterID);
+          this.ParameterID = data[0].ParameterID;
         } else {
-          this.siteID = siteID;
+          this.ParameterID = ParameterID;
         }
       }).fail((err) => {
         console.log(err);
       });
     },
     
-    getCurrentSite: function(SiteID) {
+    getCurrentParameter: function(ParameterID) {
       this.locked = true;
       $.ajax({
-        url: `http://localhost:3000/api/v1/site?siteid=${SiteID}&utcoffset=${utcoffset}`,
+        url: `http://localhost:3000/api/v1/parameter?ParameterID=${ParameterID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.currentSite = data[0];
+        this.currentParameter = data;
         this.dirty = false;
         this.error = false;
-        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Site.";
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Parameter.";
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.notificationText = "Could not load the selected Site.";
+        this.notificationText = "Could not load the selected Parameter.";
       }).always(() => {
       });
     },
     
-    updateSite: function() {
+    updateParameter: function() {
       $.ajax({
-        url: `http://localhost:3000/api/v1/site`,
+        url: `http://localhost:3000/api/v1/parameter`,
         method:'PUT',
         timeout: 3000,
-        data: JSON.stringify(this.currentSite),
+        data: JSON.stringify(this.currentParameter),
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
@@ -106,45 +100,44 @@ var vm = new Vue({
         this.error  = false;
         this.locked = true;
         this.notificationText = "Successfully updated!";
-        this.updateSiteList(this.siteID);
+        this.updateParameterList(this.ParameterID);
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.notificationText = "Could not update the Site.  Please double-check the values.";
+        this.notificationText = "Could not update the Parameter.  Please double-check the values.";
       });
     },
     
-    newSiteClick: function() {
+    newParameterClick: function() {
       if (this.creatingNew) {
-        this.saveNewSite();
+        this.saveNewParameter();
       } else {
-        this.editNewSite();
+        this.editNewParameter();
       };
     },
     
-    editNewSite: function() {
-      for (const prop in this.currentSite) {
-        this.currentSite[prop] = null;
+    editNewParameter: function() {
+      for (const prop in this.currentParameter) {
+        this.currentParameter[prop] = null;
       };
-      this.currentSite.Active = true;
       this.creatingNew        = true;
       this.locked             = false;
-      this.notificationText   = "Fill in fields below.  'Save' to create new Site."
+      this.notificationText   = "Fill in fields below.  'Save' to create new Parameter."
     },
     
-    saveNewSite: function() {
+    saveNewParameter: function() {
       $.ajax({
-        url: `http://localhost:3000/api/v1/site`,
+        url: `http://localhost:3000/api/v1/parameter`,
         method:'POST',
         timeout: 3000,
-        data: JSON.stringify(this.currentSite),
+        data: JSON.stringify(this.currentParameter),
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.notificationText = "Successfully added new Site!";
-        this.siteID = data;
-        this.updateSiteList(this.siteID);
-        this.currentSite.SiteID = data;
+        this.notificationText = "Successfully added new Parameter!";
+        this.ParameterID = data;
+        this.updateParameterList(this.ParameterID);
+        this.currentParameter.ParameterID = data;
         this.creatingNew = false;
         this.dirty       = false;
         this.error       = false;
@@ -152,12 +145,12 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.notificationText = "Could not add the Site.  Please double-check the values.";
+        this.notificationText = "Could not add the Parameter.  Please double-check the values.";
       });
     },
     
-    cancelSite: function() {
-      this.getCurrentSite(this.siteID);
+    cancelParameter: function() {
+      this.getCurrentParameter(this.ParameterID);
       
       this.creatingNew = false;
       this.locked      = true;
@@ -165,13 +158,13 @@ var vm = new Vue({
       this.dirty       = false;
     },
     
-    clickEditSite: function() {
+    clickEditParameter: function() {
       if (this.locked) {
         this.locked = false;
         this.dirty  = true;
         this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
       } else {
-        this.updateSite();
+        this.updateParameter();
       }
     },
   }

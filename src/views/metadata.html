@@ -83,6 +83,10 @@
             <a class="nav-link" id="v-pills-method-tab" data-toggle="pill" 
               href="#v-pills-method" role="tab" aria-controls="v-pills-method" 
               aria-selected="false">Method</a>
+              
+            <a class="nav-link" id="v-pills-unit-tab" data-toggle="pill" 
+              href="#v-pills-unit" role="tab" aria-controls="v-pills-unit" 
+              aria-selected="false">Unit</a>
             
             <hr>
             
@@ -780,7 +784,7 @@
                   <div class="form-group row">
                     <label for="equipment-lastCalibrationDate" class="col-sm-2 col-form-label">
                       Last Calibrated On</label>
-                    <div class="col-sm-10">
+                    <div class="col-sm-4">
                       <input type="date" class="form-control" id="equipment-lastCalibrationDate"
                         v-model="currentEQ.LastCalibrationDate">
                     </div>
@@ -852,10 +856,8 @@
                   
                   <div class="form-group row"
                     v-show="!creatingNew">
-                    <label for="equipmentModel-deployedCount" class="col-sm-2 col-form-label">Inventory</label>
-                    <div class="col-sm-10">
-                      <p id="equipmentModel-deployedCount"> {{ currentEM.EquipmentCount }} </p>
-                    </div>
+                    <p>There {{ currentEM.EquipmentCount == 1 ? 'is 1' : 'are ' + currentEM.EquipmentCount }} 
+                      in inventory.</p>
                   </div>
                   
                   <div class="form-group row">
@@ -894,15 +896,87 @@
               </form>
             </div>
             
-            
             <!-- Parameter -->
             <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
-              aria-labelledby="v-pills-parameter-tab">Parameter</div>
+              aria-labelledby="v-pills-parameter-tab">
+              
+              <form id="param-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="paramSelect" 
+                    v-model="ParameterID" 
+                    v-select="ParameterID"
+                    v-on:change="getCurrentParameter(ParameterID)">
+                    <option 
+                      v-for="param in params" 
+                      v-bind:value="param.ParameterID" 
+                      v-bind:key="param.ParameterID">
+                      {{ param.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="parameter-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="parameter-edit" type="button" class="btn btn-primary"
+                    @click="clickEditParameter()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="parameter-new" type="button" class="btn btn-secondary"
+                    @click="newParameterClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="parameter-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelParameter()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="parameterForm">
+                <fieldset id="parameterFieldset" :disabled="locked">
+                  
+                  <div class="form-group row">
+                    <label for="parameter-name" class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="parameter-name"
+                        v-model="currentParameter.Name">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="parameter-cas" class="col-sm-2 col-form-label">CAS</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="parameter-cas"
+                        v-model="currentParameter.CAS">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="parameter-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="parameter-description" rows="5"
+                        v-model="currentParameter.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
             
             <!-- Method -->
             <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
               aria-labelledby="v-pills-method-tab">Method</div>
             
+            <!-- Unit -->
+            <div class="tab-pane fade" id="v-pills-unit" role="tabpanel" 
+              aria-labelledby="v-pills-unit-tab">Unit</div>
             
             <!-- User form -->
             <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 

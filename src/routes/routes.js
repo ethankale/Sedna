@@ -6,7 +6,7 @@ const equipmentDeployment = require('../controllers/equipmentDeployment.js');
 const metadata            = require('../controllers/metadata.js');
 const measurements        = require('../controllers/measurements.js');
 const methods             = require('../controllers/methods.js');
-const parameters          = require('../controllers/parameters.js');
+const parameter           = require('../controllers/parameter.js');
 const samplepoints        = require('../controllers/samplepoints.js');
 const test                = require('../controllers/test.js');
 const sites               = require('../controllers/sites.js');
@@ -72,7 +72,10 @@ module.exports = function (app) {
     app.post('/api/v1/samplePoint', samplepoints.addSamplePoint);
     
     // Parameters
-    app.get('/api/v1/parameterList', parameters.getParameterList);
+    app.get('/api/v1/parameterList', parameter.getParameterList);
+    app.get('/api/v1/parameter', parameter.getParameterDetails);
+    app.put('/api/v1/parameter', parameter.updateParameter);
+    app.post('/api/v1/parameter', parameter.addParameter);
     
     // Sites
     app.get('/api/v1/getsites', sites.getSitesList);
