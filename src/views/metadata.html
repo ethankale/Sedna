@@ -637,8 +637,10 @@
                         <option 
                           v-for="equip in equipment" 
                           v-bind:value="equip.EquipmentID" 
-                          v-bind:key="equip.EquipmentID">
-                          {{ equip.Name }}</option>
+                          v-bind:key="equip.EquipmentID"
+                          :disabled="equip.SiteCode != null">
+                          {{ equip.Name + (equip.SiteCode == null ? '' : ' - deployed to ' + equip.SiteCode) }}
+                        </option>
                       </select>
                     </div>
                     <div class="col-sm-2">
