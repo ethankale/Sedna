@@ -26,6 +26,7 @@ module.exports = function (app) {
     app.get('/api/v1/equipmentDeployment',     equipmentDeployment.getEquipmentDeploymentDetails);
     app.put('/api/v1/equipmentDeployment',     equipmentDeployment.updateEquipmentDeployment);
     app.post('/api/v1/equipmentDeployment',    equipmentDeployment.addEquipmentDeployment);
+    app.delete('/api/v1/equipmentDeployment',  equipmentDeployment.deleteEquipmentDeployment);
     
     // Equipment
     app.get('/api/v1/equipmentList', equipment.getEquipmentList);

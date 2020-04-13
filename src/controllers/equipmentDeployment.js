@@ -200,30 +200,34 @@ let controller = {
   },
   
   deleteEquipmentDeployment: function (req, res) {
-    let cfg = require('./config.js')
-    let mssql_config = cfg.getConfig().mssql;
-    let connection     = new Connection(mssql_config);
+    if (typeof req.body.EquipmentDeploymentID != 'undefined') {
     
-    connection.on('connect', function(err) {
+      let cfg = require('./config.js')
+      let mssql_config = cfg.getConfig().mssql;
+      let connection = new Connection(mssql_config);
       
-      let statement = `DELETE EquipmentDeployment 
-       WHERE EquipmentDeploymentID = @EquipmentDeploymentID`
-      
-       var request = new Request(statement, function(err, rowCount) {
-         if (err) {
-           res.status(400).end();
-           console.log(err);
-         } else {
-           res.status(200).json("Success");
-         }
-         connection.close();
-       });
-      
-      request.addParameter('EquipmentDeploymentID', TYPES.Int,       req.body.EquipmentDeploymentID);
-      
-      connection.execSql(request);
-      
-    });
+      connection.on('connect', function(err) {
+        
+        let statement = `DELETE EquipmentDeployment 
+         WHERE EquipmentDeploymentID = @EquipmentDeploymentID`
+        
+         var request = new Request(statement, function(err, rowCount) {
+           if (err) {
+             res.status(400).end();
+             console.log(err);
+           } else {
+             res.status(200).json("Success");
+           }
+           connection.close();
+         });
+        
+        request.addParameter('EquipmentDeploymentID', TYPES.Int, req.body.EquipmentDeploymentID);
+        
+        connection.execSql(request);
+      });
+    } else {
+      res.status(400).json('Must provide the EquipmentDeploymentID to delete a deployment.');
+    };
   },
 };
 

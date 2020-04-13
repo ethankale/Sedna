@@ -213,7 +213,6 @@ var vm = new Vue({
       this.changingLookups += 1;
       console.log("getEquipmentDeployments; " + this.changingLookups);
       let url = `http://localhost:3000/api/v1/equipmentDeploymentList?MetadataID=${metaid}`;
-      
       $.ajax({
         url: url,
         method:'GET',
@@ -240,11 +239,31 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
+        this.error = false;
+        this.notificationText = "Added a new piece of equipment to this data record."
         this.getEquipmentDeployments(MetadataID);
       }).fail((err) => {
         console.log(err);
         this.error = true;
         this.notificationText = "Could not add Equipment.";
+      });
+    },
+    
+    deleteEquipment: function(EquipmentDeploymentID) {
+      let requestBody = {'EquipmentDeploymentID': EquipmentDeploymentID};
+      $.ajax({
+        url: 'http://localhost:3000/api/v1/equipmentDeployment',
+        method:'DELETE',
+        timeout: 3000,
+        data: JSON.stringify(requestBody),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done(() => {
+        this.getEquipmentDeployments(this.currentDR.MetadataID);
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not delete Equipment from this Deployment.";
       });
     },
     

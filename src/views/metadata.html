@@ -642,7 +642,8 @@
                       </select>
                     </div>
                     <div class="col-sm-2">
-                      <button class="btn btn-primary btn-sm float-right">+</button>
+                      <button type="button" class="btn btn-primary btn-sm float-right"
+                        @click="addEquipment()">+</button>
                     </div>
                   </div>
                   
@@ -655,7 +656,8 @@
                         ' (' + equip.Manufacturer + ')' }}</p>
                     </div>
                     <div class="col-sm-2">
-                      <button class="btn btn-danger btn-sm float-right">X</button>
+                      <button type="button" class="btn btn-danger btn-sm float-right"
+                        @click="deleteEquipment(equip.EquipmentDeploymentID)">X</button>
                     </div>
                   </div>
                     
