@@ -22,7 +22,7 @@ let controller = {
         } 
         
         let statement = `SELECT
-          st.Code, st.Name, st.Address, st.City, st.ZipCode, st.Active, st.Description, 
+          st.SiteID, st.Code, st.Name, st.Address, st.City, st.ZipCode, st.Active, st.Description, 
           COUNT(DISTINCT sp.SamplePointID) as SamplePointCount, COUNT(md.MetadataID) as MetadataCount
           FROM Site as st
           LEFT JOIN SamplePoint as sp
@@ -30,7 +30,7 @@ let controller = {
           LEFT JOIN Metadata as md
           ON sp.SamplePointID = md.SamplePointID
           WHERE st.SiteID = @siteid
-          GROUP BY st.Code, st.Name, st.Address, st.City, st.ZipCode, st.Active, st.Description`;
+          GROUP BY st.SiteID, st.Code, st.Name, st.Address, st.City, st.ZipCode, st.Active, st.Description`;
         
         var request = new Request(statement, function(err, rowCount) {
           if (err) {
@@ -76,53 +76,49 @@ let controller = {
     },
     
     updateSite: function(req, res) {
-      console.log(req.body);
-      let mssql_config = cfg.getConfig().mssql;
-      let connection = new Connection(mssql_config);
       
-      let returndata = {};
-      
-      let statement = `UPDATE [Site] SET
-        Code        = @Code,
-        Name        = @name,
-        Address     = @address,
-        City        = @city,
-        ZipCode     = @zip,
-        Description = @description,
-        Active      = @active
-        WHERE SiteID = @siteid\r`;
-      
-      connection.on('connect', function(err) {
+      if (typeof req.body.SiteID == 'undefined') {
+        res.status(400).json("Must include a SiteID to update a site.")
+      } else {
+        let mssql_config = cfg.getConfig().mssql;
+        let connection = new Connection(mssql_config);
         
-        var request = new Request(statement, function(err, rowCount) {
-          if (err) {
-            res.status(400).end();
-            console.log(err);
-          } else {
-            res.status(200).json("Success");
-          }
-          connection.close();
-        });
+        let returndata = {};
         
-        request.on('row', function(columns) {
-          let thisrow = {}
-          columns.forEach(function(column) {
-              thisrow[[column.metadata.colName]] = column.value;
+        connection.on('connect', function(err) {
+          
+          let statement = `UPDATE [Site] SET
+            Code        = @code,
+            Name        = @name,
+            Address     = @address,
+            City        = @city,
+            ZipCode     = @zip,
+            Description = @description,
+            Active      = @active
+            WHERE SiteID = @siteid\r`;
+            
+          var request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              res.status(400).end();
+              console.log(err);
+            } else {
+              res.status(200).json("Success");
+            }
+            connection.close();
           });
-          returndata.push(thisrow);
+          
+          request.addParameter('siteid',      TYPES.Int, req.body.SiteID);
+          request.addParameter('code',        TYPES.VarChar, req.body.Code);
+          request.addParameter('name',        TYPES.VarChar, req.body.Name);
+          request.addParameter('address',     TYPES.VarChar, req.body.Address);
+          request.addParameter('city',        TYPES.VarChar, req.body.City);
+          request.addParameter('zip',         TYPES.VarChar, req.body.Zip);
+          request.addParameter('description', TYPES.VarChar, req.body.Description);
+          request.addParameter('active',      TYPES.Bit, req.body.Active)
+          
+          connection.execSql(request);
         });
-        
-        request.addParameter('siteid', TYPES.Int, req.body.siteid);
-        request.addParameter('code', TYPES.VarChar, req.body.code);
-        request.addParameter('name', TYPES.VarChar, req.body.name);
-        request.addParameter('address', TYPES.VarChar, req.body.address);
-        request.addParameter('city', TYPES.VarChar, req.body.city);
-        request.addParameter('zip', TYPES.VarChar, req.body.zip);
-        request.addParameter('description', TYPES.VarChar, req.body.description);
-        request.addParameter('active', TYPES.Bit, req.body.active)
-        
-        connection.execSql(request);
-      });
+      };
     },
     
     addSite: function(req, res) {

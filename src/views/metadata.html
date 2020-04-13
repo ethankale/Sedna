@@ -52,7 +52,7 @@
           <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
             
                         
-            <a class="nav-link" id="v-pills-site-tab" data-toggle="pill" 
+            <a class="nav-link active" id="v-pills-site-tab" data-toggle="pill" 
               href="#v-pills-site" role="tab" aria-controls="v-pills-site" 
               aria-selected="true">Site</a>
             
@@ -60,7 +60,7 @@
               href="#v-pills-sample-point" role="tab" aria-controls="v-pills-sample-point" 
               aria-selected="true">Sample Point</a>
             
-            <a class="nav-link active" id="v-pills-datarecord-tab" data-toggle="pill" 
+            <a class="nav-link" id="v-pills-datarecord-tab" data-toggle="pill" 
               href="#v-pills-datarecord" role="tab" aria-controls="v-pills-datarecord" 
               aria-selected="true">Data Record</a>
             
@@ -98,96 +98,112 @@
           <div class="tab-content" id="v-pills-tabContent">
 
             <!-- Site form -->
-            <div class="tab-pane fade" id="v-pills-site" role="tabpanel" 
+            <div class="tab-pane fade show active" id="v-pills-site" role="tabpanel" 
               aria-labelledby="v-pills-site-tab">
               
               <form id = "site-selectHeader">
                 <div class="form-group">
-                  <select class="form-control" id="siteSelect">
-                    <option>Loading...</option>
+                  <select class="form-control" id="siteSelect"
+                    v-model="siteID" 
+                    v-select="siteID"
+                    v-on:change="getCurrentSite(siteID)">
+                    <option 
+                      v-for="site in sites" 
+                      v-bind:value="site.SiteID" 
+                      v-bind:key="site.SiteID">
+                      {{ site.Code + ": " + site.Name }}</option>
                   </select>
                 </div>
                 
                 <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="site-activeFilterCheck" checked>
+                  <input type="checkbox" class="form-check-input" id="site-activeFilterCheck" checked
+                    v-on:change="updateSiteList()">
                   <label class="form-check-label" for="site-activeFilterCheck">Hide Inactive</label>
                 </div>
                 
                 <hr />
               </form>
               
-              <div id="site-narrative" class="alert alert-info">Loading...</div>
+              <div id="site-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="site-edit" type="button" class="btn btn-primary"
+                    @click="clickEditSite()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="site-new" type="button" class="btn btn-secondary"
+                    @click="newSiteClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="site-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelSite()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
               
               <form id="siteForm">
-                <fieldset id="siteFieldset" disabled>
+                <fieldset id="siteFieldset" :disabled="locked">
                   
                   <div class="form-group row">
                     <label for="site-code" class="col-sm-2 col-form-label">Code</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="site-code">
+                      <input type="text" class="form-control" id="site-code"
+                        v-model="currentSite.Code">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="site-name" class="col-sm-2 col-form-label">Name</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="site-name">
+                      <input type="text" class="form-control" id="site-name"
+                        v-model="currentSite.Name">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="site-address" class="col-sm-2 col-form-label">Address</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="site-address">
+                      <input type="text" class="form-control" id="site-address"
+                        v-model="currentSite.Address">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="site-city" class="col-sm-2 col-form-label">City</label>
                     <div class="col-sm-4">
-                      <input type="text" class="form-control" id="site-city">
+                      <input type="text" class="form-control" id="site-city"
+                        v-model="currentSite.City">
                     </div>
 
                     <label for="site-zip" class="col-sm-2 col-form-label">Zip</label>
                     <div class="col-sm-4">
-                      <input type="text" class="form-control" id="site-zip">
+                      <input type="text" class="form-control" id="site-zip"
+                        v-model="currentSite.ZipCode">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="site-active" class="col-sm-2 col-form-label">Active</label>
                     <div class="col-sm-10">
-                      <input type="checkbox" class="form-check-input" id="site-active">
+                      <input type="checkbox" class="form-check-input" id="site-active"
+                        v-model="currentSite.Active">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="site-description" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
-                      <textarea class="form-control" id="site-description" rows="5"></textarea>
+                      <textarea class="form-control" id="site-description" rows="5"
+                        v-model="currentSite.Description"></textarea>
                     </div>
                   </div>
                   
                 </fieldset>
               </form>
-              
-              <hr />
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="site-edit" type="button" class="btn btn-primary">Edit</button>
-                </div>
-                <div class="col-md-6">
-                  <button id="site-update" type="button" class="btn btn-primary" disabled>Update</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="site-new" type="button" class="btn btn-secondary float-right">New</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="site-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
-                </div>
-              </div>
-              
             </div>
             
             <!-- Sample Point form -->
@@ -479,7 +495,7 @@
             </div>
             
             <!-- Data Record (metadata) form -->
-            <div class="tab-pane fade show active" id="v-pills-datarecord" role="tabpanel" 
+            <div class="tab-pane fade" id="v-pills-datarecord" role="tabpanel" 
               aria-labelledby="v-pills-datarecord-tab">
               
               <form id = "dr-selectHeader" v-show="!creatingNew">
