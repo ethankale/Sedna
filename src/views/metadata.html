@@ -250,22 +250,17 @@
               <div class="form-row">
                 <div class="col-md-2">
                   <button id="sample-point-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                    @click="clickEditSP()" :disabled="creatingNew"> {{ editButtonText }}</button>
                 </div>
                 
-                <div class="col-md-6">
-                  <button id="sample-point-update" type="button" class="btn btn-primary" 
-                    @click="updateSP()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="sample-point-new" type="button" class="btn btn-secondary float-right"
+                <div class="col-md-8">
+                  <button id="sample-point-new" type="button" class="btn btn-secondary"
                     @click="newSPClick()" :disabled="dirty"> {{ newButtonText }}</button>
                 </div>
                 
                 <div class="col-md-2">
                   <button id="sample-point-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewSP()" :disabled="!creatingNew">Cancel</button>
+                    @click="cancelSP()" :disabled="locked">Cancel</button>
                 </div>
               </div>
               
@@ -692,7 +687,6 @@
               </form>
               
             </div>
-            
             
             <!-- Equipment form -->
             <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 

@@ -13476,7 +13476,6 @@ var vm = new Vue({
     sites: [],
     locked: true,
     creatingNew: false,
-    changingSPs: false,
     dirty: false,
     error: false,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
@@ -13518,28 +13517,10 @@ var vm = new Vue({
         $('#sample-point-siteSelect').change();
       });
     },
-    
-    currentSP: {
-      handler(newVal, oldVal) {
-        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
-        // console.log(oldVal.SamplePointID);
-        // console.log(newVal.SamplePointID);
-        if ((oldVal.SamplePointID == newVal.SamplePointID) && 
-            (newVal.SamplePointID != null) &&
-            (oldVal.SamplePointID != null) &&
-            (this.changingSPs == false)) {
-          this.dirty = true;
-          this.notificationText = "Changes made; click 'Update' to save to the database."
-        } else {
-          this.changingSPs = false;
-        }
-      },
-      deep: true
-    }
   },
   computed: {
     editButtonText: function() {
-      return this.locked ? 'Edit' : 'Lock';
+      return this.locked ? 'Edit' : 'Save';
     },
     
     newButtonText: function() {
@@ -13598,7 +13579,6 @@ var vm = new Vue({
         this.error = true;
         this.notificationText = "Could not load the selected Sample Point.";
       }).always(() => {
-        
       });
     },
     
@@ -13611,8 +13591,9 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty = false;
-        this.error = false;
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = true;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -13635,8 +13616,8 @@ var vm = new Vue({
       };
       this.currentSP.Name   = 'Default';
       this.currentSP.Active = true;
-      this.creatingNew = true;
-      this.locked = false;
+      this.creatingNew      = true;
+      this.locked           = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Sample Point."
     },
     
@@ -13654,8 +13635,9 @@ var vm = new Vue({
         this.updateSamplePointList(this.spID);
         this.currentSP.SamplePointID = data;
         this.creatingNew = false;
-        this.dirty = false;
-        this.error = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = true;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -13663,16 +13645,24 @@ var vm = new Vue({
       });
     },
     
-    cancelNewSP: function() {
+    cancelSP: function() {
       this.getCurrentSP(this.spID);
+      
       this.creatingNew = false;
-      this.locked = true;
-      this.error = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
     },
     
-    toggleLocked: function() {
-      this.locked = this.locked ? false : true;
-    }
+    clickEditSP: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateSP();
+      }
+    },
   }
 })
 

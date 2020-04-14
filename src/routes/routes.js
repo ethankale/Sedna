@@ -42,25 +42,16 @@ module.exports = function (app) {
     app.post('/api/v1/equipmentModel',    equipmentModel.addEquipmentModel);
     
     // Measurements
-    // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurements', measurements.getMeasurements);
-    // Parameters: metaid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurementCount', measurements.getCountByDtmAndMetaid)
-    // Add one or more new measurements to the database
     app.post('/api/v1/measurements', measurements.addMeasurements);
-    // Parameters: siteid, parameterid, startdtm, enddtm, utcoffset
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
     
     // Metadata (or Data Record)
-    // Parameter: siteid
     app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
-    // Parameter: active
     app.get('/api/v1/metadataList', metadata.getMetadataList);
-    // Parameter: metadataid
     app.get('/api/v1/metadataDetails', metadata.getMetadataDetails);
-    // Parameters: ALL fields in Metadata, including ID
     app.put('/api/v1/metadata', metadata.updateMetadata);
-    // Parameters: ALL fields in Metadata, EXCEPT ID
     app.post('/api/v1/metadata', metadata.addMetadata);
     
     // Methods
