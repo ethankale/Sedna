@@ -972,11 +972,142 @@
             
             <!-- Method -->
             <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
-              aria-labelledby="v-pills-method-tab">Method</div>
+              aria-labelledby="v-pills-method-tab">
+              <form id="method-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="methodSelect" 
+                    v-model="MethodID" 
+                    v-select="MethodID"
+                    v-on:change="getCurrentMethod(MethodID)">
+                    <option 
+                      v-for="method in methods" 
+                      v-bind:value="method.MethodID" 
+                      v-bind:key="method.MethodID">
+                      {{ method.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="method-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="method-edit" type="button" class="btn btn-primary"
+                    @click="clickEditMethod()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="method-new" type="button" class="btn btn-secondary"
+                    @click="newMethodClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="method-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelMethod()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="methodForm">
+                <fieldset id="methodFieldset" :disabled="locked">
+                  
+                  <div class="form-group row">
+                    <label for="method-code" class="col-sm-2 col-form-label">Code</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="method-code"
+                        v-model="currentMethod.Code">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="method-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="method-description" rows="5"
+                        v-model="currentMethod.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="method-reference" class="col-sm-2 col-form-label">Reference</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="method-reference" rows="5"
+                        v-model="currentMethod.Reference"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
             
             <!-- Unit -->
             <div class="tab-pane fade" id="v-pills-unit" role="tabpanel" 
-              aria-labelledby="v-pills-unit-tab">Unit</div>
+              aria-labelledby="v-pills-unit-tab">
+              
+              <form id="unit-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="unitSelect" 
+                    v-model="UnitID" 
+                    v-select="UnitID"
+                    v-on:change="getCurrentUnit(UnitID)">
+                    <option 
+                      v-for="unit in units" 
+                      v-bind:value="unit.UnitID" 
+                      v-bind:key="unit.UnitID">
+                      {{ unit.Symbol }}
+                    </option>
+                  </select>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="unit-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="unit-edit" type="button" class="btn btn-primary"
+                    @click="clickEditUnit()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="unit-new" type="button" class="btn btn-secondary"
+                    @click="newUnitClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="unit-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelUnit()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="unitForm">
+                <fieldset id="unitFieldset" :disabled="locked">
+                  
+                  <div class="form-group row">
+                    <label for="unit-symbol" class="col-sm-2 col-form-label">Symbol</label>
+                    <div class="col-sm-10">
+                      <input type="text" maxlength='10' class="form-control" id="unit-symbol"
+                        v-model="currentUnit.Symbol">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="unit-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="unit-description" rows="5"
+                        v-model="currentUnit.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
             
             <!-- User form -->
             <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 

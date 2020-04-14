@@ -7,5 +7,7 @@ let samplepoint    = require('./meta-sample-point.js');
 let equipmentmodel = require('./meta-equipment-model.js');
 let equipment      = require('./meta-equipment.js');
 let parameter      = require('./meta-parameter.js');
+let method         = require('./meta-method.js');
+let unit           = require('./meta-unit.js');
 
 let utcoffset  = alqwuutils.utcoffset;

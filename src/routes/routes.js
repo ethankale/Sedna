@@ -5,12 +5,12 @@ const equipmentModel      = require('../controllers/equipmentModel.js');
 const equipmentDeployment = require('../controllers/equipmentDeployment.js');
 const metadata            = require('../controllers/metadata.js');
 const measurements        = require('../controllers/measurements.js');
-const methods             = require('../controllers/methods.js');
+const method              = require('../controllers/method.js');
 const parameter           = require('../controllers/parameter.js');
 const samplepoints        = require('../controllers/samplepoints.js');
 const test                = require('../controllers/test.js');
 const sites               = require('../controllers/sites.js');
-const units               = require('../controllers/units.js');
+const unit                = require('../controllers/unit.js');
 const user                = require('../controllers/user.js');
 
 module.exports = function (app) {
@@ -63,7 +63,10 @@ module.exports = function (app) {
     app.post('/api/v1/metadata', metadata.addMetadata);
     
     // Methods
-    app.get('/api/v1/methodList', methods.getMethodList);
+    app.get('/api/v1/methodList', method.getMethodList);
+    app.get('/api/v1/method', method.getMethodDetails);
+    app.put('/api/v1/method', method.updateMethod);
+    app.post('/api/v1/method', method.addMethod);
     
     // Sample Points
     app.get('/api/v1/samplePointList', samplepoints.getSamplePointList);
@@ -85,7 +88,10 @@ module.exports = function (app) {
     app.post('/api/v1/site', sites.addSite);
     
     // Units
-    app.get('/api/v1/unitList', units.getUnitList);
+    app.get('/api/v1/unitList', unit.getUnitList);
+    app.get('/api/v1/unit', unit.getUnitDetails);
+    app.put('/api/v1/unit', unit.updateUnit);
+    app.post('/api/v1/unit', unit.addUnit);
     
     // Users
     app.get('/api/v1/user', user.getUser);

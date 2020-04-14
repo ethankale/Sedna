@@ -12536,7 +12536,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":14,"vue":4}],7:[function(require,module,exports){
+},{"./utils.js":16,"vue":4}],7:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -12947,6 +12947,179 @@ Vue.directive('select', {
 });
 
 $(document).ready(function() {
+  $("#methodSelect").select2({ width: '100%' });
+});
+
+var vm = new Vue({
+  el: '#v-pills-method',
+  data: {
+    methods: [],
+    MethodID: 0,
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Method.",
+    currentMethod: {
+      MethodID:    null,
+      Code:        null,
+      Description: null,
+      Reference:   null
+    }
+  },
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Save';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  mounted: function () {
+    let self = this;
+    
+    self.updateMethodList();
+  },
+  methods: {
+    updateMethodList: function(MethodID) {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/methodList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.methods = data;
+        if (typeof MethodID === 'undefined') {
+          this.getCurrentMethod(data[0].MethodID);
+          this.MethodID = data[0].MethodID;
+        } else {
+          this.MethodID = MethodID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentMethod: function(MethodID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/method?MethodID=${MethodID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentMethod = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Method.";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Method.";
+      }).always(() => {
+      });
+    },
+    
+    updateMethod: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/method`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentMethod),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = true;
+        this.notificationText = "Successfully updated!";
+        this.updateMethodList(this.MethodID);
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Method.  Please double-check the values.";
+      });
+    },
+    
+    newMethodClick: function() {
+      if (this.creatingNew) {
+        this.saveNewMethod();
+      } else {
+        this.editNewMethod();
+      };
+    },
+    
+    editNewMethod: function() {
+      for (const prop in this.currentMethod) {
+        this.currentMethod[prop] = null;
+      };
+      this.creatingNew        = true;
+      this.locked             = false;
+      this.notificationText   = "Fill in fields below.  'Save' to create new Method."
+    },
+    
+    saveNewMethod: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/method`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentMethod),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Method!";
+        this.MethodID = data;
+        this.updateMethodList(this.MethodID);
+        this.currentMethod.MethodID = data;
+        this.creatingNew = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = true;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not add the Method.  Please double-check the values.";
+      });
+    },
+    
+    cancelMethod: function() {
+      this.getCurrentMethod(this.MethodID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditMethod: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateMethod();
+      }
+    },
+  }
+})
+
+
+},{"./utils.js":16,"vue":4}],10:[function(require,module,exports){
+
+let alqwuutils     = require('./utils.js');
+let Vue = require('vue')
+
+let utcoffset  = alqwuutils.utcoffset;
+
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
+$(document).ready(function() {
   $("#paramSelect").select2({ width: '100%' });
 });
 
@@ -13104,7 +13277,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":14,"vue":4}],10:[function(require,module,exports){
+},{"./utils.js":16,"vue":4}],11:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -13333,7 +13506,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],11:[function(require,module,exports){
+},{"vue":4}],12:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13514,7 +13687,178 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":14,"vue":4}],12:[function(require,module,exports){
+},{"./utils.js":16,"vue":4}],13:[function(require,module,exports){
+
+let alqwuutils     = require('./utils.js');
+let Vue = require('vue')
+
+let utcoffset  = alqwuutils.utcoffset;
+
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
+$(document).ready(function() {
+  $("#unitSelect").select2({ width: '100%' });
+});
+
+var vm = new Vue({
+  el: '#v-pills-unit',
+  data: {
+    units: [],
+    UnitID: 0,
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Unit.",
+    currentUnit: {
+      UnitID:      null,
+      Symbol:      null,
+      Description: null
+    }
+  },
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Save';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  mounted: function () {
+    this.updateUnitList();
+  },
+  methods: {
+    updateUnitList: function(UnitID) {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/unitList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.units = data;
+        if (typeof UnitID === 'undefined') {
+          this.getCurrentUnit(data[0].UnitID);
+          this.UnitID = data[0].UnitID;
+        } else {
+          this.UnitID = UnitID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentUnit: function(UnitID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/unit?UnitID=${UnitID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentUnit = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Unit.";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Unit.";
+      }).always(() => {
+      });
+    },
+    
+    updateUnit: function() {
+      console.log(JSON.stringify(this.currentUnit));
+      $.ajax({
+        url: `http://localhost:3000/api/v1/unit`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentUnit),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = true;
+        this.notificationText = "Successfully updated!";
+        this.updateUnitList(this.UnitID);
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Unit.  Please double-check the values.";
+      });
+    },
+    
+    newUnitClick: function() {
+      if (this.creatingNew) {
+        this.saveNewUnit();
+      } else {
+        this.editNewUnit();
+      };
+    },
+    
+    editNewUnit: function() {
+      for (const prop in this.currentUnit) {
+        this.currentUnit[prop] = null;
+      };
+      this.creatingNew        = true;
+      this.locked             = false;
+      this.notificationText   = "Fill in fields below.  'Save' to create new Unit."
+    },
+    
+    saveNewUnit: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/unit`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentUnit),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Unit!";
+        this.UnitID = data;
+        this.updateUnitList(this.UnitID);
+        this.currentUnit.UnitID = data;
+        this.creatingNew = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = true;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not add the Unit.  Please double-check the values.";
+      });
+    },
+    
+    cancelUnit: function() {
+      this.getCurrentUnit(this.UnitID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditUnit: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateUnit();
+      }
+    },
+  }
+})
+
+
+},{"./utils.js":16,"vue":4}],14:[function(require,module,exports){
 
 
 $(document).ready(function() {
@@ -13774,7 +14118,7 @@ function cancelNewUser() {
       .text("Review or edit users.")
 }
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let datarecord     = require('./meta-datarecord.js');
@@ -13784,10 +14128,12 @@ let samplepoint    = require('./meta-sample-point.js');
 let equipmentmodel = require('./meta-equipment-model.js');
 let equipment      = require('./meta-equipment.js');
 let parameter      = require('./meta-parameter.js');
+let method         = require('./meta-method.js');
+let unit           = require('./meta-unit.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 
-},{"./meta-datarecord.js":6,"./meta-equipment-model.js":7,"./meta-equipment.js":8,"./meta-parameter.js":9,"./meta-sample-point.js":10,"./meta-site.js":11,"./meta-user.js":12,"./utils.js":14}],14:[function(require,module,exports){
+},{"./meta-datarecord.js":6,"./meta-equipment-model.js":7,"./meta-equipment.js":8,"./meta-method.js":9,"./meta-parameter.js":10,"./meta-sample-point.js":11,"./meta-site.js":12,"./meta-unit.js":13,"./meta-user.js":14,"./utils.js":16}],16:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()
@@ -13833,4 +14179,4 @@ let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
-},{}]},{},[13]);
+},{}]},{},[15]);
