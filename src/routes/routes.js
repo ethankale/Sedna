@@ -11,6 +11,7 @@ const samplepoints        = require('../controllers/samplepoints.js');
 const test                = require('../controllers/test.js');
 const sites               = require('../controllers/sites.js');
 const unit                = require('../controllers/unit.js');
+const qualifier           = require('../controllers/qualifier.js');
 const user                = require('../controllers/user.js');
 
 module.exports = function (app) {
@@ -92,6 +93,12 @@ module.exports = function (app) {
     app.get('/api/v1/unit', unit.getUnitDetails);
     app.put('/api/v1/unit', unit.updateUnit);
     app.post('/api/v1/unit', unit.addUnit);
+    
+    // Qualifier
+    app.get('/api/v1/qualifierList', qualifier.getQualifierList);
+    app.get('/api/v1/qualifier', qualifier.getQualifierDetails);
+    app.put('/api/v1/qualifier', qualifier.updateQualifier);
+    app.post('/api/v1/qualifier', qualifier.addQualifier);
     
     // Users
     app.get('/api/v1/user', user.getUser);
