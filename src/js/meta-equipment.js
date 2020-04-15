@@ -71,13 +71,6 @@ var vm = new Vue({
     });
   },
   
-  filters: {
-    dateStringToInput: function(dt) {
-      let jsDT = new Date(dt);
-      return(jsDT.getFullYear() + "-" + (jsDT.getMonth()+1) + "-" + jsDT.getDate());
-    }
-  },
-  
   methods: {
     updateEquipmentList: function(eqID) {
       let active = $("#equipment-activeFilterCheck").prop('checked') ? '?active=1': '';
@@ -108,8 +101,8 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentEQ = data;
-        this.dirty = false;
-        this.error = false;
+        this.dirty     = false;
+        this.error     = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Equipment .`;
       }).fail((err) => {
         console.log(err);
@@ -175,7 +168,6 @@ var vm = new Vue({
         this.dirty = false;
         this.error = false;
         this.locked = true;
-        //this.updateEQ();  //This is exclusively to set Dirty to false.  Need a better way.
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;

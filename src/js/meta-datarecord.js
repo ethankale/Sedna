@@ -22,7 +22,7 @@ $(document).ready(function() {
   $("#dr-equipmentSelect").select2( { width: '100%', disabled: true });
 });
 
-var vm = new Vue({
+var vmDR = new Vue({
   el: '#v-pills-datarecord',
   data: {
     drID: 2,

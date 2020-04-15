@@ -12269,7 +12269,7 @@ $(document).ready(function() {
   $("#dr-equipmentSelect").select2( { width: '100%', disabled: true });
 });
 
-var vm = new Vue({
+var vmDR = new Vue({
   el: '#v-pills-datarecord',
   data: {
     drID: 2,
@@ -12575,25 +12575,9 @@ var vm = new Vue({
     },
   },
   
-  watch: {
-    currentEM: {
-      handler(newVal, oldVal) {
-        //console.log(`Old ID: ${oldVal.EquipmentModelID}; New ID: ${newVal.EquipmentModelID}`)
-        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
-        if ((oldVal.EquipmentModelID == newVal.EquipmentModelID) && 
-            (newVal.EquipmentModelID != null) &&
-            (oldVal.EquipmentModelID != null)) {
-          this.dirty = true;
-          this.notificationText = "Changes made; click 'Update' to save to the database."
-        }
-      },
-      deep: true
-    }
-  },
-  
   computed: {
     editButtonText: function() {
-      return this.locked ? 'Edit' : 'Lock';
+      return this.locked ? 'Edit' : 'Save';
     },
     
     newButtonText: function() {
@@ -12656,8 +12640,9 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty = false;
-        this.error = false;
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = false;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -12698,9 +12683,9 @@ var vm = new Vue({
         this.updateEquipmentModelList(this.emID);
         this.currentEM.EquipmentModelID = data;
         this.creatingNew = false;
-        this.dirty = false;
-        this.error = false;
-        this.updateEM();  //This is exclusively to set Dirty to false.  Need a better way.
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = false;
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -12708,15 +12693,23 @@ var vm = new Vue({
       });
     },
     
-    cancelNewEM: function() {
+    cancelEM: function() {
       this.getCurrentEM(this.emID);
+      
       this.creatingNew = false;
-      this.locked = true;
-      this.error = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
     },
     
-    toggleLocked: function() {
-      this.locked = this.locked ? false : true;
+    clickEditEM: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateEM();
+      }
     }
   }
 })
@@ -12796,13 +12789,6 @@ var vm = new Vue({
     });
   },
   
-  filters: {
-    dateStringToInput: function(dt) {
-      let jsDT = new Date(dt);
-      return(jsDT.getFullYear() + "-" + (jsDT.getMonth()+1) + "-" + jsDT.getDate());
-    }
-  },
-  
   methods: {
     updateEquipmentList: function(eqID) {
       let active = $("#equipment-activeFilterCheck").prop('checked') ? '?active=1': '';
@@ -12833,8 +12819,8 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentEQ = data;
-        this.dirty = false;
-        this.error = false;
+        this.dirty     = false;
+        this.error     = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Equipment .`;
       }).fail((err) => {
         console.log(err);
@@ -12900,7 +12886,6 @@ var vm = new Vue({
         this.dirty = false;
         this.error = false;
         this.locked = true;
-        //this.updateEQ();  //This is exclusively to set Dirty to false.  Need a better way.
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -14286,6 +14271,7 @@ function cancelNewUser() {
 },{}],16:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
+
 let datarecord     = require('./meta-datarecord.js');
 let users          = require('./meta-user.js');
 let sites          = require('./meta-site.js');

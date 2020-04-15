@@ -823,22 +823,17 @@
               <div class="form-row">
                 <div class="col-md-2">
                   <button id="equipmentModel-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                    @click="clickEditEM()" :disabled="creatingNew"> {{ editButtonText }}</button>
                 </div>
                 
-                <div class="col-md-6">
-                  <button id="equipmentModel-update" type="button" class="btn btn-primary" 
-                    @click="updateEM()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipmentModel-new" type="button" class="btn btn-secondary float-right"
+                <div class="col-md-8">
+                  <button id="equipmentModel-new" type="button" class="btn btn-secondary"
                     @click="newEMClick()" :disabled="dirty"> {{ newButtonText }}</button>
                 </div>
                 
                 <div class="col-md-2">
                   <button id="equipmentModel-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewEM()" :disabled="!creatingNew">Cancel</button>
+                    @click="cancelEM()" :disabled="locked">Cancel</button>
                 </div>
               </div>
               
