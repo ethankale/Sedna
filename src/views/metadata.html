@@ -724,22 +724,17 @@
               <div class="form-row">
                 <div class="col-md-2">
                   <button id="equipment-edit" type="button" class="btn btn-primary"
-                    @click="toggleLocked()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                    @click="clickEditEQ()" :disabled="creatingNew"> {{ editButtonText }}</button>
                 </div>
                 
-                <div class="col-md-6">
-                  <button id="equipment-update" type="button" class="btn btn-primary" 
-                    @click="updateEQ()" :disabled="locked || creatingNew">Update</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipment-new" type="button" class="btn btn-secondary float-right"
+                <div class="col-md-8">
+                  <button id="equipment-new" type="button" class="btn btn-secondary"
                     @click="newEQClick()" :disabled="dirty"> {{ newButtonText }}</button>
                 </div>
                 
                 <div class="col-md-2">
                   <button id="equipment-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelNewEQ()" :disabled="!creatingNew">Cancel</button>
+                    @click="cancelEQ()" :disabled="locked">Cancel</button>
                 </div>
               </div>
               

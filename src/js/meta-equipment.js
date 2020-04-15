@@ -39,33 +39,16 @@ var vm = new Vue({
   },
   
   watch: {
-    
     'currentEQ.EquipmentModelID': function () {
       Vue.nextTick(function() {
-        //let isDirty = this.dirty;
         $('#equipment-modelSelect').change();
-        //this.dirty = isDirty;
       });
     },
-    
-    currentEQ: {
-      handler(newVal, oldVal) {
-        //console.log(`Old ID: ${oldVal.EquipmentID}; New ID: ${newVal.EquipmentID}`)
-        // Dirty shouldn't be set if switching to a new site, or adding a new site to the db.
-        if ((oldVal.EquipmentID == newVal.EquipmentID) && 
-            (newVal.EquipmentID != null) &&
-            (oldVal.EquipmentID != null)) {
-          this.dirty = true;
-          this.notificationText = "Changes made; click 'Update' to save to the database."
-        }
-      },
-      deep: true
-    }
   },
   
   computed: {
     editButtonText: function() {
-      return this.locked ? 'Edit' : 'Lock';
+      return this.locked ? 'Edit' : 'Save';
     },
     
     newButtonText: function() {
@@ -86,6 +69,13 @@ var vm = new Vue({
     }).fail(function(err) {
       console.log(err);
     });
+  },
+  
+  filters: {
+    dateStringToInput: function(dt) {
+      let jsDT = new Date(dt);
+      return(jsDT.getFullYear() + "-" + (jsDT.getMonth()+1) + "-" + jsDT.getDate());
+    }
   },
   
   methods: {
@@ -139,8 +129,9 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty = false;
-        this.error = false;
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = true;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -183,7 +174,8 @@ var vm = new Vue({
         this.creatingNew = false;
         this.dirty = false;
         this.error = false;
-        this.updateEQ();  //This is exclusively to set Dirty to false.  Need a better way.
+        this.locked = true;
+        //this.updateEQ();  //This is exclusively to set Dirty to false.  Need a better way.
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -191,15 +183,23 @@ var vm = new Vue({
       });
     },
     
-    cancelNewEQ: function() {
+    cancelEQ: function() {
       this.getCurrentEQ(this.eqID);
+      
       this.creatingNew = false;
-      this.locked = true;
-      this.error = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
     },
     
-    toggleLocked: function() {
-      this.locked = this.locked ? false : true;
+    clickEditEQ: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateEQ();
+      }
     }
   }
 })

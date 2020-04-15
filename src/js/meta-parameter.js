@@ -70,6 +70,10 @@ var vm = new Vue({
     
     getCurrentParameter: function(ParameterID) {
       this.locked = true;
+      if (typeof ParameterID === 'undefined') {
+        ParameterID = typeof this.params[0].ParameterID === 'undefined'? 0 : this.params[0].ParameterID;
+      };
+      
       $.ajax({
         url: `http://localhost:3000/api/v1/parameter?ParameterID=${ParameterID}`,
         method:'GET',

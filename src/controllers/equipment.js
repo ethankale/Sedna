@@ -68,7 +68,7 @@ let controller = {
         [EquipmentID]
         ,[EquipmentModelID]
         ,[SerialNumber]
-        ,[LastCalibrationDate]
+        ,CONVERT(nvarchar(10), [LastCalibrationDate], 23) as LastCalibrationDate
         ,[Notes]
         ,[Active]
         FROM Equipment as eq
