@@ -1,258 +1,176 @@
 
+let Vue = require('vue')
 
-$(document).ready(function() {
-  
-  $("#userSelect").select2({ width: '100%' });
-  $("#userSelect").change(function() {
-    disableEditUser();
-    let userid = $("#userSelect :selected").val()
-    fillUserDetails(userid);
-  });
-  
-  $("#user-edit").click(function() {
-    editUser();
-  });
-  
-  $("#user-new").click(function() {
-    clickNewUserButton();
-  });
-  
-  loadUserList();
-  
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
 });
 
-function editUser() {
-  $("#userFieldset").prop('disabled', false);
-  $("#user-edit")
-    .text("Lock")
-    .off('click')
-    .on('click', function() {disableEditUser()});
-  $("#user-update")
-    .prop('disabled', false)
-    .on('click', function() { clickUserUpdateButton() });
-  $("#user-narrative")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text("Modify the fields to edit this user")
-}
+$(document).ready(function() {
+  $("#userSelect").select2({ width: '100%' });
+});
 
-function disableEditUser() {
-  $("#userFieldset").prop('disabled', true);
-  $("#user-edit")
-    .text("Edit")
-    .off('click')
-    .on('click', function() { editUser() });
-  $("#user-update")
-    .prop('disabled', true)
-    .off('click');
-  $("#user-narrative")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text("Review or edit users.")
-}
+//Vue.component('v-select', vSelect)
 
-function clickUserUpdateButton() {
-  $("#updateAlert")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text('Update the currently selected user?')
-  $("#updateDataButton")
-    .off('click')
-    .prop('disabled', false)
-    .text('Update User')
-    .on('click', function() { updateUser() });
-  $("#updateDataCloseButton")
-    .text("Cancel")
-  $("#updateModal").modal();
-};
-
-function updateUser() {
-  let user = makeUserObject();
+var vm = new Vue({
+  el: '#v-pills-user',
+  data: {
+    UserID: null,
+    users: [],
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: `Click 'Edit' below to make changes, or 'New' to create a new User.`,
+    currentUser: {
+      UserID: null,
+      Name:   null,
+      Email:  null,
+      Phone:  null,
+      Active: null
+    },
+  },
   
-  $.ajax({
-    url: 'http://localhost:3000/api/v1/user',
-    contentType: 'application/json',
-    method: 'PUT',
-    data: JSON.stringify(user),
-    dataType: 'json',
-    timeout: 3000,
-  }).done(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-danger alert-info")
-      .addClass("alert-success")
-      .text("Successfully updated.");
-  }).fail(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-success alert-info")
-      .addClass("alert-danger")
-      .text("Update failed; check your data.");
-  }).always(function() {
-    $("#updateDataButton")
-      .off('click')
-      .prop('disabled', true);
-    $("#updateDataCloseButton")
-      .text("Close")
-  });
-}
-
-function loadUserList(userid) {
-  $.ajax({url: 'http://localhost:3000/api/v1/userList'
-  }).done(function(data) {
-    let options = '';
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Save';
+    },
     
-    data.forEach(user => {
-      options += `<option 
-        value=${user.UserID}>
-        ${user.Name}
-        </option>`
-    });
-    
-    $('#userSelect').empty().append(options);
-    
-    if (typeof userid == 'undefined') {
-      $("#userSelect").change();
-    } else {
-      $("#userSelect").val(userid).change();
-    };
-    $("#user-narrative")
-      .removeClass("alert-primary alert-success alert-danger")
-      .addClass("alert-info")
-      .text("Review or edit users.")
-  }).fail(() => {
-    $("#user-narrative")
-      .removeClass("alert-primary alert-success  alert-info")
-      .addClass("alert-danger")
-      .text("Couldn't find any users to load.")
-  });
-};
-
-function fillUserDetails(userid) {
-  $.ajax({url: `http://localhost:3000/api/v1/user?userid=${userid}`
-  }).done((data) => {
-    
-    let username = data[0].Name;
-    let email    = data[0].Email;
-    let phone    = data[0].Phone;
-    
-    $("#user-name").val(username);
-    $("#user-email").val(email);
-    $("#user-phone").val(phone);
-    
-  }).fail(() => {
-    $("#user-narrative")
-      .removeClass("alert-primary alert-success  alert-info")
-      .addClass("alert-danger")
-      .text("Couldn't find any users to load.")
-  });
-};
-
-function makeUserObject() {
-  let user = {};
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
   
-  user.userid  = $("#userSelect").val();
-  user.name    = $("#user-name").val();
-  user.phone   = $("#user-phone").val();
-  user.email   = $("#user-email").val();
+  mounted: function () {
+    this.updateUserList();
+  },
   
-  return user;
-}
-
-function clickNewUserButton() {
-  $("#user-name").val("");
-  $("#user-phone").val("");
-  $("#user-email").val("");
-  $("#userFieldset").prop('disabled', false);
-  $("#user-narrative")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text("Fill in the values below to create a new user.")
-  
-  $("#user-edit")
-    .prop('disabled', true)
-    .off('click');
-  $("#user-update")
-    .prop('disabled', true)
-    .off('click');
-  
-  $("#user-selectHeader").addClass("d-none");
-  
-  $("#user-new")
-    .text("Create")
-    .off("click")
-    .on("click", function() {
-        clickCreateUserButton();
-    });
-  
-  $("#user-cancel")
-    .prop('disabled', false)
-    .off('click')
-    .on('click', function() { cancelNewUser() });
-}
-
-function clickCreateUserButton() {
-  $("#updateAlert")
-    .removeClass("alert-primary alert-success alert-danger")
-    .addClass("alert-info")
-    .text('Create a new user?')
-  $("#updateDataButton")
-    .off('click')
-    .prop('disabled', false)
-    .text('Create')
-    .on('click', function() { createNewUser() });
-  $("#updateDataCloseButton")
-    .text("Cancel")
-  $("#updateModal").modal();
-}
-
-function createNewUser() {
-  let user = makeUserObject();
-  console.log(user);
-  $.ajax({
-    url: 'http://localhost:3000/api/v1/user',
-    contentType: 'application/json',
-    method: 'POST',
-    data: JSON.stringify(user),
-    dataType: 'json',
-    timeout: 3000,
-  }).done(function(data) {
-    //console.log(data);
-    $("#updateAlert")
-      .removeClass("alert-primary alert-danger alert-info")
-      .addClass("alert-success")
-      .text("Successfully added new user.");
-    cancelNewUser();
+  methods: {
+    updateUserList: function(UserID) {
+      let active = $("#user-activeFilterCheck").prop('checked') ? '?active=1': '';
+      $.ajax({
+        url: `http://localhost:3000/api/v1/userList${active}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.users = data;
+        // Initial load
+        if (typeof UserID === 'undefined') {
+          this.getCurrentUser(data[0].UserID);
+          this.UserID = data[0].UserID;
+        // Subsequent updates
+        } else {
+          this.UserID = UserID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
     
-    loadUserList(data);
+    getCurrentUser: function(UserID) {
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/user?UserID=${UserID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentUser = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new User.`;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected User.";
+      }).always(() => {
+        
+      });
+    },
     
-  }).fail(function() {
-    $("#updateAlert")
-      .removeClass("alert-primary alert-success alert-info")
-      .addClass("alert-danger")
-      .text("Could not insert new user; check your data.");
-  }).always(function() {
-    $("#updateDataButton")
-      .off('click')
-      .prop('disabled', true);
-    $("#updateDataCloseButton")
-      .text("Close")
-  });
-}
+    updateUser: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/user`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentUser),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = false;
+        this.notificationText = "Successfully updated!";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the User.  Please double-check the values.";
+      });
+    },
+    
+    newUserClick: function() {
+      if (this.creatingNew) {
+        this.saveNewUser();
+      } else {
+        this.editNewUser();
+      };
+    },
+    
+    editNewUser: function() {
+      for (const prop in this.currentUser) {
+        this.currentUser[prop] = null;
+      };
+      this.currentUser.Active = true;
+      this.creatingNew = true;
+      this.locked = false;
+      this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new User."
+    },
+    
+    saveNewUser: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/user`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentUser),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new User!";
+        this.UserID = data;
+        this.updateUserList(this.UserID);
+        this.currentUser.UserID = data;
+        this.creatingNew = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = false;
+      }).fail((err) => {
+        console.log(err.status + ": " + err.responseJSON);
+        this.error = true;
+        this.notificationText = "Could not add the User.  Please double-check the values.";
+      });
+    },
+    
+    cancelUser: function() {
+      this.getCurrentUser(this.UserID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditUser: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateUser();
+      }
+    }
+  }
+})
 
-function cancelNewUser() {
-    $('#user-selectHeader').removeClass('d-none');
-    disableEditUser();
-    $("#userSelect").change();
-    $("#user-cancel").prop('disabled', true);
-    $("#user-edit")
-      .prop('disabled', false)
-      .off('click')
-      .on('click', function() { editUser() });
-    $("#user-new")
-      .text("New")
-      .off('click')
-      .on('click', function() { clickNewUserButton(); });
-    $("#user-narrative")
-      .removeClass("alert-primary alert-success alert-danger")
-      .addClass("alert-info")
-      .text("Review or edit users.")
-}

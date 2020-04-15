@@ -69,3 +69,13 @@ GO
 ALTER TABLE Equipment
 ALTER COLUMN Active bit NOT NULL;
 GO
+
+ALTER TABLE [User]
+ADD Active bit DEFAULT 1;
+GO
+UPDATE [User]
+SET Active = 1;
+GO
+ALTER TABLE [User]
+ALTER COLUMN Active bit NOT NULL;
+GO

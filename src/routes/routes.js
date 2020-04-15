@@ -92,9 +92,9 @@ module.exports = function (app) {
     app.post('/api/v1/qualifier', qualifier.addQualifier);
     
     // Users
+    app.get('/api/v1/userList', user.getUserList);
     app.get('/api/v1/user', user.getUser);
     app.put('/api/v1/user', user.updateUser);
     app.post('/api/v1/user', user.addUser);
-    app.get('/api/v1/userList', user.getUserList);
     
 };

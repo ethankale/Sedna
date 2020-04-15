@@ -1167,65 +1167,87 @@
             <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 
               aria-labelledby="v-pills-user-tab">
               
-              <form id = "user-selectHeader">
+              <form id = "user-selectHeader" v-show="!creatingNew">
                 <div class="form-group">
-                  <select class="form-control" id="userSelect">
-                    <option>Loading...</option>
+                  <select class="form-control" id="userSelect" 
+                    v-model="UserID" 
+                    v-select="UserID"
+                    v-on:change="getCurrentUser(UserID)">
+                    <option 
+                      v-for="user in users" 
+                      v-bind:value="user.UserID" 
+                      v-bind:key="user.UserID">
+                      {{ user.Name }}
+                    </option>
                   </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="user-activeFilterCheck" checked
+                    v-on:change="updateUserList(UserID)">
+                  <label class="form-check-label" for="user-activeFilterCheck">Hide Inactive</label>
                 </div>
                 
                 <hr />
               </form>
               
-              <div id="user-narrative" class="alert alert-info">Loading...</div>
+              <div id="user-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="user-edit" type="button" class="btn btn-primary"
+                    @click="clickEditUser()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="user-new" type="button" class="btn btn-secondary"
+                    @click="newUserClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="user-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelUser()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
               
               <form id="userForm">
-                <fieldset id="userFieldset" disabled>
+                <fieldset id="userFieldset" :disabled="locked">
                   
                   <div class="form-group row">
                     <label for="user-name" class="col-sm-2 col-form-label">Name</label>
                     <div class="col-sm-10">
-                      <input type="text" class="form-control" id="user-name">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="user-phone" class="col-sm-2 col-form-label">Phone</label>
-                    <div class="col-sm-10">
-                      <input type="tel" class="form-control" id="user-phone">
+                      <input type="text" maxlength='100' class="form-control" id="user-name"
+                        v-model="currentUser.Name">
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="user-email" class="col-sm-2 col-form-label">Email</label>
                     <div class="col-sm-10">
-                      <input type="email" class="form-control" id="user-email">
+                      <input type="text" maxlength='255' class="form-control" id="user-email"
+                        v-model="currentUser.Email">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="user-phone" class="col-sm-2 col-form-label">Phone</label>
+                    <div class="col-sm-4">
+                      <input type="text" maxlength='100' class="form-control" id="user-phone"
+                        v-model="currentUser.Phone">
+                    </div>
+                    
+                    <label for="user-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-4">
+                      <input type="checkbox" class="form-check-input" id="user-active" 
+                        v-model="currentUser.Active">
                     </div>
                   </div>
                   
                 </fieldset>
               </form>
-              
-              <hr />
-              
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="user-edit" type="button" class="btn btn-primary">Edit</button>
-                </div>
-                <div class="col-md-6">
-                  <button id="user-update" type="button" class="btn btn-primary" disabled>Update</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="user-new" type="button" class="btn btn-secondary float-right">New</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="user-cancel" type="button" class="btn btn-secondary float-right" disabled>Cancel</button>
-                </div>
-              </div>
-              
             </div>
-
-
           </div>
         </div>
     </div>

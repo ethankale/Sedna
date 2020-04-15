@@ -12,9 +12,17 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
+    let active    = req.query.active;
+    
     let statement = `SELECT UserID, Name
-      FROM [User]
-      ORDER BY Name\r`
+      FROM [User]`
+    
+    if (typeof active != 'undefined') {
+      active = active >= 1 ? 1 : 0;
+      statement += " WHERE Active = " + active;
+    };
+    
+    statement += " ORDER BY Name";
     
     connection.on('connect', function(err) {
       if(err) {
@@ -30,11 +38,11 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
-    let returndata = [];
+    let returndata = {};
     
-    let statement = `SELECT UserID, Name, Email, Phone
+    let statement = `SELECT UserID, Name, Email, Phone, Active
       FROM [User] 
-      WHERE UserID = @userid\r`;
+      WHERE UserID = @UserID\r`;
     
     connection.on('connect', function(err) {
       
@@ -49,14 +57,12 @@ let controller = {
       });
       
       request.on('row', function(columns) {
-        let thisrow = {}
         columns.forEach(function(column) {
-            thisrow[[column.metadata.colName]] = column.value;
+            returndata[[column.metadata.colName]] = column.value;
         });
-        returndata.push(thisrow);
       });
       
-      request.addParameter('userid', TYPES.Int, req.query.userid);
+      request.addParameter('UserID', TYPES.Int, req.query.UserID);
       
       connection.execSql(request);
     });
@@ -71,8 +77,9 @@ let controller = {
     let statement = `UPDATE [User] SET
       Name = @name,
       Email = @email,
-      Phone = @phone
-      WHERE UserID = @userid\r`;
+      Phone = @phone,
+      Active = @active
+      WHERE UserID = @UserID\r`;
     
     connection.on('connect', function(err) {
       
@@ -94,10 +101,11 @@ let controller = {
         returndata.push(thisrow);
       });
       
-      request.addParameter('userid', TYPES.Int, req.body.userid);
-      request.addParameter('name', TYPES.VarChar, req.body.name);
-      request.addParameter('email', TYPES.VarChar, req.body.email);
-      request.addParameter('phone', TYPES.VarChar, req.body.phone);
+      request.addParameter('UserID', TYPES.Int, req.body.UserID);
+      request.addParameter('name',   TYPES.VarChar, req.body.Name);
+      request.addParameter('email',  TYPES.VarChar, req.body.Email);
+      request.addParameter('phone',  TYPES.VarChar, req.body.Phone);
+      request.addParameter('active', TYPES.VarChar, req.body.Active);
       
       connection.execSql(request);
     });
@@ -110,8 +118,8 @@ let controller = {
     let lastid = 0;
     
     let statement = `INSERT INTO [User]
-      (Name, Email, Phone)
-      VALUES (@name, @email, @phone);
+      (Name, Email, Phone, Active)
+      VALUES (@name, @email, @phone, @active);
       SELECT SCOPE_IDENTITY() AS LastID;\r`;
     
     connection.on('connect', function(err) {
@@ -130,10 +138,10 @@ let controller = {
         lastid = columns[0].value;
       });
       
-      request.addParameter('userid', TYPES.Int, req.body.userid);
-      request.addParameter('name', TYPES.VarChar, req.body.name);
-      request.addParameter('email', TYPES.VarChar, req.body.email);
-      request.addParameter('phone', TYPES.VarChar, req.body.phone);
+      request.addParameter('name',   TYPES.VarChar, req.body.Name);
+      request.addParameter('email',  TYPES.VarChar, req.body.Email);
+      request.addParameter('phone',  TYPES.VarChar, req.body.Phone);
+      request.addParameter('active', TYPES.VarChar, req.body.Active);
       
       connection.execSql(request);
     });
