@@ -42,59 +42,60 @@ module.exports = function (app) {
     app.post('/api/v1/equipmentModel',    equipmentModel.addEquipmentModel);
     
     // Measurements
-    app.get('/api/v1/getMeasurements', measurements.getMeasurements);
-    app.get('/api/v1/getMeasurementCount', measurements.getCountByDtmAndMetaid)
-    app.post('/api/v1/measurements', measurements.addMeasurements);
+    app.get('/api/v1/getMeasurements',       measurements.getMeasurements);
+    app.get('/api/v1/getMeasurementCount',   measurements.getCountByDtmAndMetaid)
+    app.post('/api/v1/measurements',         measurements.addMeasurements);
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
+    app.delete('/api/v1/measurements',       measurements.deleteMeasurements);
     
     // Metadata (or Data Record)
-    app.get('/api/v1/getMetadatasBySite', sites.getMetadatasBySite);
-    app.get('/api/v1/metadataList', metadata.getMetadataList);
-    app.get('/api/v1/metadataDetails', metadata.getMetadataDetails);
-    app.put('/api/v1/metadata', metadata.updateMetadata);
-    app.post('/api/v1/metadata', metadata.addMetadata);
+    app.get('/api/v1/getMetadatasBySite',   sites.getMetadatasBySite);
+    app.get('/api/v1/metadataList',         metadata.getMetadataList);
+    app.get('/api/v1/metadataDetails',      metadata.getMetadataDetails);
+    app.put('/api/v1/metadata',             metadata.updateMetadata);
+    app.post('/api/v1/metadata',            metadata.addMetadata);
     
     // Methods
-    app.get('/api/v1/methodList', method.getMethodList);
-    app.get('/api/v1/method', method.getMethodDetails);
-    app.put('/api/v1/method', method.updateMethod);
-    app.post('/api/v1/method', method.addMethod);
+    app.get('/api/v1/methodList',   method.getMethodList);
+    app.get('/api/v1/method',       method.getMethodDetails);
+    app.put('/api/v1/method',       method.updateMethod);
+    app.post('/api/v1/method',      method.addMethod);
     
     // Sample Points
-    app.get('/api/v1/samplePointList', samplepoints.getSamplePointList);
-    app.get('/api/v1/samplePoint', samplepoints.getSamplePointDetails);
-    app.put('/api/v1/samplePoint', samplepoints.updateSamplePoint);
-    app.post('/api/v1/samplePoint', samplepoints.addSamplePoint);
+    app.get('/api/v1/samplePointList',  samplepoints.getSamplePointList);
+    app.get('/api/v1/samplePoint',      samplepoints.getSamplePointDetails);
+    app.put('/api/v1/samplePoint',      samplepoints.updateSamplePoint);
+    app.post('/api/v1/samplePoint',     samplepoints.addSamplePoint);
     
     // Parameters
-    app.get('/api/v1/parameterList', parameter.getParameterList);
-    app.get('/api/v1/parameter', parameter.getParameterDetails);
-    app.put('/api/v1/parameter', parameter.updateParameter);
-    app.post('/api/v1/parameter', parameter.addParameter);
+    app.get('/api/v1/parameterList',    parameter.getParameterList);
+    app.get('/api/v1/parameter',        parameter.getParameterDetails);
+    app.put('/api/v1/parameter',        parameter.updateParameter);
+    app.post('/api/v1/parameter',       parameter.addParameter);
     
     // Sites
-    app.get('/api/v1/getsites', sites.getSitesList);
-    app.get('/api/v1/getParamsBySite', sites.getParamsBySite);
-    app.get('/api/v1/site', sites.getSiteDetails);
-    app.put('/api/v1/site', sites.updateSite);
-    app.post('/api/v1/site', sites.addSite);
+    app.get('/api/v1/getsites',         sites.getSitesList);
+    app.get('/api/v1/getParamsBySite',  sites.getParamsBySite);
+    app.get('/api/v1/site',             sites.getSiteDetails);
+    app.put('/api/v1/site',             sites.updateSite);
+    app.post('/api/v1/site',            sites.addSite);
     
     // Units
     app.get('/api/v1/unitList', unit.getUnitList);
-    app.get('/api/v1/unit', unit.getUnitDetails);
-    app.put('/api/v1/unit', unit.updateUnit);
-    app.post('/api/v1/unit', unit.addUnit);
+    app.get('/api/v1/unit',     unit.getUnitDetails);
+    app.put('/api/v1/unit',     unit.updateUnit);
+    app.post('/api/v1/unit',    unit.addUnit);
     
     // Qualifier
-    app.get('/api/v1/qualifierList', qualifier.getQualifierList);
-    app.get('/api/v1/qualifier', qualifier.getQualifierDetails);
-    app.put('/api/v1/qualifier', qualifier.updateQualifier);
-    app.post('/api/v1/qualifier', qualifier.addQualifier);
+    app.get('/api/v1/qualifierList',    qualifier.getQualifierList);
+    app.get('/api/v1/qualifier',        qualifier.getQualifierDetails);
+    app.put('/api/v1/qualifier',        qualifier.updateQualifier);
+    app.post('/api/v1/qualifier',       qualifier.addQualifier);
     
     // Users
     app.get('/api/v1/userList', user.getUserList);
-    app.get('/api/v1/user', user.getUser);
-    app.put('/api/v1/user', user.updateUser);
-    app.post('/api/v1/user', user.addUser);
+    app.get('/api/v1/user',     user.getUser);
+    app.put('/api/v1/user',     user.updateUser);
+    app.post('/api/v1/user',    user.addUser);
     
 };

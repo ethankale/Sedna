@@ -79,3 +79,51 @@ GO
 ALTER TABLE [User]
 ALTER COLUMN Active bit NOT NULL;
 GO
+
+ALTER TABLE Measurement
+ADD CollectedDateTime datetimeoffset(0) NULL;
+GO
+UPDATE Measurement
+SET CollectedDateTime = todatetimeoffset(CollectedDtm,-8*60)
+GO
+ALTER TABLE Measurement
+ALTER COLUMN CollectedDateTime DateTimeOffset(0) NOT NULL;
+GO
+DROP INDEX Measurement.measurement_unique_idx;
+GO
+CREATE UNIQUE INDEX measurement_unique_idx
+ON Measurement (CollectedDateTime, MetadataID)
+GO
+DROP INDEX Measurement.measurement_metadataid_idx;
+GO
+CREATE INDEX measurement_metadataid_idx
+ON Measurement (MetadataID)
+GO
+ALTER VIEW Measurement_By_SamplePoint_v
+AS
+SELECT sp.SiteID, md.ParameterID, md.MethodID, pm.Name, 
+    mt.Description AS Method, MAX(ms.CollectedDateTime) AS maxdtm, 
+    MIN(ms.CollectedDateTime) AS mindtm, COUNT(ms.MeasurementID) AS nmeasure
+FROM dbo.Measurement AS ms 
+  INNER JOIN dbo.Metadata AS md ON ms.MetadataID = md.MetadataID 
+  INNER JOIN dbo.SamplePoint AS sp ON md.SamplePointID = sp.SamplePointID 
+  INNER JOIN dbo.Parameter AS pm ON pm.ParameterID = md.ParameterID 
+  INNER JOIN dbo.Method AS mt ON md.MethodID = mt.MethodID
+GROUP BY sp.SiteID, md.ParameterID, md.MethodID, pm.Name, mt.Description;
+GO
+ALTER TABLE Measurement
+DROP COLUMN CollectedDtm;
+GO
+ALTER TABLE Measurement
+ADD CollectedDate AS (CONVERT(date,CollectedDateTime)) PERSISTED;
+GO
+CREATE INDEX measurement_collecteddate_idx
+ON Measurement (CollectedDate)
+GO
+ALTER TABLE Measurement
+ADD AddedDate datetime2(0) DEFAULT(GETDATE())
+GO
+CREATE INDEX measurement_addeddate_idx
+ON Measurement (AddedDate)
+GO
+

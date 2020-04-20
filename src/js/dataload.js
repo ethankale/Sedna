@@ -231,7 +231,7 @@ var reviewData = function(headers, fileData) {
                 //   PST is behind UTC by 8 hours - so -8 is correct.
                 let utcsymbol = utcoffset > 0 ? "-" : "+";
                 let utcnumber = Math.abs(utcoffset);
-                d.dtm         = new Date(d[dtmColName] + utcsymbol + utcnumber);
+                d.dtm         = new Date(d[dtmColName] + utcsymbol + utcnumber + ':00');
                 
                 d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
                 if (isNaN(d.Value)) {
@@ -288,6 +288,8 @@ var reviewData = function(headers, fileData) {
                     </div>
                   </form>
               </div>\n`)
+              // Because we're adding listeners to the markup that's appended above, we have to
+              //   wait for the first append to complete so the DOM is ready for the listeners.
               .append(function() {
                   graphColumn("#graph"+header, dataFilled, 'dtm', 'Value');
                   
@@ -301,7 +303,6 @@ var reviewData = function(headers, fileData) {
                       
                       offset = isNaN(offset) ? 0 : offset;
                       drift  = isNaN(drift)  ? 0 : drift;
-                      
                       
                       dataAdjusted = adjustValues(dataFilled, 'Value', offset, drift, adjustedCol)
                       console.log(dataAdjusted);
@@ -322,6 +323,8 @@ var reviewData = function(headers, fileData) {
                       interimData.forEach((d, i, arr) => {
                           let d_new = {};
                           
+                          // Use the values that were adjusted for offset and drift; 
+                          //   if no adjustment was performed, use the original values.
                           d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
                           d_new.dtm    = d.dtm;
                           
@@ -351,11 +354,11 @@ var reviewData = function(headers, fileData) {
                           $(`#upload${header}`).text("Overwrite?");
                           $(`#upload${header}`).off("click");
                           $(`#upload${header}`).click(() => { 
-                            loadMeasurements(finalData, selectVal) 
+                            deleteMeasurements(selectVal, mindate, maxdate, finalData) 
                           });
                         
                         } else {
-                          loadMeasurements(finalData, selectVal);
+                          uploadMeasurements(finalData, selectVal);
                         };
                       });
                   });
@@ -370,45 +373,88 @@ var reviewData = function(headers, fileData) {
     }
 }
 
-var loadMeasurements = function(finalData, metaid) {
-  let errors = 0;
-  let step = 30;    // The max number of rows to bulk insert.
-  for (let i=0; i<finalData.length; i+=step) {
+var uploadMeasurements = function(finalData, metaid) {
+  let errors    = 0;
+  let successes = 0;
+  let stepSize = 30;    // The max number of rows to bulk insert.
+  for (let i=0; i<finalData.length; i+=stepSize) {
     let dataToLoad = {'metaid': metaid,
-                      'loadnumber': i/step,
-                      'measurements': finalData.slice(i, i+step)};
-    console.log("Starting Post #" + i/step);
+                      'loadnumber': i/stepSize,
+                      'measurements': finalData.slice(i, i+stepSize)};
+    console.log("Starting Post #" + i/stepSize);
     
-    $.post({
+    $.ajax({
+      type: 'POST',
+      url: 'http://localhost:3000/api/v1/measurements',
       contentType: 'application/json',
       data: JSON.stringify(dataToLoad),
       dataType: 'json',
-      timeout: 3000,
-      success: function(data){
+      timeout: 5000
+    }).done((data) => {
           console.log("Server says: " + data);
-          errors += data != 'Success' ? 0 : 1;
-          //console.log("Loaded Post #" + i/step);
-      },
-      error: function(){
-          console.log("Upload failed for Post #" + i/step);
+          if (data != 'Success') {
+            errors += 1;
+          } else {
+            successes += 1;
+          }
+          //console.log("Loaded Post #" + i/stepSize);
+    }).fail((err) => {
+          console.log("Upload failed for Post #" + i/stepSize);
           errors += 1;
-      },
-      processData: false,
-      type: 'POST',
-      url: 'http://localhost:3000/api/v1/measurements'
+    }).always(() => {
+      displayLoadStatus(errors, successes, i, finalData.length, stepSize);
     }); 
   };
-  
-  if (errors == 0) {
+}
+
+let deleteMeasurements = function(metaid, mindtm, maxdtm, finalData) {
+    let body = {'MetadataID': metaid,'MinDtm': mindtm, 'MaxDtm': maxdtm};
+    
+    $.ajax({
+      type: 'DELETE',
+      url: 'http://localhost:3000/api/v1/measurements',
+      contentType: 'application/json',
+      data: JSON.stringify(body),
+      dataType: 'json',
+      timeout: 3000
+    }).done((data) => {
+      console.log("Server says: " + data);
+      $("#uploadAlert")
+        .removeClass("alert-info  alert-primary alert-danger")
+        .addClass("alert-success")
+        .text("Deleted data");
+      uploadMeasurements(finalData, metaid);
+      //console.log("Loaded Post #" + i/stepSize);
+    }).fail((err) => {
+      console.log(err);
+      $("#uploadAlert")
+        .removeClass("alert-info alert-success alert-primary ")
+        .addClass("alert-danger")
+        .text("Failed to delete data");
+    }).always(() => {
+    }); 
+}
+
+var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize) {
+  console.log("step: " + step + "; lastStep: " + lastStep + "; errors: " + errorCount)
+  if (step < (lastStep-stepSize)) {
     $("#uploadAlert")
-      .removeClass("  alert-primary  alert-info alert-danger")
-      .addClass("alert-success")
-      .text("Data loaded!")
+      .removeClass(" alert-success alert-primary alert-danger")
+      .addClass("alert-info")
+      .text("Loading data...")
   } else {
-    $("#uploadAlert")
-      .removeClass("alert-success alert-primary  alert-info ")
-      .addClass("alert-danger")
-      .text("Failed to load some or all of the data.")
+    if (errorCount == 0) {
+      let countText = step == 1 ? " 1 record!": step + " records!"
+      $("#uploadAlert")
+        .removeClass("  alert-primary  alert-info alert-danger")
+        .addClass("alert-success")
+        .text("Successfully loaded " + countText);
+    } else {
+      $("#uploadAlert")
+        .removeClass("alert-success alert-primary  alert-info ")
+        .addClass("alert-danger")
+        .text("Failed to load " + Math.min(errorCount*stepSize, lastStep) + " records, out of " + lastStep + ".")
+    };
   };
 }
 
