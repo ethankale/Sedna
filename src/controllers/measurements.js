@@ -90,7 +90,7 @@ let controller = {
         var methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
         
         var statement = `SELECT 
-            CollectedDateTime,
+            DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
             ms.Value, sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
             pm.Name as Parameter, mt.Code as Method
           FROM Measurement as ms
@@ -168,16 +168,12 @@ let controller = {
             measurement_new.CollectedDTM       = new Date(measurement.dtm);
             measurement_new.Value              = Math.round(measurement.Value*multiplier)/multiplier;
             measurement_new.MetadataID         = parseInt(metaid);
-            // This is reversed, because in the measurement table CollectedDTMOffset
-            //   is the number of minutes you add to CollectedDTM to get to UTC,
-            //   NOT the number of minutes you add to UTC to get to local (the usual way).
-            measurement_new.CollectedDTMOffset = parseInt(offset)*-1;
+            measurement_new.CollectedDTMOffset = parseInt(offset);
             
             bulkLoad.addRow(measurement_new);
-            if (index%10 == 0) { console.log(measurement_new) };
+            //if (index%10 == 0) { console.log(measurement_new) };
           });
           bulkConnection.execBulkLoad(bulkLoad);
-          //console.log(bulkLoad);
           console.log("Loaded #" + req.body.loadnumber);
         };
         
@@ -202,9 +198,6 @@ let controller = {
                 res.json("Error: " + err);
               } else {
                 callbackBus.requestComplete = true;
-                //console.log("Got metaid for #" + req.body.loadnumber);
-                
-                //console.log(callbackBus.loadMeasurement);
                 callbackBus.loadMeasurement;
               }
               connection.close();

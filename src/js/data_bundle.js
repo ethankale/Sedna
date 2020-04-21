@@ -45498,29 +45498,7 @@ const { DateTime } = require("luxon");
 var alqwuutils = require('./utils.js');
 let utcoffset = Math.floor(alqwuutils.utcoffset*60);  // MINUTES to add to local time to get UTC
 
-var t = new Date('2020-11-11 14:05:20+06:00')
-
 // Generic functions
-let jsonDateString = function(t) {
-  let y = t.getUTCFullYear();
-  let m = t.getUTCMonth()+1 <= 9 ? "0" + (t.getUTCMonth()+1) : t.getUTCMonth()+1;
-  let d = t.getUTCDate()    <= 9 ? "0" + t.getUTCDate()      : t.getUTCDate();
-  let h = t.getUTCHours()   <= 9 ? "0" + t.getUTCHours()     : t.getUTCHours();
-  let M = t.getUTCMinutes() <= 9 ? "0" + t.getUTCMinutes()   : t.getUTCMinutes();
-  let s = t.getUTCSeconds() <= 9 ? "0" + t.getUTCSeconds()   : t.getUTCSeconds();
-  
-  let tz   = t.getTimezoneOffset()/60;
-  let sign = tz < 0 ? "-" : "+";
-  let zabs = Math.abs(tz);
-  
-  let zh   = Math.floor(zabs);
-  zh = zh <= 9 ? "0"+zh : zh;
-  
-  let zm   = Math.round((zabs%1) * 60)
-  zm = zm <= 9 ? "0"+zm : zm;
-  
-  return `${y}-${m}-${d} ${h}:${M}:${s}${sign}${zh}:${zm}`
-}
 
 // From column selection back to CSV upload
 var showUpload = function() {
