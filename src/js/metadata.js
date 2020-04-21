@@ -11,5 +11,6 @@ let parameter      = require('./meta-parameter.js');
 let method         = require('./meta-method.js');
 let unit           = require('./meta-unit.js');
 let qualifier      = require('./meta-qualifier.js');
+let conversion     = require('./meta-conversion.js');
 
 let utcoffset  = alqwuutils.utcoffset;

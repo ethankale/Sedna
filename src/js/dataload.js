@@ -1,7 +1,6 @@
 
 var Papa           = require('papaparse');
 var d3             = require('d3');
-const { DateTime } = require("luxon");
 var alqwuutils = require('./utils.js');
 let utcoffset = Math.floor(alqwuutils.utcoffset*60);  // MINUTES to add to local time to get UTC
 

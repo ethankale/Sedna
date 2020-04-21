@@ -94,6 +94,12 @@
             
             <hr>
             
+            <a class="nav-link" id="v-pills-conversion-tab" data-toggle="pill" 
+              href="#v-pills-conversion" role="tab" aria-controls="v-pills-conversion" 
+              aria-selected="true">Conversion Table</a>
+            
+            <hr>
+            
             <a class="nav-link" id="v-pills-user-tab" data-toggle="pill" 
               href="#v-pills-user" role="tab" aria-controls="v-pills-user" 
               aria-selected="true">User</a>
@@ -1156,6 +1162,101 @@
                     <div class="col-sm-10">
                       <textarea class="form-control" id="qualifier-description" rows="5"
                         v-model="currentQualifier.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
+            
+            <!-- Conversion -->
+            <div class="tab-pane fade" id="v-pills-conversion" role="tabpanel" 
+              aria-labelledby="v-pills-conversion-tab">
+              
+              <form id="conversion-selectHeader" v-show="!creatingNew">
+                <div class="form-group">
+                  <select class="form-control" id="conversionSelect" 
+                    v-model="ConversionID" 
+                    v-select="ConversionID"
+                    v-on:change="getCurrentConversion(ConversionID)">
+                    <option 
+                      v-for="conversion in conversions" 
+                      v-bind:value="conversion.ConversionID" 
+                      v-bind:key="conversion.ConversionID">
+                      {{ conversion.ConversionName }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="conversion-activeFilterCheck" checked
+                    v-on:change="updateConversionList(ConversionID)">
+                  <label class="form-check-label" for="conversion-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="conversion-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                {{ notificationText }}</div>
+              
+              <div class="form-row">
+                <div class="col-md-2">
+                  <button id="conversion-edit" type="button" class="btn btn-primary"
+                    @click="clickEditConversion()" :disabled="creatingNew"> {{ editButtonText }}</button>
+                </div>
+                <div class="col-md-8">
+                  <button id="conversion-new" type="button" class="btn btn-secondary"
+                    @click="newConversionClick()" :disabled="dirty"> {{ newButtonText }}</button>
+                </div>
+                <div class="col-md-2">
+                  <button id="conversion-cancel" type="button" class="btn btn-secondary float-right"
+                    @click="cancelConversion()" :disabled="locked">Cancel</button>
+                </div>
+              </div>
+              
+              <hr>
+              
+              <form id="conversionForm">
+                <fieldset id="conversionFieldset" :disabled="locked">
+                  
+                  <div class="form-group row">
+                    <label for="conversion-name" class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                      <input type="text" maxlength='100' class="form-control" id="conversion-name"
+                        v-model="currentConversion.ConversionName">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="conversion-createdBy" class="col-sm-2 col-form-label">Created By</label>
+                    <div class="col-sm-10">
+                      <input type="text" maxlength='100' class="form-control" id="conversion-createdBy"
+                        v-model="currentConversion.CreatedBy">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="conversion-lastModifiedDate" class="col-sm-2 col-form-label">
+                      Last Modified</label>
+                    <div class="col-sm-4">
+                      <input type="date" class="form-control" id="conversion-lastModifiedDate"
+                        v-model="currentConversion.LastModified">
+                    </div>
+                    
+                    <label for="conversion-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-4">
+                      <input type="checkbox" class="form-check-input" id="conversion-active" 
+                        v-model="currentConversion.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="conversion-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" maxlength='255' id="conversion-description" rows="5"
+                        v-model="currentConversion.Description"></textarea>
                     </div>
                   </div>
                   

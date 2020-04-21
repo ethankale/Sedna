@@ -134,3 +134,22 @@ GO
 CREATE UNIQUE INDEX measurement_unique_idx
 ON Measurement (CollectedDateTime, MetadataID, Depth_M)
 GO
+
+
+CREATE TABLE Conversion (
+  ConversionID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED,
+  ConversionName VARCHAR(100) NOT NULL,
+  CreatedBy VARCHAR(100) NULL,
+  LastModified Date NULL,
+  Active BIT DEFAULT 1 NOT NULL,
+  Description VARCHAR(255)
+);
+GO
+CREATE TABLE ConversionValue (
+  ConversionValueID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED,
+  ConversionID INT NOT NULL REFERENCES Conversion(ConversionID),
+  FromValue Numeric(18,6) NOT NULL,
+  ToValue Numeric(18,6) NOT NULL
+);
+GO
+

@@ -12246,6 +12246,186 @@ if (process.env.NODE_ENV === 'production') {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
 },{"timers":2}],6:[function(require,module,exports){
 
+let Vue = require('vue')
+
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
+$(document).ready(function() {
+  $("#conversionSelect").select2({ width: '100%' });
+});
+
+//Vue.component('v-select', vSelect)
+
+var vm = new Vue({
+  el: '#v-pills-conversion',
+  data: {
+    ConversionID: null,
+    conversions: [],
+    locked: true,
+    creatingNew: false,
+    dirty: false,
+    error: false,
+    notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`,
+    currentConversion: {
+      ConversionID:     null,
+      ConversionName:   null,
+      CreatedBy:        null,
+      LastModified:     null,
+      Description:      null,
+      Active:           null
+    },
+  },
+  
+  computed: {
+    editButtonText: function() {
+      return this.locked ? 'Edit' : 'Save';
+    },
+    
+    newButtonText: function() {
+      return this.creatingNew ? 'Save' : 'New';
+    }
+  },
+  
+  mounted: function () {
+    this.updateConversionList();
+  },
+  
+  methods: {
+    updateConversionList: function(ConversionID) {
+      let active = $("#conversion-activeFilterCheck").prop('checked') ? '?active=1': '';
+      $.ajax({
+        url: `http://localhost:3000/api/v1/conversionList${active}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.conversions = data;
+        // Initial load
+        if (typeof ConversionID === 'undefined') {
+          this.getCurrentConversion(data[0].ConversionID);
+          this.ConversionID = data[0].ConversionID;
+        // Subsequent updates
+        } else {
+          this.ConversionID = ConversionID;
+        }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    getCurrentConversion: function(ConversionID) {
+      ConversionID = typeof ConversionID == 'undefined' ? conversions[0].ConversionID : ConversionID;
+      this.locked = true;
+      $.ajax({
+        url: `http://localhost:3000/api/v1/conversion?ConversionID=${ConversionID}`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.currentConversion = data;
+        this.dirty = false;
+        this.error = false;
+        this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not load the selected Conversion.";
+      }).always(() => {
+        
+      });
+    },
+    
+    updateConversion: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/conversion`,
+        method:'PUT',
+        timeout: 3000,
+        data: JSON.stringify(this.currentConversion),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.dirty  = false;
+        this.error  = false;
+        this.locked = false;
+        this.notificationText = "Successfully updated!";
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Could not update the Conversion.  Please double-check the values.";
+      });
+    },
+    
+    newConversionClick: function() {
+      if (this.creatingNew) {
+        this.saveNewConversion();
+      } else {
+        this.editNewConversion();
+      };
+    },
+    
+    editNewConversion: function() {
+      for (const prop in this.currentConversion) {
+        this.currentConversion[prop] = null;
+      };
+      this.currentConversion.Active = true;
+      this.creatingNew = true;
+      this.locked = false;
+      this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Conversion."
+    },
+    
+    saveNewConversion: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/conversion`,
+        method:'POST',
+        timeout: 3000,
+        data: JSON.stringify(this.currentConversion),
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.notificationText = "Successfully added new Conversion!";
+        this.ConversionID = data;
+        this.updateConversionList(this.ConversionID);
+        this.currentConversion.ConversionID = data;
+        this.creatingNew = false;
+        this.dirty       = false;
+        this.error       = false;
+        this.locked      = false;
+      }).fail((err) => {
+        console.log(err.status + ": " + err.responseJSON);
+        this.error = true;
+        this.notificationText = "Could not add the Conversion.  Please double-check the values.";
+      });
+    },
+    
+    cancelConversion: function() {
+      this.getCurrentConversion(this.ConversionID);
+      
+      this.creatingNew = false;
+      this.locked      = true;
+      this.error       = false;
+      this.dirty       = false;
+    },
+    
+    clickEditConversion: function() {
+      if (this.locked) {
+        this.locked = false;
+        this.dirty  = true;
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      } else {
+        this.updateConversion();
+      }
+    }
+  }
+})
+
+
+},{"vue":4}],7:[function(require,module,exports){
+
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
 
@@ -12536,7 +12716,7 @@ var vmDR = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],7:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],8:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -12715,7 +12895,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],8:[function(require,module,exports){
+},{"vue":4}],9:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -12915,7 +13095,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],9:[function(require,module,exports){
+},{"vue":4}],10:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13088,7 +13268,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],10:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],11:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13266,7 +13446,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],11:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],12:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13437,7 +13617,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],12:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],13:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -13553,6 +13733,7 @@ var vm = new Vue({
     },
     
     getCurrentSP: function(SamplePointID) {
+      SamplePointID = typeof SamplePointID == 'undefined' ? this.sites[0].SamplePointID : SamplePointID;
       this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,
@@ -13656,7 +13837,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],13:[function(require,module,exports){
+},{"vue":4}],14:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -13837,7 +14018,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],14:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],15:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
@@ -14008,7 +14189,7 @@ var vm = new Vue({
 })
 
 
-},{"./utils.js":17,"vue":4}],15:[function(require,module,exports){
+},{"./utils.js":18,"vue":4}],16:[function(require,module,exports){
 
 let Vue = require('vue')
 
@@ -14186,7 +14367,7 @@ var vm = new Vue({
 })
 
 
-},{"vue":4}],16:[function(require,module,exports){
+},{"vue":4}],17:[function(require,module,exports){
 
 let alqwuutils     = require('./utils.js');
 
@@ -14200,10 +14381,11 @@ let parameter      = require('./meta-parameter.js');
 let method         = require('./meta-method.js');
 let unit           = require('./meta-unit.js');
 let qualifier      = require('./meta-qualifier.js');
+let conversion     = require('./meta-conversion.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 
-},{"./meta-datarecord.js":6,"./meta-equipment-model.js":7,"./meta-equipment.js":8,"./meta-method.js":9,"./meta-parameter.js":10,"./meta-qualifier.js":11,"./meta-sample-point.js":12,"./meta-site.js":13,"./meta-unit.js":14,"./meta-user.js":15,"./utils.js":17}],17:[function(require,module,exports){
+},{"./meta-conversion.js":6,"./meta-datarecord.js":7,"./meta-equipment-model.js":8,"./meta-equipment.js":9,"./meta-method.js":10,"./meta-parameter.js":11,"./meta-qualifier.js":12,"./meta-sample-point.js":13,"./meta-site.js":14,"./meta-unit.js":15,"./meta-user.js":16,"./utils.js":18}],18:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()
@@ -14249,4 +14431,4 @@ let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 exports.utcoffset   = utcoffset;
 exports.utcoffsetjs = utcoffset*60*60*1000;  // UTC offset in milliseconds
 
-},{}]},{},[16]);
+},{}]},{},[17]);

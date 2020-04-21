@@ -113,6 +113,7 @@ var vm = new Vue({
     },
     
     getCurrentSP: function(SamplePointID) {
+      SamplePointID = typeof SamplePointID == 'undefined' ? this.sites[0].SamplePointID : SamplePointID;
       this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,

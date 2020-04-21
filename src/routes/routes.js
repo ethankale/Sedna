@@ -1,5 +1,6 @@
 "use strict";
 
+const conversion          = require('../controllers/conversion.js');
 const equipment           = require('../controllers/equipment.js');
 const equipmentModel      = require('../controllers/equipmentModel.js');
 const equipmentDeployment = require('../controllers/equipmentDeployment.js');
@@ -21,6 +22,12 @@ module.exports = function (app) {
     
     app.get('/api/v1/test', test.getTest);
 
+    
+    // Conversions
+    app.get('/api/v1/conversionList', conversion.getConversionList);
+    app.get('/api/v1/conversion',     conversion.getConversion);
+    app.put('/api/v1/conversion',     conversion.updateConversion);
+    app.post('/api/v1/conversion',    conversion.addConversion);
     
     // Equipment Deployments
     app.get('/api/v1/equipmentDeploymentList', equipmentDeployment.getEquipmentDeploymentList);

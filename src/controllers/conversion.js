@@ -6,21 +6,21 @@ let cfg = require('./config.js');
 const sqlfunctions = require('./sqlexecutefunction.js');
 
 let controller = {
-  getUserList: function(req, res) {
+  getConversionList: function(req, res) {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
     let active    = req.query.active;
     
-    let statement = `SELECT UserID, Name
-      FROM [User]`
+    let statement = `SELECT ConversionID, ConversionName
+      FROM [Conversion]`
     
     if (typeof active != 'undefined') {
       active = active >= 1 ? 1 : 0;
       statement += " WHERE Active = " + active;
     };
     
-    statement += " ORDER BY Name";
+    statement += " ORDER BY ConversionName";
     
     connection.on('connect', function(err) {
       if(err) {
@@ -32,15 +32,17 @@ let controller = {
     });
   },
   
-  getUser: function(req, res) {
+  getConversion: function(req, res) {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
     let returndata = {};
     
-    let statement = `SELECT UserID, Name, Email, Phone, Active
-      FROM [User] 
-      WHERE UserID = @UserID\r`;
+    let statement = `SELECT ConversionID, ConversionName, CreatedBy, 
+      CONVERT(nvarchar(10), [LastModified], 23) as LastModified,
+      Active, Description
+      FROM [Conversion] 
+      WHERE ConversionID = @ConversionID\r`;
     
     connection.on('connect', function(err) {
       
@@ -60,24 +62,25 @@ let controller = {
         });
       });
       
-      request.addParameter('UserID', TYPES.Int, req.query.UserID);
+      request.addParameter('ConversionID', TYPES.Int, req.query.ConversionID);
       
       connection.execSql(request);
     });
   },
   
-  updateUser: function(req, res) {
+  updateConversion: function(req, res) {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
     let returndata = {};
     
-    let statement = `UPDATE [User] SET
-      Name = @name,
-      Email = @email,
-      Phone = @phone,
-      Active = @active
-      WHERE UserID = @UserID\r`;
+    let statement = `UPDATE [Conversion] SET
+      ConversionName = @name,
+      CreatedBy      = @createdby,
+      LastModified   = @lastmodified,
+      Active         = @active,
+      Description    = @description
+      WHERE ConversionID = @ConversionID`;
     
     connection.on('connect', function(err) {
       
@@ -99,25 +102,26 @@ let controller = {
         returndata.push(thisrow);
       });
       
-      request.addParameter('UserID', TYPES.Int, req.body.UserID);
-      request.addParameter('name',   TYPES.VarChar, req.body.Name);
-      request.addParameter('email',  TYPES.VarChar, req.body.Email);
-      request.addParameter('phone',  TYPES.VarChar, req.body.Phone);
-      request.addParameter('active', TYPES.VarChar, req.body.Active);
+      request.addParameter('ConversionID',  TYPES.Int, req.body.ConversionID);
+      request.addParameter('name',          TYPES.VarChar, req.body.ConversionName);
+      request.addParameter('createdby',     TYPES.VarChar, req.body.CreatedBy);
+      request.addParameter('lastmodified',  TYPES.Date, req.body.LastModified);
+      request.addParameter('description',   TYPES.VarChar, req.body.Description);
+      request.addParameter('active',        TYPES.Bit, req.body.Active);
       
       connection.execSql(request);
     });
   },
   
-  addUser: function(req, res) {
+  addConversion: function(req, res) {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
     let lastid = 0;
     
-    let statement = `INSERT INTO [User]
-      (Name, Email, Phone, Active)
-      VALUES (@name, @email, @phone, @active);
+    let statement = `INSERT INTO [Conversion]
+      (ConversionName, CreatedBy, LastModified, Description, Active)
+      VALUES (@name, @createdby, @lastmodified, @description, @active);
       SELECT SCOPE_IDENTITY() AS LastID;\r`;
     
     connection.on('connect', function(err) {
@@ -136,10 +140,11 @@ let controller = {
         lastid = columns[0].value;
       });
       
-      request.addParameter('name',   TYPES.VarChar, req.body.Name);
-      request.addParameter('email',  TYPES.VarChar, req.body.Email);
-      request.addParameter('phone',  TYPES.VarChar, req.body.Phone);
-      request.addParameter('active', TYPES.VarChar, req.body.Active);
+      request.addParameter('name',          TYPES.VarChar, req.body.ConversionName);
+      request.addParameter('createdby',     TYPES.VarChar, req.body.CreatedBy);
+      request.addParameter('lastmodified',  TYPES.Date, req.body.LastModified);
+      request.addParameter('description',   TYPES.VarChar, req.body.Description);
+      request.addParameter('active',        TYPES.Bit, req.body.Active);
       
       connection.execSql(request);
     });

@@ -65,6 +65,7 @@ var vm = new Vue({
     },
     
     getCurrentUnit: function(UnitID) {
+      UnitID = typeof UnitID == 'undefined' ? units[0].UnitID : UnitID;
       this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/unit?UnitID=${UnitID}`,
