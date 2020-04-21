@@ -21,7 +21,7 @@ let controller = {
         var utcoffset = req.query.utcoffset;
         
         var statement = `SELECT 
-            CollectedDateTime, ms.Value, md.ParameterID
+            CollectedDateTime, ms.Value, ms.Depth_M, md.ParameterID
           FROM Measurement as ms
           LEFT JOIN Metadata as md
             on ms.MetadataID = md.MetadataID
@@ -58,8 +58,8 @@ let controller = {
           COUNT(MeasurementID) as measurementCount
           FROM Measurement
           WHERE MetadataID = ${metaid}
-          AND CollectedDateTime >= '${startdtm}'
-          AND CollectedDateTime <= '${enddtm}'`;
+          AND CollectedDateTime >= DATEADD(hour, ${utcoffset}, '${startdtm}')
+          AND CollectedDateTime <= DATEADD(hour, ${utcoffset}, '${enddtm}')`;
         
         connection.on('connect', function(err) {
           if(err) {
@@ -122,6 +122,10 @@ let controller = {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         
+        let metaid       = req.body.metaid;
+        let offset       = req.body.offset;
+        let measurements = req.body.measurements;
+        
         let connection     = new Connection(mssql_config);
         let bulkConnection = new Connection(mssql_config);
         let decimals       = 3;
@@ -132,7 +136,7 @@ let controller = {
             bulkConnected: false,
             get loadMeasurement() {
                 if(this.requestComplete & this.bulkConnected) {
-                    loadBulkMeasurements(multiplier, req.body.metaid, req.body.measurements);
+                    loadBulkMeasurements(multiplier, metaid, offset, measurements);
                     //return req.body.measurements;
                 } else {
                     //return "Waiting for request or bulk connect, or both";
@@ -140,7 +144,7 @@ let controller = {
             }
         };
         
-        let loadBulkMeasurements = function(multiplier, metaid, measurements) {
+        let loadBulkMeasurements = function(multiplier, metaid, offset, measurements) {
           let options = { keepNulls: true };
           let bulkLoad = bulkConnection.newBulkLoad('Measurement', options, function (err, rowCount) {
             if (err) {
@@ -154,21 +158,27 @@ let controller = {
             bulkConnection.close();
           });
           
-          bulkLoad.addColumn('CollectedDateTime', TYPES.DateTimeOffset, { nullable: false, scale: 0 });
-          bulkLoad.addColumn('Value',             TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
-          bulkLoad.addColumn('MetadataID',        TYPES.Int, { nullable: false });
+          bulkLoad.addColumn('CollectedDTM',       TYPES.DateTimeOffset, { nullable: false, scale: 0 });
+          bulkLoad.addColumn('Value',              TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
+          bulkLoad.addColumn('MetadataID',         TYPES.Int, { nullable: false });
+          bulkLoad.addColumn('CollectedDTMOffset', TYPES.Int, { nullable: false });
           
           measurements.forEach( (measurement, index) => {
             let measurement_new = {};
-            measurement_new.CollectedDateTime = new Date(measurement.dtm);
-            measurement_new.Value             = Math.round(measurement.Value*multiplier)/multiplier;
-            measurement_new.MetadataID        = parseInt(metaid);
+            measurement_new.CollectedDTM       = new Date(measurement.dtm);
+            measurement_new.Value              = Math.round(measurement.Value*multiplier)/multiplier;
+            measurement_new.MetadataID         = parseInt(metaid);
+            // This is reversed, because in the measurement table CollectedDTMOffset
+            //   is the number of minutes you add to CollectedDTM to get to UTC,
+            //   NOT the number of minutes you add to UTC to get to local (the usual way).
+            measurement_new.CollectedDTMOffset = parseInt(offset)*-1;
             
             bulkLoad.addRow(measurement_new);
-            
+            if (index%10 == 0) { console.log(measurement_new) };
           });
           bulkConnection.execBulkLoad(bulkLoad);
-          //console.log("Loaded #" + req.body.loadnumber);
+          //console.log(bulkLoad);
+          console.log("Loaded #" + req.body.loadnumber);
         };
         
         bulkConnection.on('connect', function(err) {

@@ -1,10 +1,33 @@
 
-var Papa = require('papaparse');
-var d3   = require('d3');
+var Papa           = require('papaparse');
+var d3             = require('d3');
+const { DateTime } = require("luxon");
 var alqwuutils = require('./utils.js');
-let utcoffset = alqwuutils.utcoffset;  // hours to add to local time to get UTC
+let utcoffset = Math.floor(alqwuutils.utcoffset*60);  // MINUTES to add to local time to get UTC
 
-// From CSV upload to column selection
+var t = new Date('2020-11-11 14:05:20+06:00')
+
+// Generic functions
+let jsonDateString = function(t) {
+  let y = t.getUTCFullYear();
+  let m = t.getUTCMonth()+1 <= 9 ? "0" + (t.getUTCMonth()+1) : t.getUTCMonth()+1;
+  let d = t.getUTCDate()    <= 9 ? "0" + t.getUTCDate()      : t.getUTCDate();
+  let h = t.getUTCHours()   <= 9 ? "0" + t.getUTCHours()     : t.getUTCHours();
+  let M = t.getUTCMinutes() <= 9 ? "0" + t.getUTCMinutes()   : t.getUTCMinutes();
+  let s = t.getUTCSeconds() <= 9 ? "0" + t.getUTCSeconds()   : t.getUTCSeconds();
+  
+  let tz   = t.getTimezoneOffset()/60;
+  let sign = tz < 0 ? "-" : "+";
+  let zabs = Math.abs(tz);
+  
+  let zh   = Math.floor(zabs);
+  zh = zh <= 9 ? "0"+zh : zh;
+  
+  let zm   = Math.round((zabs%1) * 60)
+  zm = zm <= 9 ? "0"+zm : zm;
+  
+  return `${y}-${m}-${d} ${h}:${M}:${s}${sign}${zh}:${zm}`
+}
 
 // From column selection back to CSV upload
 var showUpload = function() {
@@ -226,14 +249,9 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-                // Since we're converting local time to UTC by specifing the offset,
-                //   we have to reverse positive/negative.  For example,
-                //   PST is behind UTC by 8 hours - so -8 is correct.
-                let utcsymbol = utcoffset > 0 ? "-" : "+";
-                let utcnumber = Math.abs(utcoffset);
-                d.dtm         = new Date(d[dtmColName] + utcsymbol + utcnumber + ':00');
-                
+                d.dtm   = new Date(d[dtmColName]);
                 d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
+                
                 if (isNaN(d.Value)) {
                     cmis += 1;
                 } else {
@@ -374,14 +392,16 @@ var reviewData = function(headers, fileData) {
 }
 
 var uploadMeasurements = function(finalData, metaid) {
-  let errors    = 0;
-  let successes = 0;
-  let stepSize = 30;    // The max number of rows to bulk insert.
+  let errors        = 0;
+  let successes     = 0;
+  let completeSteps = 0;
+  let stepSize      = 30;    // The max number of rows to bulk insert.
   for (let i=0; i<finalData.length; i+=stepSize) {
     let dataToLoad = {'metaid': metaid,
+                      'offset': utcoffset,
                       'loadnumber': i/stepSize,
                       'measurements': finalData.slice(i, i+stepSize)};
-    console.log("Starting Post #" + i/stepSize);
+    //console.log("Starting Post #" + i/stepSize);
     
     $.ajax({
       type: 'POST',
@@ -402,7 +422,8 @@ var uploadMeasurements = function(finalData, metaid) {
           console.log("Upload failed for Post #" + i/stepSize);
           errors += 1;
     }).always(() => {
-      displayLoadStatus(errors, successes, i, finalData.length, stepSize);
+      displayLoadStatus(errors, successes, i, finalData.length, stepSize, completeSteps);
+      completeSteps += stepSize;
     }); 
   };
 }
@@ -435,13 +456,13 @@ let deleteMeasurements = function(metaid, mindtm, maxdtm, finalData) {
     }); 
 }
 
-var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize) {
+var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize, completeSteps) {
   console.log("step: " + step + "; lastStep: " + lastStep + "; errors: " + errorCount)
-  if (step < (lastStep-stepSize)) {
+  if (completeSteps < (lastStep-stepSize)) {
     $("#uploadAlert")
       .removeClass(" alert-success alert-primary alert-danger")
       .addClass("alert-info")
-      .text("Loading data...")
+      .text("Loading data; errors = " + errorCount)
   } else {
     if (errorCount == 0) {
       let countText = step == 1 ? " 1 record!": step + " records!"

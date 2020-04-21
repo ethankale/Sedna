@@ -126,4 +126,11 @@ GO
 CREATE INDEX measurement_addeddate_idx
 ON Measurement (AddedDate)
 GO
-
+ALTER TABLE Measurement
+ADD Depth_M Numeric(6,2) NULL
+GO
+DROP INDEX Measurement.measurement_unique_idx;
+GO
+CREATE UNIQUE INDEX measurement_unique_idx
+ON Measurement (CollectedDateTime, MetadataID, Depth_M)
+GO
