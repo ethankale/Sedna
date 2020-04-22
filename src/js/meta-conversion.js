@@ -1,5 +1,6 @@
 
 let Vue = require('vue');
+let d3  = require('d3');
 
 Vue.directive('select', {
   twoWay: true,
@@ -26,6 +27,8 @@ var vm = new Vue({
     dirty: false,
     error: false,
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`,
+    line: '',
+    svgWidth: 0,
     currentConversion: {
       ConversionID:     null,
       ConversionName:   null,
@@ -37,6 +40,12 @@ var vm = new Vue({
     },
   },
   
+  watch: {
+    svgWidth: function() {
+      this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
+    }
+  },
+  
   computed: {
     editButtonText: function() {
       return this.locked ? 'Edit' : 'Save';
@@ -44,11 +53,17 @@ var vm = new Vue({
     
     newButtonText: function() {
       return this.creatingNew ? 'Save' : 'New';
+    },
+    
+    svgHeight: function() {
+      return this.svgWidth / 1.6;
     }
   },
   
   mounted: function () {
     this.updateConversionList();
+    this.addResizeListener();
+    this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
   },
   
   methods: {
@@ -85,6 +100,15 @@ var vm = new Vue({
         this.dirty = false;
         this.error = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`;
+        
+        // The first time this loads svgWidth is 0, for reasons I can't figure out.
+        //   But the resize handler works.  So trigger that (and the subsequent
+        //   graphing function) if svgWidth is 0; otherwise, skip the resize event.
+        if (this.svgWidth == 0) {
+          window.dispatchEvent(new Event('resize'));
+        } else {
+          this.calculatePath();
+        };
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -174,7 +198,32 @@ var vm = new Vue({
       } else {
         this.updateConversion();
       }
-    }
+    },
+    
+    getScales() {
+      const x = d3.scaleLinear().range([0, this.svgWidth]);
+      const y = d3.scaleLinear().range([this.svgHeight, 0]);
+      d3.axisLeft().scale(x);
+      d3.axisBottom().scale(y);
+      x.domain(d3.extent(this.currentConversion.ConversionValues, d => d.FromValue));
+      y.domain([0, d3.max(this.currentConversion.ConversionValues, d => d.ToValue)]);
+      return { x, y };
+    },
+    
+    calculatePath() {
+      const scale = this.getScales();
+      const path = d3.line()
+        .x((d, i) => scale.x(d.FromValue))
+        .y(d => scale.y(d.ToValue));
+      this.line = path(this.currentConversion.ConversionValues);
+    },
+    
+   addResizeListener() {
+     window.addEventListener('resize', () => {
+       this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
+       this.calculatePath();
+     });
+   }
   }
 })
 
