@@ -1,4 +1,6 @@
 
+var Papa           = require('papaparse');
+var d3             = require('d3');
 let alqwuutils     = require('./utils.js');
 
 let datarecord     = require('./meta-datarecord.js');

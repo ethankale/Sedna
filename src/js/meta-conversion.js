@@ -1,5 +1,5 @@
 
-let Vue = require('vue')
+let Vue = require('vue');
 
 Vue.directive('select', {
   twoWay: true,
@@ -32,7 +32,8 @@ var vm = new Vue({
       CreatedBy:        null,
       LastModified:     null,
       Description:      null,
-      Active:           null
+      Active:           null,
+      ConversionValues: []
     },
   },
   
@@ -126,6 +127,7 @@ var vm = new Vue({
         this.currentConversion[prop] = null;
       };
       this.currentConversion.Active = true;
+      this.currentConversion.ConversionValues = [];
       this.creatingNew = true;
       this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Conversion."
