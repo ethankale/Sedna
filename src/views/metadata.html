@@ -1264,8 +1264,12 @@
                   
                   <div id="ccc" class="form-group row">
                     <div id="conversionChartContainer" class="col-12">
-                      <svg :width="svgWidth" :height="svgHeight">
-                        <g style="transform: translate(0, 10px)">
+                      <svg :width="outsideWidth" :height="outsideHeight">
+                        <g :transform="`translate(${margin.left},${margin.top})`">
+                          <g v-axis:x="scale" :transform="`translate(0,${svgHeight})`">
+                          </g>
+                          <g v-axis:y="scale">
+                          </g>
                           <path fill="none" stroke="steelblue" stroke-width="1.5" 
                             :d="line" />
                         </g>

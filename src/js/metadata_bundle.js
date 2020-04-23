@@ -31486,6 +31486,15 @@ var vm = new Vue({
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`,
     line: '',
     svgWidth: 0,
+    //svgHeight: 300,
+    margin: {
+      top: 10, 
+      right: 30, 
+      bottom: 30, 
+      left: 40
+    },
+    xaxis: '',
+    yaxis: '',
     currentConversion: {
       ConversionID:     null,
       ConversionName:   null,
@@ -31498,8 +31507,8 @@ var vm = new Vue({
   },
   
   watch: {
-    svgWidth: function() {
-      this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
+    ConversionID: function() {
+      this.setSVGWidth();
     }
   },
   
@@ -31513,14 +31522,43 @@ var vm = new Vue({
     },
     
     svgHeight: function() {
-      return this.svgWidth / 1.6;
+      return Math.floor(this.svgWidth / 1.6);
+    },
+    
+    outsideWidth() {
+      return this.svgWidth + this.margin.left + this.margin.right;
+    },
+    
+    outsideHeight() {
+      return this.svgHeight + this.margin.top + this.margin.bottom;
+    },
+    
+    scale() {
+      const x = d3
+        .scaleLinear()
+        .domain(d3.extent(this.currentConversion.ConversionValues, d => d.FromValue))
+        .rangeRound([0, this.svgWidth]);
+      const y = d3
+        .scaleLinear()
+        .domain(d3.extent(this.currentConversion.ConversionValues, d => d.ToValue))
+        .rangeRound([this.svgHeight, 0]);
+      return { x, y };
+    }
+  },
+  
+  directives: {
+    axis(el, binding) {
+      const axis = binding.arg;
+      const axisMethod = { x: "axisBottom", y: "axisLeft" }[axis];
+      const methodArg = binding.value[axis];
+      
+      d3.select(el).call(d3[axisMethod](methodArg));
     }
   },
   
   mounted: function () {
     this.updateConversionList();
     this.addResizeListener();
-    this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
   },
   
   methods: {
@@ -31561,11 +31599,9 @@ var vm = new Vue({
         // The first time this loads svgWidth is 0, for reasons I can't figure out.
         //   But the resize handler works.  So trigger that (and the subsequent
         //   graphing function) if svgWidth is 0; otherwise, skip the resize event.
-        if (this.svgWidth == 0) {
-          window.dispatchEvent(new Event('resize'));
-        } else {
-          this.calculatePath();
-        };
+        
+        this.calculatePath();
+        
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -31657,30 +31693,29 @@ var vm = new Vue({
       }
     },
     
-    getScales() {
-      const x = d3.scaleLinear().range([0, this.svgWidth]);
-      const y = d3.scaleLinear().range([this.svgHeight, 0]);
-      d3.axisLeft().scale(x);
-      d3.axisBottom().scale(y);
-      x.domain(d3.extent(this.currentConversion.ConversionValues, d => d.FromValue));
-      y.domain([0, d3.max(this.currentConversion.ConversionValues, d => d.ToValue)]);
-      return { x, y };
-    },
-    
     calculatePath() {
-      const scale = this.getScales();
+      // const scale = this.getScales();
+      const scale = this.scale;
       const path = d3.line()
-        .x((d, i) => scale.x(d.FromValue))
+        .x(d => scale.x(d.FromValue))
         .y(d => scale.y(d.ToValue));
       this.line = path(this.currentConversion.ConversionValues);
     },
     
-   addResizeListener() {
-     window.addEventListener('resize', () => {
-       this.svgWidth = document.getElementById('conversionChartContainer').offsetWidth * 0.9;
-       this.calculatePath();
-     });
-   }
+    setSVGWidth() {
+      if ($("#conversionChartContainer").width() > 0) {
+        this.svgWidth = $("#conversionChartContainer").width() - this.margin.left - this.margin.right;
+      } else {
+        this.svgWidth = 500;
+      };
+    },
+    
+    addResizeListener() {
+      window.addEventListener('resize', () => {
+        this.setSVGWidth();
+        this.calculatePath();
+      });
+    }
   }
 })
 
