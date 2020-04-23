@@ -16,14 +16,19 @@ window.writeText = function (text, filepath) {
 window.writeFileStatus = "Success";
 
 window.openCSV = function() {
-    var path = dialog.showOpenDialogSync({
+    let fo = dialog.showOpenDialogSync({
         title: 'Select CSV',
         properties: ['openFile']
-    })[0];
+    });
     
-    console.log(path);
-    var data = readFileSync(path, "utf8").trim();
-    return [path, data];
+    if (typeof fo != 'undefined') {
+      let path = fo[0];
+      console.log(path);
+      let data = readFileSync(path, "utf8").trim();
+      return [path, data];
+    } else {
+      return ['',''];
+    }
 };
 
 window.getConfig = function() {

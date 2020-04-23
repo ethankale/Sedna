@@ -1,6 +1,7 @@
 
-let Vue = require('vue');
-let d3  = require('d3');
+let Vue  = require('vue');
+let d3   = require('d3');
+var Papa = require('papaparse');
 
 Vue.directive('select', {
   twoWay: true,
@@ -15,8 +16,6 @@ $(document).ready(function() {
   $("#conversionSelect").select2({ width: '100%' });
 });
 
-//Vue.component('v-select', vSelect)
-
 var vm = new Vue({
   el: '#v-pills-conversion',
   data: {
@@ -29,7 +28,6 @@ var vm = new Vue({
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`,
     line: '',
     svgWidth: 0,
-    //svgHeight: 300,
     margin: {
       top: 10, 
       right: 30, 
@@ -52,6 +50,10 @@ var vm = new Vue({
   watch: {
     ConversionID: function() {
       this.setSVGWidth();
+    },
+    
+    CVs: function() {
+      this.calculatePath();
     }
   },
   
@@ -86,6 +88,10 @@ var vm = new Vue({
         .domain(d3.extent(this.currentConversion.ConversionValues, d => d.ToValue))
         .rangeRound([this.svgHeight, 0]);
       return { x, y };
+    },
+    
+    CVs() {
+      return this.currentConversion.ConversionValues;
     }
   },
   
@@ -258,7 +264,37 @@ var vm = new Vue({
         this.setSVGWidth();
         this.calculatePath();
       });
+    },
+    
+    openCVFileDialog() {
+      let [filePath, fileText] = window.openCSV();
+      // Sometimes users cancel out of the dialog
+      if (fileText != '') {
+        this.parseCVText(fileText);
+      };
+    },
+    
+    parseCVText(fileText) {
+      let papaConfig = {
+        delimiter: ',',
+        quoteChar: '"',
+        header: false, 
+        skipEmptyLines: true
+      };
+      var fileData = Papa.parse(fileText, papaConfig);
+      this.currentConversion.ConversionValues = [];
+      //console.log(fileData.data[0]);
+      fileData.data.forEach((d, i) => {
+        let fromval = parseFloat(d[0]);
+        let toval   = parseFloat(d[1]);
+        if (!isNaN(toval) & !isNaN(fromval)) {
+          this.currentConversion.ConversionValues.push({'FromValue': fromval, 'ToValue': toval});
+        }
+      });
+      
+      
     }
+    
   }
 })
 

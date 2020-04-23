@@ -107,34 +107,32 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
-    let returndata = {};
+    let ConversionValues = req.body.ConversionValues;
     
-    let statement = `UPDATE [Conversion] SET
+    connection.on('connect', function(err) {
+      
+      let statement = `UPDATE [Conversion] SET
       ConversionName = @name,
       CreatedBy      = @createdby,
       LastModified   = @lastmodified,
       Active         = @active,
       Description    = @description
-      WHERE ConversionID = @ConversionID`;
-    
-    connection.on('connect', function(err) {
+      WHERE ConversionID = @ConversionID;
+      DELETE ConversionValue
+      WHERE ConversionID = @ConversionID;`;
       
-      var request = new Request(statement, function(err, rowCount) {
+      let request = new Request(statement, function(err, rowCount) {
         if (err) {
-          res.status(400).end();
           console.log(err);
+          res.status(400).end();
         } else {
-          res.status(200).json("Success");
+          if (ConversionValues.length > 0) {
+            loadBulkData();
+          } else {
+            res.status(200).json("Success");
+            connection.close();
+          }
         }
-        connection.close();
-      });
-      
-      request.on('row', function(columns) {
-        let thisrow = {}
-        columns.forEach(function(column) {
-            thisrow[[column.metadata.colName]] = column.value;
-        });
-        returndata.push(thisrow);
       });
       
       request.addParameter('ConversionID',  TYPES.Int, req.body.ConversionID);
@@ -146,15 +144,44 @@ let controller = {
       
       connection.execSql(request);
     });
+    
+    function loadBulkData() {
+      var option = { keepNulls: true }; // option to honor null
+      var bulkLoad = connection.newBulkLoad('ConversionValue', option, function(err, rowCont) {
+        if (err) {
+          console.log("Could not bulk load conversion values.  " + err)
+          res.status(400).end();
+        } else {
+          res.status(200).json("Success");
+        }
+        connection.close();
+      });
+      
+      // setup columns
+      bulkLoad.addColumn('ConversionID', TYPES.Int, { nullable: false });
+      bulkLoad.addColumn('FromValue',    TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
+      bulkLoad.addColumn('ToValue',      TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
+      
+      // add rows
+      ConversionValues.forEach( (cv, index) => {
+        let cv_new = {};
+        cv_new.ConversionID = parseInt(req.body.ConversionID);
+        cv_new.FromValue    = parseFloat(cv.FromValue);
+        cv_new.ToValue      = parseFloat(cv.ToValue);
+        
+        bulkLoad.addRow(cv_new);
+      });
+      
+      // perform bulk insert
+      connection.execBulkLoad(bulkLoad);
+    }
+    
   },
   
   addConversion: function(req, res) {
     let mssql_config = cfg.getConfig().mssql;
     
-    //console.log(req.body);
-    
     let insertConnection = new Connection(mssql_config);
-    let bulkConnection   = new Connection(mssql_config);
     
     let lastid = null;
     let ConversionValues = req.body.ConversionValues;
@@ -172,7 +199,6 @@ let controller = {
         } else {
           loadBulkData();
         }
-        // insertConnection.close();
       });
       
       request.on('row', function(columns) {
@@ -190,50 +216,36 @@ let controller = {
     
     
     function loadBulkData() {
-      // if (lastid != null) {
-        var option = { keepNulls: true }; // option to honor null
-        var bulkLoad = insertConnection.newBulkLoad('ConversionValue', option, function(err, rowCont) {
-          if (err) {
-            console.log("Could not bulk load conversion values.  " + err)
-            res.status(400).end();
-          } else {
-            console.log('rows inserted :', rowCont);
-            res.status(200).json(lastid);
-          }
-          insertConnection.close();
-        });
+      var option = { keepNulls: true }; // option to honor null
+      var bulkLoad = insertConnection.newBulkLoad('ConversionValue', option, function(err, rowCont) {
+        if (err) {
+          console.log("Could not bulk load conversion values.  " + err)
+          res.status(400).end();
+        } else {
+          console.log('rows inserted :', rowCont);
+          res.status(200).json(lastid);
+        }
+        insertConnection.close();
+      });
+      
+      // setup columns
+      bulkLoad.addColumn('ConversionID', TYPES.Int, { nullable: false });
+      bulkLoad.addColumn('FromValue',    TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
+      bulkLoad.addColumn('ToValue',      TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
+      
+      // add rows
+      ConversionValues.forEach( (cv, index) => {
+        let cv_new = {};
+        cv_new.ConversionID = parseInt(lastid);
+        cv_new.FromValue    = parseFloat(cv.FromValue);
+        cv_new.ToValue      = parseFloat(cv.ToValue);
         
-        // setup columns
-        bulkLoad.addColumn('ConversionID', TYPES.Int, { nullable: false });
-        bulkLoad.addColumn('FromValue',    TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
-        bulkLoad.addColumn('ToValue',      TYPES.Numeric, { nullable: false, precision: 18, scale: 6 });
-        
-        // add rows
-        ConversionValues.forEach( (cv, index) => {
-          let cv_new = {};
-          cv_new.ConversionID = parseInt(lastid);
-          cv_new.FromValue    = parseFloat(cv.FromValue);
-          cv_new.ToValue      = parseFloat(cv.ToValue);
-          
-          bulkLoad.addRow(cv_new);
-          //console.log(cv_new);
-        });
-        
-        // perform bulk insert
-        insertConnection.execBulkLoad(bulkLoad);
-      // };
+        bulkLoad.addRow(cv_new);
+      });
+      
+      // perform bulk insert
+      insertConnection.execBulkLoad(bulkLoad);
     }
-    
-    
-    // bulkConnection.on('connect', function(err) {
-      // if (err) {
-        // res.status(400).end();
-        // console.log(err);
-      // } else {
-        // loadBulkData();
-      // };
-    // });
-    
   }
   
 };

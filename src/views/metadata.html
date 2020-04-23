@@ -14,33 +14,6 @@
   </head>
   <body>
     
-        <!-- Update existing record modal -->
-    <div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Change Data</h5>
-          </div>
-          
-          <div class="modal-body">
-          
-            <div id="updateAlert" class="row alert alert-info" role="alert">
-              Update the currently selected data?
-            </div>
-          
-            
-          </div>
-          
-          <div class="modal-footer">
-            <button id="updateDataButton" type="button" class="btn btn-primary">Update Data</button>
-            <button id="updateDataCloseButton" type="button" class="btn btn-secondary" 
-              data-dismiss="modal">Cancel</button>
-          </div>
-          
-        </div>
-      </div>
-    </div>
-    
     <!-- Begin main page content -->
     <div class="container-fluid" role="main">
       <h1>Metadata</h1>
@@ -1262,6 +1235,8 @@
                   
                   <hr>
                   
+                  <h2>Conversion Points</h2>
+                  
                   <div id="ccc" class="form-group row">
                     <div id="conversionChartContainer" class="col-12">
                       <svg :width="outsideWidth" :height="outsideHeight">
@@ -1275,6 +1250,11 @@
                         </g>
                       </svg>
                     </div>
+                  </div>
+                  
+                  <div class="row">
+                    <button id="openCSVFileButton" type="button" class="btn btn-primary"
+                      @click="openCVFileDialog()">Load Values</button>
                   </div>
                   
                 </fieldset>
