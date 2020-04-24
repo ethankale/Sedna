@@ -246,6 +246,107 @@ let controller = {
       // perform bulk insert
       insertConnection.execBulkLoad(bulkLoad);
     }
+  },
+  
+  conversionStats: function(req, res) {
+    let mssql_config = cfg.getConfig().mssql;
+    let connection = new Connection(mssql_config);
+    
+    let MetadataID   = req.query.MetadataID;
+    let ConversionID = req.query.ConversionID;
+    let FromDate     = new Date(req.query.FromDate);
+    let ToDate       = new Date(req.query.ToDate);
+    
+    let returndata = {};
+    
+    connection.on('connect', function(err) {
+      
+      let statement = `SELECT sum(case when cv.FromValue is null then 1 else 0 end) as count_nulls, 
+        count(cv.FromValue) as count_valid
+        FROM Metadata as md
+        LEFT JOIN Measurement as ms
+        ON md.MetadataID = ms.MetadataID
+        LEFT JOIN ConversionValue as cv
+        ON ms.Value = cv.FromValue
+        AND cv.ConversionID = @ConversionID
+        WHERE md.MetadataID = @MetadataID
+        AND ms.CollectedDTM >= @FromDate
+        AND ms.CollectedDTM <= @ToDate;`;
+      
+      let request = new Request(statement, function(err, rowCount) {
+        if (err) {
+          console.log(err);
+          res.status(400).end();
+        } else {
+          res.status(200).json(returndata);
+        }
+      });
+      
+      request.addParameter('ConversionID', TYPES.Int, ConversionID);
+      request.addParameter('MetadataID',   TYPES.Int, MetadataID);
+      request.addParameter('FromDate',     TYPES.DateTime2, FromDate);
+      request.addParameter('ToDate',       TYPES.DateTime2, ToDate);
+      
+      request.on('row', function(columns) {
+        columns.forEach((column) => {
+          returndata[[column.metadata.colName]] = column.value;
+        });
+      });
+      
+      connection.execSql(request);
+    });
+  },
+  
+  convertMeasurements: function(req, res) {
+    let mssql_config = cfg.getConfig().mssql;
+    let connection = new Connection(mssql_config);
+    
+    let MetadataID   = req.query.MetadataID;
+    let ConversionID = req.query.ConversionID;
+    let FromDate     = req.query.FromDate;
+    let ToDate       = req.query.ToDate;
+    
+    let returndata = [];
+    
+    connection.on('connect', function(err) {
+      
+      let statement = `SELECT md.MetadataID, ms.CollectedDTMOffset, 
+          ms.CollectedDTM, ms.Value, cv.FromValue, cv.ToValue
+        FROM Metadata as md
+        LEFT JOIN Measurement as ms
+        ON md.MetadataID = ms.MetadataID
+        LEFT JOIN ConversionValue as cv
+        ON ms.Value = cv.FromValue
+        AND cv.ConversionID = @ConversionID
+        WHERE md.MetadataID = @MetadataID
+        AND ms.CollectedDTM >= @FromDate
+        AND ms.CollectedDTM <= @ToDate
+        ORDER BY ms.CollectedDateTime ASC;`;
+      
+      let request = new Request(statement, function(err, rowCount) {
+        if (err) {
+          console.log(err);
+          res.status(400).end();
+        } else {
+          res.status(200).json(returndata);
+        }
+      });
+      
+      request.addParameter('ConversionID', TYPES.Int, ConversionID);
+      request.addParameter('MetadataID',   TYPES.Int, MetadataID);
+      request.addParameter('FromDate',     TYPES.DateTime2, FromDate);
+      request.addParameter('ToDate',       TYPES.DateTime2, ToDate);
+      
+      request.on('row', function(columns) {
+        let newrow = {};
+        columns.forEach((column) => {
+          newrow[[column.metadata.colName]] = column.value;
+        });
+        returndata.push(newrow);
+      });
+      
+      connection.execSql(request);
+    });
   }
   
 };

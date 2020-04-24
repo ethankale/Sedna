@@ -29,6 +29,9 @@ module.exports = function (app) {
     app.put('/api/v1/conversion',     conversion.updateConversion);
     app.post('/api/v1/conversion',    conversion.addConversion);
     
+    app.get('/api/v1/conversionStats',     conversion.conversionStats);
+    app.get('/api/v1/convertMeasurements', conversion.convertMeasurements);
+    
     // Equipment Deployments
     app.get('/api/v1/equipmentDeploymentList', equipmentDeployment.getEquipmentDeploymentList);
     app.get('/api/v1/equipmentDeployment',     equipmentDeployment.getEquipmentDeploymentDetails);

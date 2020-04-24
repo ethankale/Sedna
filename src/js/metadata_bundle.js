@@ -33702,8 +33702,6 @@ var vm = new Vue({
 
 },{"vue":37}],50:[function(require,module,exports){
 
-var Papa           = require('papaparse');
-var d3             = require('d3');
 let alqwuutils     = require('./utils.js');
 
 let datarecord     = require('./meta-datarecord.js');
@@ -33720,7 +33718,7 @@ let conversion     = require('./meta-conversion.js');
 
 let utcoffset  = alqwuutils.utcoffset;
 
-},{"./meta-conversion.js":39,"./meta-datarecord.js":40,"./meta-equipment-model.js":41,"./meta-equipment.js":42,"./meta-method.js":43,"./meta-parameter.js":44,"./meta-qualifier.js":45,"./meta-sample-point.js":46,"./meta-site.js":47,"./meta-unit.js":48,"./meta-user.js":49,"./utils.js":51,"d3":32,"papaparse":33}],51:[function(require,module,exports){
+},{"./meta-conversion.js":39,"./meta-datarecord.js":40,"./meta-equipment-model.js":41,"./meta-equipment.js":42,"./meta-method.js":43,"./meta-parameter.js":44,"./meta-qualifier.js":45,"./meta-sample-point.js":46,"./meta-site.js":47,"./meta-unit.js":48,"./meta-user.js":49,"./utils.js":51}],51:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()

@@ -120,6 +120,9 @@ GO
 CREATE INDEX measurement_collecteddate_idx
 ON Measurement (CollectedDate)
 GO
+CREATE INDEX measurement_collecteddtm_idx
+ON Measurement (CollectedDTM)
+GO
 ALTER TABLE Measurement
 ADD AddedDate datetime2(0) DEFAULT(GETDATE())
 GO
@@ -151,5 +154,8 @@ CREATE TABLE ConversionValue (
   FromValue Numeric(18,6) NOT NULL,
   ToValue Numeric(18,6) NOT NULL
 );
+GO
+CREATE INDEX ConversionValue_idx
+ON ConversionValue (ConversionID)
 GO
 
