@@ -332,8 +332,8 @@ let controller = {
         ON ms.Value = cv.FromValue
         AND cv.ConversionID = @ConversionID
         WHERE md.MetadataID = @MetadataID
-        AND ms.CollectedDTM >= @FromDate
-        AND ms.CollectedDTM <= @ToDate
+        AND ms.CollectedDateTime >= @FromDate
+        AND ms.CollectedDateTime <= @ToDate
         ORDER BY ms.CollectedDateTime ASC;`;
       
       let request = new Request(statement, function(err, rowCount) {

@@ -243,7 +243,6 @@ var vm = new Vue({
     },
     
     calculatePath() {
-      // const scale = this.getScales();
       const scale = this.scale;
       const path = d3.line()
         .x(d => scale.x(d.FromValue))

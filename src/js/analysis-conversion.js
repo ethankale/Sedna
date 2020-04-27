@@ -1,6 +1,9 @@
 
-let Vue  = require('vue');
+let Vue      = require('vue');
 let Datetime = require('vue-datetime');
+let dt       = require('luxon');
+let d3       = require('d3');
+let utils    = require('./utils.js');
 
 Vue.directive('select', {
   twoWay: true,
@@ -24,22 +27,49 @@ var vm = new Vue({
     oldDRID: null,
     newDRID: null,
     ConversionID: null,
+    
     fromDate: null,
     toDate: null,
+    utcoffset: utils.utcoffset,
+    
     conversions: [],
     drs: [],
     measurements: [],
+    
     nulls: 0,
     valids: 0,
+    recordsToOverwrite: 0,
+    
     converting: false,
     conversionState: 'initial',
     error: false,
-    notificationText: "Select a data record to calculate from, one to save new data to, a conversion table, and a timeframe."
+    notificationText: `Select a data record to calculate 
+      from, one to save new data to, a conversion table, and a timeframe.`,
+    
+    // D3 stuff.
+    oldLine: '',
+    newLine: '',
+    svgWidth: 500,
+    margin: {
+      top: 10, 
+      right: 30, 
+      bottom: 30, 
+      left: 40
+    },
   },
   
   mounted: function () {
     this.loadDRs();
     this.loadConversions();
+    this.addResizeListener();
+  },
+  
+  watch: {
+    measurements: function() {
+      this.setSVGWidth();
+      this.calculatePathOldVals();
+      this.calculatePathNewVals();
+    }
   },
   
   computed: {
@@ -50,6 +80,64 @@ var vm = new Vue({
     convertButtonDisable: function() {
       let st = this.conversionState;
       return st == 'loading';
+    },
+    
+    utcFromDate: function() {
+      return dt.DateTime
+        .fromISO(this.fromDate, { zone: this.utcZoneString })
+        // .setZone('utc');
+    },
+    
+    utcToDate: function() {
+      return dt.DateTime
+        .fromISO(this.toDate, { zone: this.utcZoneString })
+        // .setZone('utc');
+    },
+    
+    utcZoneString: function() {
+      let hours = Math.abs(this.utcoffset);
+      let sign  = this.utcoffset < 0 ? '+' : '-';
+      return('UTC' + sign + hours);
+    },
+    
+    svgHeight: function() {
+      return Math.floor(this.svgWidth / 2.2);
+    },
+    
+    outsideWidth() {
+      return this.svgWidth + this.margin.left + this.margin.right;
+    },
+    
+    outsideHeight() {
+      return this.svgHeight + this.margin.top + this.margin.bottom;
+    },
+    
+    scale() {
+      const x = d3
+        .scaleTime()
+        .domain(d3.extent(this.measurements, d => d.jsdate))
+        .rangeRound([0, this.svgWidth]);
+      
+      let extent    = d3.extent(this.measurements, d => d.Value);
+      let extentOld = d3.extent(this.measurements, d => d.FromValue);
+      extent[0] = extentOld[0] < extent[0] ? extentOld[0] : extent[0];
+      extent[1] = extentOld[1] > extent[1] ? extentOld[1] : extent[1];
+      
+      const y = d3
+        .scaleLinear()
+        .domain(extent)
+        .rangeRound([this.svgHeight, 0]);
+      return { x, y };
+    },
+  },
+  
+  directives: {
+    axis(el, binding) {
+      const axis = binding.arg;
+      const axisMethod = { x: "axisBottom", y: "axisLeft" }[axis];
+      const methodArg = binding.value[axis];
+      
+      d3.select(el).call(d3[axisMethod](methodArg).ticks(4));
     }
   },
   
@@ -93,15 +181,15 @@ var vm = new Vue({
       this.conversionState = 'loading';
       let query = {
         'ConversionID': this.ConversionID,
-        'MetadataID': this.oldDRID,
-        'FromDate': this.fromDate,
-        'ToDate': this.toDate
+        'MetadataID':   this.oldDRID,
+        'FromDate':     this.fromDate,
+        'ToDate':       this.toDate
       }
       $.ajax({
         url: `http://localhost:3000/api/v1/conversionStats`,
         data: query,
         method:'GET',
-        timeout: 3000
+        timeout: 10000
       }).done((data) => {
         if (data.count_valid > 0) {
           this.nulls  = data.count_nulls;
@@ -134,6 +222,9 @@ var vm = new Vue({
         method:'GET',
         timeout: 3000
       }).done((data) => {
+        data.forEach((d) => {
+          d.jsdate = new Date(d.CollectedDTM);
+        });
         this.measurements = data;
         this.conversionState = 'calculated';
       }).fail((err) => {
@@ -158,7 +249,41 @@ var vm = new Vue({
     cancelConversion: function() {
       this.notificationText = "Cancelled conversion.";
       this.converting = false;
-    }
+    },
+    
+    // D3 methods
+    
+    calculatePathOldVals() {
+      const scale = this.scale;
+      const path = d3.line()
+        .x(d => scale.x(d.jsdate))
+        .y(d => scale.y(d.FromValue));
+      this.oldLine = path(this.measurements);
+    },
+    
+    calculatePathNewVals() {
+      const scale = this.scale;
+      const path = d3.line()
+        .x(d => scale.x(d.jsdate))
+        .y(d => scale.y(d.Value));
+      this.newLine = path(this.measurements);
+    },
+    
+    setSVGWidth() {
+      if ($("#conversionChartContainer").width() > 0) {
+        this.svgWidth = $("#conversionChartContainer").width() - this.margin.left - this.margin.right;
+      } else {
+        this.svgWidth = 500;
+      };
+    },
+    
+    addResizeListener() {
+      window.addEventListener('resize', () => {
+        this.setSVGWidth();
+        this.calculatePathOldVals();
+        this.calculatePathNewVals();
+      });
+    },
   },
   
   components: {
