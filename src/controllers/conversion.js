@@ -301,6 +301,8 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
+    console.log(req.query);
+    
     let MetadataID   = req.query.MetadataID;
     let ConversionID = req.query.ConversionID;
     let FromDate     = req.query.FromDate;
@@ -310,8 +312,19 @@ let controller = {
     
     connection.on('connect', function(err) {
       
-      let statement = `SELECT md.MetadataID, ms.CollectedDTMOffset, 
-          ms.CollectedDTM, ms.Value, cv.FromValue, cv.ToValue
+      let statement = `SELECT 
+          cv.ToValue as Value
+          ,cv.FromValue as FromValue
+          ,md.[MetadataID]
+          ,ms.[MeasurementCommentID]
+          ,ms.[MeasurementQualityID]
+          ,ms.[QualifierID]
+          ,ms.[AddedDate]
+          ,ms.[CollectedDTM]
+          ,ms.[CollectedDTMOffset]
+          ,ms.[CollectedDateTime]
+          ,ms.[CollectedDate]
+          ,ms.[Depth_M]
         FROM Metadata as md
         LEFT JOIN Measurement as ms
         ON md.MetadataID = ms.MetadataID

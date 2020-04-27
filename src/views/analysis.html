@@ -9,6 +9,7 @@
     <title>Gage Data</title>
     <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="../../node_modules/select2/dist/css/select2.min.css">
+    <link rel="stylesheet" href="../../node_modules/vue-datetime/dist/vue-datetime.min.css">
     <link rel="stylesheet" href="../index.css">
   </head>
   <body>
@@ -94,16 +95,18 @@
                 </div>
                 
                 <div class="form-group row">
-                  <label for="fromDate" class="col-sm-2 col-form-label">Between</label>
-                  <div class="col-sm-4">
-                    <input type="datetime-local" class="form-control" id="fromDate"
-                      v-model="fromDate">
+                  <label for="fromDate" class="col-sm-2 col-form-label">From</label>
+                  <div class="col-sm-10">
+                    <datetime type='datetime' input-class="form-control" input-id="fromDate"
+                      v-model="fromDate"></datetime>
                   </div>
-
-                  <label for="toDate" class="col-sm-2 col-form-label">and</label>
-                  <div class="col-sm-4">
-                    <input type="datetime-local" class="form-control" id="toDate"
-                      v-model="toDate">
+                </div>
+                
+                <div class="form-group row">
+                  <label for="toDate" class="col-sm-2 col-form-label">To</label>
+                  <div class="col-sm-10">
+                    <datetime type='datetime' input-class="form-control" input-id="toDate"
+                      v-model="toDate"></datetime>
                   </div>
                 </div>
                 
@@ -113,7 +116,7 @@
               <div class="form-row">
                 <div class="col-md-6">
                   <button id="conversion-convert" type="button" class="btn btn-primary"
-                    @click="clickConvert()" > {{ convertButtonText }}</button>
+                    @click="clickConvert()" :disabled='convertButtonDisable'> {{ convertButtonText }}</button>
                 </div>
                 
                 <div class="col-md-6">

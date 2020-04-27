@@ -71,6 +71,66 @@ let controller = {
         });
     },
     
+    getRawMeasurements: function (req, res) {
+      let cfg = require('./config.js')
+      let mssql_config = cfg.getConfig().mssql;
+      var connection = new Connection(mssql_config);
+      
+      var metadataid = req.query.MetadataID;
+      var startdtm   = req.query.startdtm;
+      var enddtm     = req.query.enddtm;
+      
+      let returndata = [];
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err)
+        } else {
+          var statement = `SELECT 
+            [Value]
+            ,[MetadataID]
+            ,[MeasurementCommentID]
+            ,[MeasurementQualityID]
+            ,[QualifierID]
+            ,[AddedDate]
+            ,[CollectedDTM]
+            ,[CollectedDTMOffset]
+            ,[CollectedDateTime]
+            ,[CollectedDate]
+            ,[Depth_M]
+          FROM Measurement 
+          WHERE MetadataID = @metadataid
+          AND ms.CollectedDTM >= '@startdtm'
+          AND ms.CollectedDTM <= '@enddtm'
+          ORDER BY CollectedDTM ASC`;
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              console.log(err);
+              res.status(400).end();
+            } else {
+              res.status(200).json(returndata);
+            }
+          });
+          
+          request.addParameter('MetadataID',   TYPES.Int, MetadataID);
+          request.addParameter('startdtm',     TYPES.DateTime2, startdtm);
+          request.addParameter('enddtm',       TYPES.DateTime2, enddtm);
+          
+          request.on('row', function(columns) {
+            let newrow = {};
+            columns.forEach((column) => {
+              newrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(newrow);
+          });
+          
+          connection.execSql(request);
+          
+        }
+      });
+    },
+    
     getDetails: function (req, res) {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;

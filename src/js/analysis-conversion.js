@@ -1,5 +1,6 @@
 
 let Vue  = require('vue');
+let Datetime = require('vue-datetime');
 
 Vue.directive('select', {
   twoWay: true,
@@ -27,7 +28,11 @@ var vm = new Vue({
     toDate: null,
     conversions: [],
     drs: [],
+    measurements: [],
+    nulls: 0,
+    valids: 0,
     converting: false,
+    conversionState: 'initial',
     error: false,
     notificationText: "Select a data record to calculate from, one to save new data to, a conversion table, and a timeframe."
   },
@@ -40,6 +45,11 @@ var vm = new Vue({
   computed: {
     convertButtonText: function() {
       return this.converting ? "Save" : "Start";
+    },
+    
+    convertButtonDisable: function() {
+      let st = this.conversionState;
+      return st == 'loading';
     }
   },
   
@@ -79,11 +89,67 @@ var vm = new Vue({
       });
     },
     
+    getConvertRecordStats: function() {
+      this.conversionState = 'loading';
+      let query = {
+        'ConversionID': this.ConversionID,
+        'MetadataID': this.oldDRID,
+        'FromDate': this.fromDate,
+        'ToDate': this.toDate
+      }
+      $.ajax({
+        url: `http://localhost:3000/api/v1/conversionStats`,
+        data: query,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        if (data.count_valid > 0) {
+          this.nulls  = data.count_nulls;
+          this.valids = data.count_valid;
+          this.conversionState = 'statsLoaded';
+          this.notificationText = `Valid measurements to convert: ${this.valids}; non-matching records: ${this.nulls}`;
+          this.getConvertedMeasurements();
+        } else {
+          this.conversionState = 'initial';
+          this.notificationText = 'No records found matching that date range and conversion table.'
+        }
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.notificationText = "Failed to retrieve stats for this data record."
+      });
+    },
+    
+    getConvertedMeasurements: function() {
+      this.conversionState = 'loading';
+      let query = {
+        'MetadataID':   this.oldDRID,
+        'ConversionID': this.ConversionID,
+        'FromDate':     this.fromDate,
+        'ToDate':       this.toDate
+      }
+      $.ajax({
+        url: `http://localhost:3000/api/v1/convertMeasurements`,
+        data: query,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.measurements = data;
+        this.conversionState = 'calculated';
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.conversionState = 'ready';
+        this.notificationText = "Error attempting to convert old measurements to new."
+      });
+    },
+    
     clickConvert: function() {
       if (this.converting) {
         this.notificationText = "Saving conversion.";
         this.converting = false;
       } else {
+        this.getConvertRecordStats();
         this.notificationText = "Starting conversion.";
         this.converting = true;
       }
@@ -93,6 +159,10 @@ var vm = new Vue({
       this.notificationText = "Cancelled conversion.";
       this.converting = false;
     }
+  },
+  
+  components: {
+    datetime: Datetime.Datetime
   }
   
 });
