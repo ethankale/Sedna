@@ -56,7 +56,6 @@ module.exports = function (app) {
     app.get('/api/v1/getMeasurementCount',   measurements.getCountByDtmAndMetaid)
     app.post('/api/v1/measurements',         measurements.addMeasurements);
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);
-    app.get('/api/v1/getMeasurementsRaw',    measurements.getRawMeasurements);
     app.delete('/api/v1/measurements',       measurements.deleteMeasurements);
     
     // Metadata (or Data Record)

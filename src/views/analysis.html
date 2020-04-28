@@ -40,8 +40,8 @@
               <h2>Conversion Tables</h2>
               <p>Create a new data record from an existing one, using a conversion table.</p>
               
-              <div id="conversion-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error} "> 
+              <div id="conversion-narrative" class="alert"
+                v-bind:class="narrativeClass"> 
                 {{ notificationText }}
               </div>
               
@@ -63,71 +63,76 @@
               </div>
               
               <form id="eq-selectHeader">
-                <div class="form-group row">
-                  <label for="oldDRSelect" class="col-sm-2 col-form-label">Old Data Record</label>
-                  <div class="col-sm-10">
-                    <select class="form-control" id="oldDRSelect" 
-                      v-model="oldDRID" 
-                      v-select="oldDRID">
-                      <option 
-                        v-for="dr in drs" 
-                        v-bind:value="dr.MetadataID" 
-                        v-bind:key="dr.MetadataID">
-                        {{ dr.Metaname }}
-                      </option>
-                    </select>
+                <fieldset id="conversionFieldset" :disabled="formDisable">
+                  <div class="form-group row">
+                    <label for="oldDRSelect" class="col-sm-2 col-form-label">Old Data Record</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="oldDRSelect" 
+                        :disabled="formDisable"
+                        v-model="oldDRID" 
+                        v-select="oldDRID">
+                        <option 
+                          v-for="dr in drs" 
+                          v-bind:value="dr.MetadataID" 
+                          v-bind:key="dr.MetadataID">
+                          {{ dr.Metaname }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="form-group row">
-                  <label for="newDRSelect" class="col-sm-2 col-form-label">New Data Record</label>
-                  <div class="col-sm-10">
-                    <select class="form-control" id="newDRSelect" 
-                      v-model="newDRID" 
-                      v-select="newDRID">
-                      <option 
-                        v-for="dr in drs" 
-                        v-bind:value="dr.MetadataID" 
-                        v-bind:key="dr.MetadataID">
-                        {{ dr.Metaname }}
-                      </option>
-                    </select>
+                  
+                  <div class="form-group row">
+                    <label for="newDRSelect" class="col-sm-2 col-form-label">New Data Record</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="newDRSelect" 
+                        :disabled="formDisable"
+                        v-model="newDRID" 
+                        v-select="newDRID">
+                        <option 
+                          v-for="dr in drs" 
+                          v-bind:value="dr.MetadataID" 
+                          v-bind:key="dr.MetadataID">
+                          {{ dr.Metaname }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="form-group row">
-                  <label for="conversionTableSelect" class="col-sm-2 col-form-label">Conversion Table</label>
-                  <div class="col-sm-10">
-                    <select class="form-control" id="conversionTableSelect" 
-                      v-model="ConversionID" 
-                      v-select="ConversionID">
-                      <option 
-                        v-for="conversion in conversions" 
-                        v-bind:value="conversion.ConversionID" 
-                        v-bind:key="conversion.ConversionID">
-                        {{ conversion.ConversionName }}
-                      </option>
-                    </select>
+                  
+                  <div class="form-group row">
+                    <label for="conversionTableSelect" class="col-sm-2 col-form-label">Conversion Table</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="conversionTableSelect" 
+                        :disabled="formDisable"
+                        v-model="ConversionID" 
+                        v-select="ConversionID">
+                        <option 
+                          v-for="conversion in conversions" 
+                          v-bind:value="conversion.ConversionID" 
+                          v-bind:key="conversion.ConversionID">
+                          {{ conversion.ConversionName }}
+                        </option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="form-group row">
-                  <label for="fromDate" class="col-sm-2 col-form-label">From</label>
-                  <div class="col-sm-10">
-                    <datetime type='datetime' input-class="form-control" input-id="fromDate"
-                      v-model="fromDate" :zone="utcZoneString"></datetime>
+                  
+                  <div class="form-group row">
+                    <label for="fromDate" class="col-sm-2 col-form-label">From</label>
+                    <div class="col-sm-10">
+                      <datetime type='datetime' input-class="form-control" input-id="fromDate"
+                        v-model="fromDate" :zone="utcZoneString"></datetime>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="form-group row">
-                  <label for="toDate" class="col-sm-2 col-form-label">To</label>
-                  <div class="col-sm-10">
-                    <datetime type='datetime' input-class="form-control" input-id="toDate"
-                      v-model="toDate" :zone="utcZoneString"></datetime>
+                  
+                  <div class="form-group row">
+                    <label for="toDate" class="col-sm-2 col-form-label">To</label>
+                    <div class="col-sm-10">
+                      <datetime type='datetime' input-class="form-control" input-id="toDate"
+                        v-model="toDate" :zone="utcZoneString"></datetime>
+                    </div>
                   </div>
-                </div>
-                
-                <hr>
+                  
+                  <hr>
+                </fieldset>
               </form>
               
               <div class="form-row">

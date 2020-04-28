@@ -366,7 +366,7 @@ var reviewData = function(headers, fileData) {
         $('#uploadReviewTab a:first').tab('show')
         
     }
-}
+};
 
 var uploadMeasurements = function(finalData, metaid) {
   let errors        = 0;

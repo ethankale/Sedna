@@ -1,7 +1,7 @@
 
 let Vue      = require('vue');
 let Datetime = require('vue-datetime');
-let dt       = require('luxon');
+//let dt       = require('luxon');
 let d3       = require('d3');
 let utils    = require('./utils.js');
 
@@ -28,8 +28,8 @@ var vm = new Vue({
     newDRID: null,
     ConversionID: null,
     
-    fromDate: null,
-    toDate: null,
+    fromDate: '',
+    toDate: '',
     utcoffset: utils.utcoffset,
     
     conversions: [],
@@ -41,8 +41,10 @@ var vm = new Vue({
     recordsToOverwrite: 0,
     
     converting: false,
+    // initial -> loading -> calculated -> loaded
     conversionState: 'initial',
     error: false,
+    loadErrorCount: 0,
     notificationText: `Select a data record to calculate 
       from, one to save new data to, a conversion table, and a timeframe.`,
     
@@ -78,26 +80,33 @@ var vm = new Vue({
     },
     
     convertButtonDisable: function() {
-      let st = this.conversionState;
-      return st == 'loading';
+      let disable = false;
+      if (this.conversionState == 'loading') {
+        disable = true;
+      } else if (this.fromDate.length == 0 | this.toDate.length == 0) {
+        disable = true;
+      }
+      return disable;
     },
     
-    utcFromDate: function() {
-      return dt.DateTime
-        .fromISO(this.fromDate, { zone: this.utcZoneString })
-        // .setZone('utc');
-    },
-    
-    utcToDate: function() {
-      return dt.DateTime
-        .fromISO(this.toDate, { zone: this.utcZoneString })
-        // .setZone('utc');
+    formDisable: function() {
+      return this.conversionState == 'calculated';
     },
     
     utcZoneString: function() {
       let hours = Math.abs(this.utcoffset);
       let sign  = this.utcoffset < 0 ? '+' : '-';
       return('UTC' + sign + hours);
+    },
+    
+    narrativeClass: function() {
+      let nclass = 'alert-info';
+      if (this.error) {
+        nclass = 'alert-danger';
+      } else if(this.nulls > 0 | this.recordsToOverwrite > 0) {
+        nclass = 'alert-warning';
+      };
+      return nclass;
     },
     
     svgHeight: function() {
@@ -194,8 +203,7 @@ var vm = new Vue({
         if (data.count_valid > 0) {
           this.nulls  = data.count_nulls;
           this.valids = data.count_valid;
-          this.conversionState = 'statsLoaded';
-          this.notificationText = `Valid measurements to convert: ${this.valids}; non-matching records: ${this.nulls}`;
+          this.notificationText = `Stats calculated; running conversion...`;
           this.getConvertedMeasurements();
         } else {
           this.conversionState = 'initial';
@@ -227,28 +235,146 @@ var vm = new Vue({
         });
         this.measurements = data;
         this.conversionState = 'calculated';
+        this.getExistingMeasurements();
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.conversionState = 'ready';
+        this.conversionState = 'initial';
         this.notificationText = "Error attempting to convert old measurements to new."
       });
     },
     
+    getExistingMeasurements: function() {
+      this.conversionState = 'loading';
+      let query = {
+        'metaid':   this.newDRID,
+        'startdtm': this.fromDate,
+        'enddtm':   this.toDate
+      };
+      $.ajax({
+        url: `http://localhost:3000/api/v1/getMeasurementCount`,
+        data: query,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.recordsToOverwrite = data.measurementCount;
+        this.conversionState = 'calculated';
+        this.notificationText = `
+          ${this.valids} valid measurements to convert; 
+          ${this.nulls} non-matching records; and
+          ${this.recordsToOverwrite} records to write over (delete and replace).`;
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.conversionState = 'initial';
+        this.notificationText = "Error finding number of existing measurements to overwrite."
+      });
+    },
+    
+    deleteExistingMeasurements: function() {
+      this.notificationText = `Deleting ${this.recordsToOverwrite} measurements...`;
+      let query = {
+        'MetadataID': this.newDRID,
+        'MinDtm':     this.fromDate,
+        'MaxDtm':     this.toDate
+      };
+      $.ajax({
+        url: `http://localhost:3000/api/v1/measurements`,
+        contentType: 'application/json',
+        data: JSON.stringify(query),
+        method:'DELETE',
+        timeout: 3000
+      }).done((data) => {
+        this.uploadCalculatedMeasurements();
+      }).fail((err) => {
+        console.log(err);
+        this.error = true;
+        this.conversionState = 'initial';
+        this.notificationText = "Error overwriting existing measurements."
+      });
+    },
+    
+    uploadCalculatedMeasurements: function() {
+      this.notificationText = `Uploading ${this.measurements.length} measurements...`;
+      this.conversionState = 'loading';
+      let errors        = 0;
+      let successes     = 0;
+      let stepSize      = 30;    // The max number of rows to bulk insert.
+      for (let i=0; i<this.measurements.length; i+=stepSize) {
+        let dataToLoad = {'metaid': this.newDRID,
+                          'offset': this.utcoffset,
+                          'loadnumber': i/stepSize,
+                          'measurements': this.measurements.slice(i, i+stepSize)};
+        //console.log("Starting Post #" + i/stepSize);
+        
+        $.ajax({
+          type: 'POST',
+          url: 'http://localhost:3000/api/v1/measurements',
+          contentType: 'application/json',
+          data: JSON.stringify(dataToLoad),
+          dataType: 'json',
+          timeout: 5000
+        }).done((data) => {
+          console.log("Server says: " + data);
+          if (data != 'Success') {
+            errors += dataToLoad.measurements.length;
+          } else {
+            successes += dataToLoad.measurements.length;
+          }
+          //console.log("Loaded Post #" + i/stepSize);
+        }).fail((err) => {
+          console.log("Upload failed for Post #" + i/stepSize);
+          errors += dataToLoad.measurements.length;
+        }).always(() => {
+          this.notificationText = (`
+            ${errors} errors and 
+            ${successes} successes so far of 
+            ${this.measurements.length} values to load...`);
+          this.error = errors > 0 ? true : false;
+          if (errors + successes == this.measurements.length) {
+            this.conversionState = 'initial';
+            this.notificationText = `Loaded ${successes} measurements; failed to load ${errors}.`;
+            
+            this.measurements = [];
+            this.newLine = '';
+            this.oldLine = '';
+            
+            this.valids = 0;
+            this.nulls = 0;
+            this.recordsToOverwrite = 0;
+            this.loadErrorCount = 0;
+            
+          };
+        }); 
+      };
+    },
+    
     clickConvert: function() {
-      if (this.converting) {
-        this.notificationText = "Saving conversion.";
-        this.converting = false;
-      } else {
-        this.getConvertRecordStats();
+      if (this.conversionState == 'initial') {
         this.notificationText = "Starting conversion.";
         this.converting = true;
+        this.getConvertRecordStats();
+      } else if(this.recordsToOverwrite > 0) {
+        this.converting = false;
+        this.deleteExistingMeasurements();
+      } else {
+        this.uploadCalculatedMeasurements();
       }
     },
     
     cancelConversion: function() {
       this.notificationText = "Cancelled conversion.";
       this.converting = false;
+      this.conversionState = 'initial';
+      
+      this.measurements = [];
+      this.newLine = '';
+      this.oldLine = '';
+      
+      this.valids = 0;
+      this.nulls = 0;
+      this.recordsToOverwrite = 0;
+      this.loadErrorCount = 0;
     },
     
     // D3 methods

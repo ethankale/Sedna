@@ -44,65 +44,25 @@ let controller = {
     },
     
     getCountByDtmAndMetaid: function(req, res) {
-        let cfg = require('./config.js')
-        let mssql_config = cfg.getConfig().mssql;
-        var returndata = [];
-        var connection = new Connection(mssql_config);
-        
-        var metaid    = req.query.metaid;
-        var startdtm  = req.query.startdtm;
-        var enddtm    = req.query.enddtm;
-        var utcoffset = req.query.utcoffset;
-        
-        var statement = `SELECT 
-          COUNT(MeasurementID) as measurementCount
-          FROM Measurement
-          WHERE MetadataID = ${metaid}
-          AND CollectedDateTime >= DATEADD(hour, ${utcoffset}, '${startdtm}')
-          AND CollectedDateTime <= DATEADD(hour, ${utcoffset}, '${enddtm}')`;
-        
-        connection.on('connect', function(err) {
-          if(err) {
-            console.log('Error: ', err)
-            res.json(err);
-          } else {
-            sqlfunctions.executeSelect(statement, connection, res);
-          }
-        });
-    },
-    
-    getRawMeasurements: function (req, res) {
       let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
+      var returndata = {};
       var connection = new Connection(mssql_config);
       
-      var metadataid = req.query.MetadataID;
-      var startdtm   = req.query.startdtm;
-      var enddtm     = req.query.enddtm;
-      
-      let returndata = [];
+      var metaid    = req.query.metaid;
+      var startdtm  = req.query.startdtm;
+      var enddtm    = req.query.enddtm;
       
       connection.on('connect', function(err) {
         if(err) {
           console.log('Error: ', err)
+          res.status(400).json(err);
         } else {
-          var statement = `SELECT 
-            [Value]
-            ,[MetadataID]
-            ,[MeasurementCommentID]
-            ,[MeasurementQualityID]
-            ,[QualifierID]
-            ,[AddedDate]
-            ,[CollectedDTM]
-            ,[CollectedDTMOffset]
-            ,[CollectedDateTime]
-            ,[CollectedDate]
-            ,[Depth_M]
+          var statement = `SELECT count(MeasurementID) as measurementCount
           FROM Measurement 
-          WHERE MetadataID = @metadataid
-          AND ms.CollectedDTM >= '@startdtm'
-          AND ms.CollectedDTM <= '@enddtm'
-          ORDER BY CollectedDTM ASC`;
+          WHERE MetadataID = @metaid
+          AND CollectedDateTime >= @startdtm
+          AND CollectedDateTime <= @enddtm`;
           
           let request = new Request(statement, function(err, rowCount) {
             if (err) {
@@ -113,21 +73,18 @@ let controller = {
             }
           });
           
-          request.addParameter('MetadataID',   TYPES.Int, MetadataID);
-          request.addParameter('startdtm',     TYPES.DateTime2, startdtm);
-          request.addParameter('enddtm',       TYPES.DateTime2, enddtm);
+          request.addParameter('metaid',   TYPES.Int, metaid);
+          request.addParameter('startdtm', TYPES.DateTime2, startdtm);
+          request.addParameter('enddtm',   TYPES.DateTime2, enddtm);
           
           request.on('row', function(columns) {
-            let newrow = {};
             columns.forEach((column) => {
-              newrow[[column.metadata.colName]] = column.value;
+              returndata[[column.metadata.colName]] = column.value;
             });
-            returndata.push(newrow);
           });
           
           connection.execSql(request);
-          
-        }
+        };
       });
     },
     
@@ -218,23 +175,37 @@ let controller = {
             bulkConnection.close();
           });
           
-          bulkLoad.addColumn('CollectedDTM',       TYPES.DateTimeOffset, { nullable: false, scale: 0 });
-          bulkLoad.addColumn('Value',              TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
-          bulkLoad.addColumn('MetadataID',         TYPES.Int, { nullable: false });
-          bulkLoad.addColumn('CollectedDTMOffset', TYPES.Int, { nullable: false });
+          bulkLoad.addColumn('CollectedDTM',         TYPES.DateTime2, { nullable: false, scale: 0 });
+          bulkLoad.addColumn('Value',                TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
+          bulkLoad.addColumn('MetadataID',           TYPES.Int, { nullable: false });
+          bulkLoad.addColumn('CollectedDTMOffset',   TYPES.Int, { nullable: false });
+          bulkLoad.addColumn('MeasurementCommentID', TYPES.Int, { nullable: true });
+          bulkLoad.addColumn('MeasurementQualityID', TYPES.Int, { nullable: true });
+          bulkLoad.addColumn('QualifierID',          TYPES.Int, { nullable: true });
+          bulkLoad.addColumn('Depth_M',              TYPES.Numeric, { nullable: true, precision: 6, scale: 2 });
           
           measurements.forEach( (measurement, index) => {
             let measurement_new = {};
-            measurement_new.CollectedDTM       = new Date(measurement.dtm);
-            measurement_new.Value              = Math.round(measurement.Value*multiplier)/multiplier;
-            measurement_new.MetadataID         = parseInt(metaid);
-            measurement_new.CollectedDTMOffset = parseInt(offset);
+            let val = null;
+            if (measurement.Value != null) {
+              val = Math.round(measurement.Value*multiplier)/multiplier;
+            };
+            
+            measurement_new.CollectedDTM         = new Date(measurement.CollectedDTM);
+            measurement_new.Value                = val;
+            measurement_new.MetadataID           = metaid;
+            measurement_new.CollectedDTMOffset   = offset;
+            measurement_new.MeasurementCommentID = measurement.MeasurementCommentID;
+            measurement_new.MeasurementQualityID = measurement.MeasurementQualityID;
+            measurement_new.QualifierID          = measurement.QualifierID;
+            measurement_new.Depth_M              = measurement.Depth_M;
             
             bulkLoad.addRow(measurement_new);
-            //if (index%10 == 0) { console.log(measurement_new) };
+            if (index%10 == 0) { console.log(measurement) };
+            if (index%10 == 0) { console.log(measurement_new) };
           });
           bulkConnection.execBulkLoad(bulkLoad);
-          console.log("Loaded #" + req.body.loadnumber);
+          //console.log("Loaded #" + req.body.loadnumber);
         };
         
         bulkConnection.on('connect', function(err) {
@@ -276,10 +247,16 @@ let controller = {
     },
     
     deleteMeasurements: function(req, res) {
-      if (typeof req.body.MetadataID != 'undefined') {
+      if (typeof req.body.MetadataID == 'undefined') {
+        res.status(400).json('Must provide a MetadataID to delete measurements.');
+      } else {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         let connection = new Connection(mssql_config);
+        
+        let MetadataID = req.body.MetadataID;
+        let MinDtm     = req.body.MinDtm;
+        let MaxDtm     = req.body.MaxDtm;
         
         connection.on('connect', function(err) {
           
@@ -298,14 +275,12 @@ let controller = {
              connection.close();
            });
           
-          request.addParameter('MetadataID', TYPES.Int, req.body.MetadataID);
-          request.addParameter('MinDtm',    TYPES.DateTimeOffset, req.body.MinDtm);
-          request.addParameter('MaxDtm',    TYPES.DateTimeOffset, req.body.MaxDtm);
+          request.addParameter('MetadataID', TYPES.Int,             MetadataID);
+          request.addParameter('MinDtm',     TYPES.DateTimeOffset,  MinDtm);
+          request.addParameter('MaxDtm',     TYPES.DateTimeOffset,  MaxDtm);
           
           connection.execSql(request);
         });
-      } else {
-        res.status(400).json('Must provide a MetadataID to delete measurements.');
       };
     }
 };

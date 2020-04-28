@@ -270,8 +270,8 @@ let controller = {
         ON ms.Value = cv.FromValue
         AND cv.ConversionID = @ConversionID
         WHERE md.MetadataID = @MetadataID
-        AND ms.CollectedDTM >= @FromDate
-        AND ms.CollectedDTM <= @ToDate;`;
+        AND ms.CollectedDateTime >= @FromDate
+        AND ms.CollectedDateTime <= @ToDate;`;
       
       let request = new Request(statement, function(err, rowCount) {
         if (err) {
@@ -301,7 +301,7 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
-    console.log(req.query);
+    //console.log(req.query);
     
     let MetadataID   = req.query.MetadataID;
     let ConversionID = req.query.ConversionID;
