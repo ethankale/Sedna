@@ -33757,6 +33757,12 @@ exports.formatDateForSQL = function(dt) {
     return  strDate + " " + strTime;
 }
 
+exports.utcOffsetString = function(utcOffsetMinutes) {
+  let hours = Math.abs(utcOffsetMinutes)/60;
+  let sign  = utcOffsetMinutes >= 0 ? '+' : '-';
+  return('UTC' + sign + hours);
+}
+
 let config     = window.getConfig();
 let utcoffset  = typeof config.utcoffset == 'undefined' ? 0 : config.utcoffset;
 

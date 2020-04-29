@@ -1,8 +1,13 @@
 
-var Papa           = require('papaparse');
-var d3             = require('d3');
-var alqwuutils = require('./utils.js');
+let Papa       = require('papaparse');
+let d3         = require('d3');
+let lx         = require('luxon');
+let alqwuutils = require('./utils.js');
+
 let utcoffset = Math.floor(alqwuutils.utcoffset*60);  // MINUTES to add to local time to get UTC
+let utcstring = alqwuutils.utcOffsetString(utcoffset);
+// Globals
+let qualifiers = [];
 
 // Generic functions
 
@@ -72,16 +77,16 @@ var showReview = function() {
 };
 
 $(document).ready(function() {
+    getQualifiers();
     $("#siteSelect").change(function() {
-        $("#uploadCSVContainer").removeClass("d-none");
-        $("#uploadColumnSelectContainer").addClass("d-none");
-        $("#uploadReviewContainer").addClass("d-none");
-        $("#uploadBackButton").addClass("d-none");
-        $("#uploadNextButton").addClass("d-none");
-        $("#uploadColumnSelectForm").empty();
-        $("#uploadFileName").text("Select a File...");
+      $("#uploadCSVContainer").removeClass("d-none");
+      $("#uploadColumnSelectContainer").addClass("d-none");
+      $("#uploadReviewContainer").addClass("d-none");
+      $("#uploadBackButton").addClass("d-none");
+      $("#uploadNextButton").addClass("d-none");
+      $("#uploadColumnSelectForm").empty();
+      $("#uploadFileName").text("Select a File...");
     });
-    
     
     $("#openCSVFileButton").click(function() {
         
@@ -145,11 +150,13 @@ $(document).ready(function() {
 //   -1 = Empty (ignore the column during import)
 //   -2 = Date and Time
 //   -3 = Flag/qualifier
+//   -4 = Depth
 var buildUploadColumnSelect = function(colname, metas) {
     var metaoptions = `
         <option value=-1>Blank</option>\n
         <option value=-2>Date and Time</option>\n
-        <option value=-3>Flag or Qualifier</option>\n`;
+        <option value=-3>Flag or Qualifier</option>\n
+        <option value=-4>Depth (meters)</option>\n`;
     
     metas.forEach(meta => {
         metaoptions += `<option
@@ -178,7 +185,9 @@ var reviewData = function(headers, fileData) {
     $("#uploadReviewTabContent").empty()
     
     // First of two loops (lame).  Pull out the date/time column, and do validation.
-    var dtmColName = "";
+    var dtmColName   = "";
+    var depthColName = "";
+    var qualColName  = "";
     headers.forEach(header => {
       var headert   = header.trim();
       var selectVal = $("#uploadHeader" + header).val();
@@ -186,7 +195,10 @@ var reviewData = function(headers, fileData) {
       columncount   += selectVal == -1 ? 0 : 1;
       datetimecount += selectVal == -2 ? 1 : 0;
       
-      dtmColName = $("#uploadHeader" + header).val() == -2 ? header : dtmColName;
+      dtmColName   = $("#uploadHeader" + header).val() == -2 ? header : dtmColName;
+      qualColName  = $("#uploadHeader" + header).val() == -3 ? header : qualColName;
+      depthColName = $("#uploadHeader" + header).val() == -4 ? header : depthColName;
+      
     });
     
     if (columncount < 2) {
@@ -226,8 +238,18 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-                d.dtm   = new Date(d[dtmColName]);
-                d.Value = d[header].trim() == '' ? NaN : Number(d[header]);
+                d.dtm = lx.DateTime
+                  .fromJSDate(new Date(d[dtmColName]))
+                  .setZone(utcstring, { keepLocalTime: true });
+                  
+                d.Value       = d[header].trim() == '' ? NaN  : Number(d[header]);
+                d.Depth_M     = depthColName == ''     ? null : d[depthColName];
+                d.QualifierID = null;
+                
+                if (qualColName != '') {
+                  let qualifierobj = qualifiers.find(o => o.Code.trim() === d[qualColName]);
+                  d.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
+                };
                 
                 if (isNaN(d.Value)) {
                     cmis += 1;
@@ -239,12 +261,11 @@ var reviewData = function(headers, fileData) {
                 arr[i] = d;
             });
             
+            console.log(data)
+            
             let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
-            console.log(dataFilled);
             
-            cmis += (dataFilled.length - data.length)
-            
-            //console.log(dataFilled);
+            cmis += (dataFilled.length - data.length);
             
             $("#uploadReviewTab").append(
               `<li class="nav-item">
@@ -312,34 +333,54 @@ var reviewData = function(headers, fileData) {
                       
                       let interimData = dataAdjusted.length > 0 ? dataAdjusted : dataFilled;
                       let finalData = [];
-                      let mindate   = new Date('9999-01-01');
-                      let maxdate   = new Date('0001-01-01');
+                      let mindate   = lx.DateTime.local(3000,01,01);
+                      let maxdate   = lx.DateTime.local(1000,01,01);
                       
                       interimData.forEach((d, i, arr) => {
-                          let d_new = {};
-                          
-                          // Use the values that were adjusted for offset and drift; 
-                          //   if no adjustment was performed, use the original values.
-                          d_new.Value  = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
-                          d_new.dtm    = d.dtm;
-                          
-                          mindate = d_new.dtm > mindate ? mindate : d_new.dtm;
-                          maxdate = d_new.dtm < maxdate ? maxdate : d_new.dtm;
-                          
-                          finalData.push(d_new);
+                        let d_new = {};
+                        
+                        // Use the values that were adjusted for offset and drift; 
+                        //   if no adjustment was performed, use the original values.
+                        d_new.Value        = typeof d[adjustedCol] == 'undefined' ? d.Value : d[adjustedCol];
+                        d_new.CollectedDTM = d.dtm;
+                        d_new.QualifierID  = d.QualifierID;
+                        d_new.Depth_M      = d.Depth_M;
+                        
+                        // Not using these (yet), so leave null.
+                        d_new.MeasurementCommentID = null;
+                        d_new.MeasurementQualityID = null;
+                        
+                        mindate = d_new.CollectedDTM > mindate ? mindate : d_new.CollectedDTM;
+                        maxdate = d_new.CollectedDTM < maxdate ? maxdate : d_new.CollectedDTM;
+                        
+                        finalData.push(d_new);
                       });
                       
-                      let urlMeasureCount = "http://localhost:3000/api/v1/getMeasurementCount" +
-                        "?metaid=" + selectVal +
-                        "&startdtm=" + mindate.toLocaleDateString() + " " + mindate.toLocaleTimeString() +
-                        "&enddtm=" + maxdate.toLocaleDateString() + " " + maxdate.toLocaleTimeString() +
-                        "&utcoffset=" + utcoffset
-                      console.log(urlMeasureCount);
-                      $.ajax({url: urlMeasureCount
+                      mindate = mindate.setZone('UTC');
+                      maxdate = maxdate.setZone('UTC');
+                      
+                      //mindate = lx.DateTime.fromJSDate(mindate).minus({minutes: utcoffset}).toString();
+                      //maxdate = lx.DateTime.fromJSDate(maxdate).minus({minutes: utcoffset}).toString();
+                      
+                      let data = {
+                        "metaid":    selectVal,
+                        // "startdtm":  mindate.toLocaleDateString() + " " + mindate.toLocaleTimeString(),
+                        "startdtm":  mindate.toString(),
+                        // "enddtm":    maxdate.toLocaleDateString() + " " + maxdate.toLocaleTimeString(),
+                        "enddtm":    maxdate.toString(),
+                        "utcoffset": utcoffset
+                      };
+                      
+                      $.ajax({
+                        url:         'http://localhost:3000/api/v1/getMeasurementCount',
+                        contentType: 'application/json',
+                        type:        'GET',
+                        data:        data,
+                        timeout:     3000
                       }).done(function(data) {
-                        let rowcount = parseInt(data[0].measurementCount);
+                        let rowcount = parseInt(data.measurementCount);
                         console.log("Number of existing records: " + rowcount);
-                        
+                        console.log(finalData);
                         if (rowcount > 0) {
                           $("#uploadAlert")
                             .removeClass("alert-success  alert-primary  alert-info")
@@ -386,7 +427,7 @@ var uploadMeasurements = function(finalData, metaid) {
       contentType: 'application/json',
       data: JSON.stringify(dataToLoad),
       dataType: 'json',
-      timeout: 5000
+      timeout: 8000
     }).done((data) => {
           console.log("Server says: " + data);
           if (data != 'Success') {
@@ -406,31 +447,54 @@ var uploadMeasurements = function(finalData, metaid) {
 }
 
 let deleteMeasurements = function(metaid, mindtm, maxdtm, finalData) {
-    let body = {'MetadataID': metaid,'MinDtm': mindtm, 'MaxDtm': maxdtm};
-    
-    $.ajax({
-      type: 'DELETE',
-      url: 'http://localhost:3000/api/v1/measurements',
-      contentType: 'application/json',
-      data: JSON.stringify(body),
-      dataType: 'json',
-      timeout: 3000
-    }).done((data) => {
-      console.log("Server says: " + data);
-      $("#uploadAlert")
-        .removeClass("alert-info  alert-primary alert-danger")
-        .addClass("alert-success")
-        .text("Deleted data");
-      uploadMeasurements(finalData, metaid);
-      //console.log("Loaded Post #" + i/stepSize);
-    }).fail((err) => {
-      console.log(err);
-      $("#uploadAlert")
-        .removeClass("alert-info alert-success alert-primary ")
-        .addClass("alert-danger")
-        .text("Failed to delete data");
-    }).always(() => {
-    }); 
+  let body = {
+    'MetadataID': metaid,
+    'MinDtm': mindtm, 
+    // 'MinDtm': new lx.DateTime(mindtm).minus({minutes: utcoffset}), 
+    'MaxDtm': maxdtm
+    // 'MaxDtm': new lx.DateTime(maxdtm).minus({minutes: utcoffset})
+  };
+  
+  console.log(body);
+  
+  $.ajax({
+    type: 'DELETE',
+    url: 'http://localhost:3000/api/v1/measurements',
+    contentType: 'application/json',
+    data: JSON.stringify(body),
+    dataType: 'json',
+    timeout: 3000
+  }).done((data) => {
+    console.log("Server says: " + data);
+    $("#uploadAlert")
+      .removeClass("alert-info  alert-primary alert-danger")
+      .addClass("alert-success")
+      .text("Deleted data");
+    uploadMeasurements(finalData, metaid);
+    //console.log("Loaded Post #" + i/stepSize);
+  }).fail((err) => {
+    console.log(err);
+    $("#uploadAlert")
+      .removeClass("alert-info alert-success alert-primary ")
+      .addClass("alert-danger")
+      .text("Failed to delete data");
+  }).always(() => {
+  }); 
+};
+
+let getQualifiers = function() {
+  $.ajax({
+    type:        'GET',
+    url:         'http://localhost:3000/api/v1/qualifierList',
+    contentType: 'application/json',
+    dataType:    'json',
+    timeout:     3000
+  }).done((data) => {
+    qualifiers = data;
+  }).fail((err) => {
+    console.log(err);
+  }).always(() => {
+  }); 
 }
 
 var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize, completeSteps) {
@@ -476,8 +540,9 @@ var fillGaps = function(data, freq, datecol, valuecol) {
             if (isFinite(ntoinsert)) {
             
                 for (let j=1; j<=ntoinsert; j++) {
-                    let insertDate = new Date(lastDate);
-                    insertDate.setMinutes(lastDate.getMinutes() + (j*freq));
+                    //let insertDate = new Date(lastDate);
+                    insertDate = lastDate.plus({ minutes: j*freq });
+                    //insertDate.setMinutes(lastDate.getMinutes() + (j*freq));
                     
                     d_copy[valuecol] = j == ntoinsert ? d_copy[valuecol] : NaN;
                     
@@ -510,8 +575,7 @@ var adjustValues = function(arr, valuecol, offset, drift, newcol) {
         newarr.push(d_copy);
     });
     return newarr;
-}
-
+};
 
 // measurements needs be an object with 'dtm' and 'Value' arrays
 var graphColumn = function(selector, measurements, datecol, valuecol, filledval) {

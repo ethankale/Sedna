@@ -3,6 +3,7 @@
 
 let { Connection, TYPES, Request} = require('tedious');
 let cfg = require('./config.js');
+let lx  = require('luxon');
 
 const sqlfunctions = require('./sqlexecutefunction.js')
 
@@ -48,6 +49,8 @@ let controller = {
       let mssql_config = cfg.getConfig().mssql;
       var returndata = {};
       var connection = new Connection(mssql_config);
+      
+      console.log(req.query);
       
       var metaid    = req.query.metaid;
       var startdtm  = req.query.startdtm;
@@ -108,7 +111,7 @@ let controller = {
         
         var statement = `SELECT 
             DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
-            ms.Value, sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
+            ms.Value, qf.Code as Qualifier, sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
             pm.Name as Parameter, mt.Code as Method
           FROM Measurement as ms
           LEFT JOIN Metadata as md
@@ -119,6 +122,8 @@ let controller = {
             ON pm.ParameterID = md.ParameterID
           LEFT JOIN Method as mt
             ON mt.MethodID = md.MethodID
+          LEFT JOIN Qualifier as qf
+            ON ms.QualifierID = qf.QualifierID
           WHERE sp.SiteID = ${siteid}
             AND md.ParameterID IN (${paramstring})
             AND md.MethodID IN  (${methodstring})
@@ -176,22 +181,26 @@ let controller = {
           });
           
           bulkLoad.addColumn('CollectedDTM',         TYPES.DateTime2, { nullable: false, scale: 0 });
-          bulkLoad.addColumn('Value',                TYPES.Numeric, { nullable: true, precision: 18, scale: 6 });
-          bulkLoad.addColumn('MetadataID',           TYPES.Int, { nullable: false });
-          bulkLoad.addColumn('CollectedDTMOffset',   TYPES.Int, { nullable: false });
-          bulkLoad.addColumn('MeasurementCommentID', TYPES.Int, { nullable: true });
-          bulkLoad.addColumn('MeasurementQualityID', TYPES.Int, { nullable: true });
-          bulkLoad.addColumn('QualifierID',          TYPES.Int, { nullable: true });
-          bulkLoad.addColumn('Depth_M',              TYPES.Numeric, { nullable: true, precision: 6, scale: 2 });
+          bulkLoad.addColumn('Value',                TYPES.Numeric,   { nullable: true, precision: 18, scale: 6 });
+          bulkLoad.addColumn('MetadataID',           TYPES.Int,       { nullable: false });
+          bulkLoad.addColumn('CollectedDTMOffset',   TYPES.Int,       { nullable: false });
+          bulkLoad.addColumn('MeasurementCommentID', TYPES.Int,       { nullable: true });
+          bulkLoad.addColumn('MeasurementQualityID', TYPES.Int,       { nullable: true });
+          bulkLoad.addColumn('QualifierID',          TYPES.Int,       { nullable: true });
+          bulkLoad.addColumn('Depth_M',              TYPES.Numeric,   { nullable: true, precision: 6, scale: 2 });
           
           measurements.forEach( (measurement, index) => {
+            
             let measurement_new = {};
             let val = null;
             if (measurement.Value != null) {
               val = Math.round(measurement.Value*multiplier)/multiplier;
             };
-            
-            measurement_new.CollectedDTM         = new Date(measurement.CollectedDTM);
+            measurement_new.CollectedDTM = lx.DateTime
+              .fromISO(measurement.CollectedDTM)
+              .setZone('UTC', {keepLocalTime: true })
+              .toJSDate();
+              
             measurement_new.Value                = val;
             measurement_new.MetadataID           = metaid;
             measurement_new.CollectedDTMOffset   = offset;
@@ -201,8 +210,9 @@ let controller = {
             measurement_new.Depth_M              = measurement.Depth_M;
             
             bulkLoad.addRow(measurement_new);
-            if (index%10 == 0) { console.log(measurement) };
-            if (index%10 == 0) { console.log(measurement_new) };
+            // if (index%10 == 0) { console.log(measurement) };
+            // if (index%10 == 0) { console.log(measurement_new) };
+            
           });
           bulkConnection.execBulkLoad(bulkLoad);
           //console.log("Loaded #" + req.body.loadnumber);
