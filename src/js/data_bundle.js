@@ -45497,8 +45497,13 @@ let d3         = require('d3');
 let lx         = require('luxon');
 let alqwuutils = require('./utils.js');
 
-let utcoffset = Math.floor(alqwuutils.utcoffset*60);  // MINUTES to add to local time to get UTC
-let utcstring = alqwuutils.utcOffsetString(utcoffset);
+// Difference between supplied times and UTC (measurementtime-UTC), in minutes; -480 in PST
+let utcHours       = alqwuutils.utcoffset;
+let utcoffset      = Math.floor(utcHours*60);
+let utcHoursString = utcHours < 0 ? utcHours.toString() : "+" + utcHours.toString()
+// Difference between computer time and UTC (comptime-UTC), in minutes; -480 in PST and -420 in PDT
+let currentoffset  = lx.DateTime.fromJSDate(new Date()).o
+let utcstring      = alqwuutils.utcOffsetString(utcoffset);
 // Globals
 let qualifiers = [];
 
@@ -45592,7 +45597,7 @@ $(document).ready(function() {
         $("#uploadFileName").text(filePath);
         
         let papaConfig = {
-            delimiter: ',',
+            //delimiter: ',',
             quoteChar: '"',
             header: true, 
             skipEmptyLines: true,
@@ -45608,32 +45613,38 @@ $(document).ready(function() {
         //   that doesn't match, but replace with what?
         
         var fileData = Papa.parse(fileText, papaConfig);
-        var headers  = Object.keys(fileData.data[0]);
-        //console.log(headers);
         
-        $("#uploadAlert")
+        if (fileData.data.length > 0) {
+          var headers  = Object.keys(fileData.data[0]);
+          $("#uploadAlert")
+              .removeClass("alert-danger alert-info alert-primary")
+              .addClass("alert-success")
+              .text("File upload complete!")
+          
+          var siteid    = $("#siteSelect").val();
+          $.ajax({url: `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`
+          }).done(function(metas) {
+              var uploadHeaderMarkup = "";
+              headers.forEach(header => {
+                  uploadHeaderMarkup += buildUploadColumnSelect(header, metas);
+              })
+              
+              showColumnSelect();
+              
+              $("#uploadColumnSelectForm")
+                .empty()
+                .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
+              $("#uploadNextButton")
+                .removeClass("d-none disabled")
+                .off('click')
+                .click(function() {reviewData(headers, fileData); });
+          });
+        } else {
+          $("#uploadAlert")
             .removeClass("alert-danger alert-info alert-primary")
-            .addClass("alert-success")
-            .text("File upload complete!")
-        
-        var siteid    = $("#siteSelect").val();
-        $.ajax({url: `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`
-        }).done(function(metas) {
-            var uploadHeaderMarkup = "";
-            headers.forEach(header => {
-                uploadHeaderMarkup += buildUploadColumnSelect(header, metas);
-            })
-            
-            showColumnSelect();
-            
-            $("#uploadColumnSelectForm")
-              .empty()
-              .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
-            $("#uploadNextButton")
-              .removeClass("d-none disabled")
-              .off('click')
-              .click(function() {reviewData(headers, fileData); });
-        });
+            .addClass("alert-danger")
+            .text("Could not read the specified file.  Check the format and try again.")
+        }
     });
 });
 
@@ -45731,9 +45742,23 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-              d.dtm = lx.DateTime
-                .fromJSDate(new Date(d[dtmColName]))
-                .setZone(utcstring, { keepLocalTime: true });
+              // Javascript interprets the date in the local time zone,
+              //   which will probably have DST.
+              d.jsdate = lx.DateTime.fromJSDate(new Date(d[dtmColName] + utcHoursString))
+                .setZone(utcstring);
+              // let jsdate = lx.DateTime.fromJSDate(new Date(d[dtmColName]));
+              d.dtm = d.jsdate;
+              // d.minutediff = jsdate.o - currentoffset;
+              // d.dtm = jsdate
+                // .setZone(utcstring, {keepLocalTime: true})
+                // .minus({ minute: d.minutediff});
+              // if (jsdate.o = utcoffset) {
+                // d.dtm = jsdate.setZone(utcstring, { keepLocalTime: true })
+              // }
+              // d.dtm = lx.DateTime
+                // .fromJSDate(new Date(d[dtmColName]),
+                  // {zone: utcstring, keepLocalTime: true})
+                // .setZone(utcstring, { keepLocalTime: true });
                 
               d.Value       = d[header].trim() == '' ? NaN  : Number(d[header]);
               d.Depth_M     = depthColName == ''     ? null : d[depthColName];
@@ -45754,9 +45779,13 @@ var reviewData = function(headers, fileData) {
               arr[i] = d;
             });
             
-            console.log(data)
+            console.log("Raw(ish) data");
+            console.log(data);
             
             let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
+            
+            console.log("Filled data");
+            console.log(dataFilled);
             
             cmis += (dataFilled.length - data.length);
             

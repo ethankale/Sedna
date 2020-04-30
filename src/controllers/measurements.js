@@ -146,6 +146,7 @@ let controller = {
         
         let metaid       = req.body.metaid;
         let offset       = req.body.offset;
+        let offsetstring = offset < 0 ? 'UTC' + offset/60 : 'UTC+' + (offset/60);
         let measurements = req.body.measurements;
         
         let connection     = new Connection(mssql_config);
@@ -198,6 +199,7 @@ let controller = {
             };
             measurement_new.CollectedDTM = lx.DateTime
               .fromISO(measurement.CollectedDTM)
+              .setZone(offsetstring)
               .setZone('UTC', {keepLocalTime: true })
               .toJSDate();
               
