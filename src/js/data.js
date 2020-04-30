@@ -2,7 +2,7 @@
 // Node modules.  Remember to run browserify every time to bundle this.
 // browserify src/js/data.js -o src/js/data_bundle.js
 
-var datefns    = require('date-fns');
+var lx         = require('luxon');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
 var dataload   = require('./dataload.js')
@@ -86,8 +86,8 @@ $(document).ready(function() {
         var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
 
         
-        $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
-        $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
+        $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
+        $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
         
         updateDates();
     });
@@ -150,8 +150,8 @@ function loadParamList(siteid) {
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
             
-            $("#startDate").val(datefns.format(firstdtm, 'yyyy-MM-dd'));
-            $("#endDate").val(datefns.format(lastdtm, 'yyyy-MM-dd'));
+            $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
+            $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
             
             paramcurrent  = $(this).data("paramid");
             methodcurrent = $(this).data("methodid");
@@ -218,12 +218,10 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utc
     }).done(function(data) {
         measurements = data;
         measurements.forEach(function(d) {
-            //d.localDTM = datefns.format(datefns.parse(d.CollectedDateTime, "yyyy-MM-dd[T]HH:mm:ss.SSS[Z]", new Date()),"yyyy-MM-dd HH:mm:ss");
-            
-            // This is super ugly, but date-fns insists on treating every date like it's UTC, 
-            //   and I specifically want all the dates in the front end to be local, 
-            //   with UTC on the back end.
-            d.CollectedDateTime = d.CollectedDateTime.replace("T", " ").replace("Z", " ").trim();
+          // This is super ugly, but javascript insists on treating every date like it's UTC, 
+          //   and I specifically want all the dates in the front end to be local, 
+          //   with UTC on the back end.
+          d.CollectedDateTime = d.CollectedDateTime.replace("T", " ").replace("Z", " ").trim();
         });
         
         window.writeText(Papa.unparse(data), $("#downloadFileName").val());
