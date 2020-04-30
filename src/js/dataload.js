@@ -238,27 +238,27 @@ var reviewData = function(headers, fileData) {
             var cmax = 0;
             var cmin = Number(data[0][header]);
             data.forEach((d, i, arr) => {
-                d.dtm = lx.DateTime
-                  .fromJSDate(new Date(d[dtmColName]))
-                  .setZone(utcstring, { keepLocalTime: true });
-                  
-                d.Value       = d[header].trim() == '' ? NaN  : Number(d[header]);
-                d.Depth_M     = depthColName == ''     ? null : d[depthColName];
-                d.QualifierID = null;
+              d.dtm = lx.DateTime
+                .fromJSDate(new Date(d[dtmColName]))
+                .setZone(utcstring, { keepLocalTime: true });
                 
-                if (qualColName != '') {
-                  let qualifierobj = qualifiers.find(o => o.Code.trim() === d[qualColName]);
-                  d.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
-                };
-                
-                if (isNaN(d.Value)) {
-                    cmis += 1;
-                } else {
-                    csum += d.Value;
-                    cmax = d.Value > cmax ? d.Value : cmax;
-                    cmin = d.Value < cmin ? d.Value : cmin;
-                }
-                arr[i] = d;
+              d.Value       = d[header].trim() == '' ? NaN  : Number(d[header]);
+              d.Depth_M     = depthColName == ''     ? null : d[depthColName];
+              d.QualifierID = null;
+              
+              if (qualColName != '') {
+                let qualifierobj = qualifiers.find(o => o.Code.trim() === d[qualColName]);
+                d.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
+              };
+              
+              if (isNaN(d.Value)) {
+                cmis += 1;
+              } else {
+                csum += d.Value;
+                cmax = d.Value > cmax ? d.Value : cmax;
+                cmin = d.Value < cmin ? d.Value : cmin;
+              }
+              arr[i] = d;
             });
             
             console.log(data)

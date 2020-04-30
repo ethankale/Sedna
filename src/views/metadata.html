@@ -1213,13 +1213,13 @@
                   <div class="form-group row">
                     <label for="conversion-lastModifiedDate" class="col-sm-2 col-form-label">
                       Last Modified</label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-6">
                       <input type="date" class="form-control" id="conversion-lastModifiedDate"
                         v-model="currentConversion.LastModified">
                     </div>
                     
                     <label for="conversion-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-4">
+                    <div class="col-sm-2">
                       <input type="checkbox" class="form-check-input" id="conversion-active" 
                         v-model="currentConversion.Active">
                     </div>
@@ -1228,7 +1228,7 @@
                   <div class="form-group row">
                     <label for="conversion-description" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
-                      <textarea class="form-control" maxlength='255' id="conversion-description" rows="5"
+                      <textarea class="form-control" maxlength="255" id="conversion-description" rows="5"
                         v-model="currentConversion.Description"></textarea>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 
 let Vue      = require('vue');
 let Datetime = require('vue-datetime');
-//let dt       = require('luxon');
+let lx       = require('luxon');
 let d3       = require('d3');
 let utils    = require('./utils.js');
 
@@ -30,7 +30,7 @@ var vm = new Vue({
     
     fromDate: '',
     toDate: '',
-    utcoffset: utils.utcoffset,
+    utcoffset: Math.floor(utils.utcoffset*60),
     
     conversions: [],
     drs: [],
@@ -76,7 +76,7 @@ var vm = new Vue({
   
   computed: {
     convertButtonText: function() {
-      return this.converting ? "Save" : "Start";
+      return this.conversionState == 'calculated' ? 'Save' : 'Start';
     },
     
     convertButtonDisable: function() {
@@ -94,9 +94,17 @@ var vm = new Vue({
     },
     
     utcZoneString: function() {
-      let hours = Math.abs(this.utcoffset);
-      let sign  = this.utcoffset < 0 ? '+' : '-';
-      return('UTC' + sign + hours);
+      return utils.utcOffsetString(this.utcoffset)
+    },
+    
+    minMeasurementDate: function() {
+      let min = this.measurements.reduce((prev, curr) => prev.jsdate < curr.jsdate ? prev : curr);
+      return min.jsdate;
+    },
+    
+    maxMeasurementDate: function() {
+      let max = this.measurements.reduce((prev, curr) => prev.jsdate > curr.jsdate ? prev : curr);
+      return max.jsdate;
     },
     
     narrativeClass: function() {
@@ -230,8 +238,21 @@ var vm = new Vue({
         method:'GET',
         timeout: 3000
       }).done((data) => {
+        
         data.forEach((d) => {
-          d.jsdate = new Date(d.CollectedDTM);
+          let utcZS = utils.utcOffsetString(d.CollectedDTMOffset);
+          d.jsdate = lx.DateTime
+            .fromISO(d.CollectedDTM)
+            // Because the API assumes that dates in the database
+            //   are in UTC, we have to change the CollectedDTM back
+            //   to the correct local time.
+            .minus({minutes: this.utcoffset})
+            .setZone(this.utcZoneString)  // Not strictly necessary, but handy
+          d.CollectedDTM = d.jsdate;
+          d.DateString = d.CollectedDTM.toString();
+          // d.CollectedDTM = lx.DateTime
+            // .fromJSDate(d.jsdate)
+            // .setZone(utcZS, { keepLocalTime: true });
         });
         this.measurements = data;
         this.conversionState = 'calculated';
@@ -248,8 +269,8 @@ var vm = new Vue({
       this.conversionState = 'loading';
       let query = {
         'metaid':   this.newDRID,
-        'startdtm': this.fromDate,
-        'enddtm':   this.toDate
+        'startdtm': this.minMeasurementDate.toString(),
+        'enddtm':   this.maxMeasurementDate.toString()
       };
       $.ajax({
         url: `http://localhost:3000/api/v1/getMeasurementCount`,
