@@ -53,6 +53,7 @@ module.exports = function (app) {
     
     // Measurements
     app.get('/api/v1/getMeasurements',       measurements.getMeasurements);
+    app.get('/api/v1/getMeasurementsDaily',  measurements.getDailyMeasurements);
     app.get('/api/v1/getMeasurementCount',   measurements.getCountByDtmAndMetaid)
     app.post('/api/v1/measurements',         measurements.addMeasurements);
     app.get('/api/v1/getMeasurementDetails', measurements.getDetails);

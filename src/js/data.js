@@ -6,6 +6,7 @@ var lx         = require('luxon');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
 var dataload   = require('./dataload.js')
+let Vue        = require('vue');
 
 var sites        = [];
 var sitecurrent  = 0;
@@ -21,6 +22,55 @@ var wycurrent    = 0;
 var wymarkup     = "";
 
 var measurements = []
+
+var vm = new Vue({
+  el: '#everythingContainer',
+  
+  data: {
+    dailySummary: []
+  },
+  
+  methods: {
+    clickCreateReport() {
+      this.getDailyMeasurements().done((data) => {
+        
+        data.forEach((d) => {
+          let dt      = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
+          d.month     = dt.month;
+          d.day       = dt.day;
+        });
+        
+        this.dailySummary = data;
+        
+        // let table    = this.formatWaterYearRows(data);
+        let table    = data;
+        let siteName = $("#siteSelect :selected").text();
+        let svg      = $("#chartContainer svg")[0];
+        
+        window.makePDF(siteName, table, svg);
+      });
+    },
+    
+    getDailyMeasurements() {
+      let query = {
+        siteid:    sitecurrent,
+        paramid:   paramcurrent,
+        methodid:  methodcurrent,
+        startdate: $("#startDate").val(),
+        enddate:   $("#endDate").val()
+      };
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/getMeasurementsDaily`,
+        method:'GET',
+        timeout: 3000,
+        data: query,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
+    }
+  }
+});
 
 $(document).ready(function() {
     

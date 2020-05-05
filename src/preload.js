@@ -1,5 +1,7 @@
-const { writeFileSync, readFileSync } = require('fs')
-const { dialog, app }                 = require('electron').remote;
+const { writeFileSync, readFileSync, createWriteStream } = require('fs')
+const PDFDocument     = require('pdfkit');
+const SVGtoPDF        = require('svg-to-pdfkit');
+const { dialog, app } = require('electron').remote;
 
 const configFileName = 'alqwuconfig.json';
 
@@ -51,6 +53,80 @@ window.setConfig = function(config) {
     console.log(err);
     return "Fail";
   }
+};
+
+// PDF Reports
+window.makePDF = function(title, table, svg) {
+  let path = dialog.showSaveDialogSync({
+    title: "Save the report as",
+    defaultPath: ""
+  });
+  
+  if (typeof path == 'undefined') {
+    console.log("User cancelled save.")
+  } else {
+    const doc = new PDFDocument();
+    doc.pipe(createWriteStream(path));
+    
+    // Title
+    doc
+      .font('Helvetica')
+      .fontSize(25)
+      .text(title, {align: 'center'})
+      .moveDown();
+    
+    // Subtitle
+    
+    
+    // Daily table
+    doc
+      .font('Courier')
+      .fontSize(8);
+      
+    const titley = doc.y;
+    let maxY = 0;
+    
+    let colwidth   = 40;
+    let lineheight = 12;
+    let cellchars  = 10;
+    
+    let months = [
+      "Oct", "Nov", "Dec", "Jan", "Feb", "Mar",
+      "Apr", "May", "Jun", "Jul", "Aug", "Sep"
+    ];
+    months.forEach((m, i) => {
+      let mstring = m.padStart(cellchars, " ");
+      doc.text(mstring, ((i+1)*colwidth), titley, {align: 'left'});
+    });
+    
+    let days = [...Array(32).keys()];
+    days.forEach((d, i) => {
+      let dstring = (d+":").padStart(10);
+      if (i > 0) {
+        doc.text(dstring, 0, (i*lineheight)+titley, {align: 'left'})
+      };
+    });
+    
+    table.forEach(row => {
+      row.x = (row.month >= 10 ? (row.month-9) : (row.month+3)) * colwidth;
+      row.y = row.day*lineheight;
+      maxY  = maxY < row.y ? row.y : maxY;
+      
+      row.valString = row.Value.toFixed(2).padStart(cellchars, " ");
+      
+      doc.text(row.valString, row.x, row.y+titley, {align:'left'});
+    });
+    
+    // Graph
+    SVGtoPDF(doc, svg, 25, maxY+titley+20, options = {
+      width:  500,
+      height: 200,
+      preserveAspectRatio: 'xMidYMin meet',
+      useCSS: true
+    });
+    
+    doc.end();
+  };
 };
 
 

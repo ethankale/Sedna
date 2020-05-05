@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- REMOVE! -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -9,178 +11,187 @@
     <link rel="stylesheet" href="../../node_modules/select2/dist/css/select2.min.css">
     <link rel="stylesheet" href="../index.css">
   </head>
+  
   <body>
     
-    <!-- Data upload modal -->
-    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Upload Data</h5>
-            <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          
-          <div class="modal-body">
-            <div class="container-fluid">
-                <div id="uploadAlert" class="row alert alert-info" role="alert">
-                    Load data from a CSV file
-                  </div>
-                <div id="uploadCSVContainer">
-                  
-                  <div class="row">
-                    <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
-                  </div>
-                  
-                </div>
-                
-                <div id="uploadColumnSelectContainer" class="d-none">
-                  <div id="uploadColumnSelectForm" class="row"></div>
-                </div>
-                
-                <div id="uploadReviewContainer" class="d-none">
-                  <div id="uploadReviewTabs">
+    <div id="everythingContainer">
+    
+      <!-- Data upload modal -->
+      <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Upload Data</h5>
+              <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            
+            <div class="modal-body">
+              <div class="container-fluid">
+                  <div id="uploadAlert" class="row alert alert-info" role="alert">
+                      Load data from a CSV file
+                    </div>
+                  <div id="uploadCSVContainer">
                     
-                    <ul class="nav nav-tabs" id="uploadReviewTab" role="tablist">
-                    </ul>
-                    
-                    <div class="tab-content" id="uploadReviewTabContent">
+                    <div class="row">
+                      <button id="openCSVFileButton" type="button" class="btn btn-primary">Open CSV</button>
                     </div>
                     
                   </div>
-                </div>
+                  
+                  <div id="uploadColumnSelectContainer" class="d-none">
+                    <div id="uploadColumnSelectForm" class="row"></div>
+                  </div>
+                  
+                  <div id="uploadReviewContainer" class="d-none">
+                    <div id="uploadReviewTabs">
+                      
+                      <ul class="nav nav-tabs" id="uploadReviewTab" role="tablist">
+                      </ul>
+                      
+                      <div class="tab-content" id="uploadReviewTabContent">
+                      </div>
+                      
+                    </div>
+                  </div>
+                  
+              </div>
+              
+              <div class="row">
+                <small id="uploadFileName" class="text-muted">Select a File...</small>
+              </div>
+              
+              <div class="modal-footer">
                 
+                <button id="uploadBackButton" type="button" class="btn btn-primary">Restart</button>
+                <button id="uploadNextButton" type="button" class="btn btn-primary">Next</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Data download modal -->
+      <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Download Data</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
             </div>
             
-            <div class="row">
-              <small id="uploadFileName" class="text-muted">Select a File...</small>
+            <div class="modal-body">
+            
+              <div id="downloadAlert" class="row alert alert-info" role="alert">
+                Download data to a local CSV file
+              </div>
+            
+              <div id="downloadDateRow" class="form-group row">
+                <div class="col-5">
+                  <label for="downloadStartDate">Start Date</label>
+                  <input class="form-control" type="date" id="downloadStartDate"></input>
+                </div>
+                
+                <div class="col-5">
+                  <label for="downloadEndDate">End Date</label>
+                  <input class="form-control" type="date" id="downloadEndDate"></input>
+                </div>
+              </div>
+              
+              <div id="downloadParameterRow" class="form-group row">
+                <div class="col">
+                  <label for="downloadParameterSelect">Parameter</label>
+                  <select id="downloadParameterSelect" class="form-control" style="width:100%; max-width:90%;" multiple="multiple">
+                  </select>
+                </div>
+              </div>
+              
+              <div id="downloadFileNameRow" class="form-group row">
+                <div class="col">
+                  <label for="downloadFileName">File Name</label>
+                  <input id="downloadFileName" class="form-control">
+                  </input>
+                </div>
+              </div>
+              
             </div>
             
             <div class="modal-footer">
-              
-              <button id="uploadBackButton" type="button" class="btn btn-primary">Restart</button>
-              <button id="uploadNextButton" type="button" class="btn btn-primary">Next</button>
+              <button id="downloadDataButton" type="button" class="btn btn-primary">Download CSV</button>
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Data download modal -->
-    <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Download Data</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          
-          <div class="modal-body">
-          
-            <div id="downloadAlert" class="row alert alert-info" role="alert">
-              Download data to a local CSV file
-            </div>
-          
-            <div id="downloadDateRow" class="form-group row">
-              <div class="col-5">
-                <label for="downloadStartDate">Start Date</label>
-                <input class="form-control" type="date" id="downloadStartDate"></input>
-              </div>
-              
-              <div class="col-5">
-                <label for="downloadEndDate">End Date</label>
-                <input class="form-control" type="date" id="downloadEndDate"></input>
-              </div>
-            </div>
-            
-            <div id="downloadParameterRow" class="form-group row">
-              <div class="col">
-                <label for="downloadParameterSelect">Parameter</label>
-                <select id="downloadParameterSelect" class="form-control" style="width:100%; max-width:90%;" multiple="multiple">
-                </select>
-              </div>
-            </div>
-            
-            <div id="downloadFileNameRow" class="form-group row">
-              <div class="col">
-                <label for="downloadFileName">File Name</label>
-                <input id="downloadFileName" class="form-control">
-                </input>
-              </div>
-            </div>
             
           </div>
-          
-          <div class="modal-footer">
-            <button id="downloadDataButton" type="button" class="btn btn-primary">Download CSV</button>
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-          
-        </div>
-      </div>
-    </div>
-    
-    <!-- Begin main page content -->
-    <div class="container-fluid" role="main">
-      <h1>Data</h1>
-      <p><a href="index.html">Home</a></p>
-      
-      <div class="row">
-        <div class="col">
-          <div class="form-group">
-            <label for="siteSelect">Monitoring Site</label>
-            <select class="form-control" id="siteSelect">
-              <option>Loading...</option>
-            </select>
-          </div>
         </div>
       </div>
       
-      <div id="date-select-row" class="form-group row">
-          <div class="col-5">
-            <label for="startDate">Start Date</label>
-            <input class="form-control" type="date" id="startDate"></input>
-          </div>
-          
-          <div class="col-5">
-            <label for="endDate">End Date</label>
-            <input class="form-control" type="date" id="endDate"></input>
-          </div>
-          
-          <div class="col-2">
-            <label for="wylist">Water Year</label>
-            <select class="form-control" id="wylist">
-              <option></option>
-            </select>
-          </div>
-      </div>
-      
-      <div class="row border-top">
-        <div id="paramList" class="col-4">
-          <p>Loading Parameters...</p>
-        </div>
-        <div id="chartContainer" class="col-8">
-        </div>
-      </div>
-      
-    </div>
-    
-    <footer class="footer fixed-bottom">
-      <div class="container-fluid">
+      <!-- Begin main page content -->
+      <div class="container-fluid" role="main">
+        <h1>Data</h1>
+        <p><a href="index.html">Home</a></p>
+        
         <div class="row">
-          <div class="col-6 text-center">
-            <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#uploadModal">Upload Data</button>
-          </div>  
-          <div class="col-6 text-center">
-            <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
-          </div>  
+          <div class="col">
+            <div class="form-group">
+              <label for="siteSelect">Monitoring Site</label>
+              <select class="form-control" id="siteSelect">
+                <option>Loading...</option>
+              </select>
+            </div>
+          </div>
         </div>
+        
+        <div id="date-select-row" class="form-group row">
+            <div class="col-5">
+              <label for="startDate">Start Date</label>
+              <input class="form-control" type="date" id="startDate"></input>
+            </div>
+            
+            <div class="col-5">
+              <label for="endDate">End Date</label>
+              <input class="form-control" type="date" id="endDate"></input>
+            </div>
+            
+            <div class="col-2">
+              <label for="wylist">Water Year</label>
+              <select class="form-control" id="wylist">
+                <option></option>
+              </select>
+            </div>
+        </div>
+        
+        <div class="row border-top">
+          <div id="paramList" class="col-4">
+            <p>Loading Parameters...</p>
+          </div>
+          <div id="chartContainer" class="col-8">
+          </div>
+        </div>
+        
       </div>
-    </footer>
+      
+      <footer class="footer fixed-bottom">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-4 text-center">
+              <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#uploadModal">Upload Data</button>
+            </div>  
+            <div class="col-4 text-center">
+              <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
+            </div>  
+            <div class="col-4 text-center">
+              <button type="button" class="btn btn-secondary btn-sm" 
+                @click="clickCreateReport()">Create Report</button>
+            </div>  
+          </div>
+        </div>
+      </footer>
+      
+    </div>
     
   </body>
   <script src="../../node_modules/jquery/dist/jquery.min.js"></script>

@@ -44,13 +44,77 @@ let controller = {
         });
     },
     
+    getDailyMeasurements: function(req, res) {
+      let cfg = require('./config.js')
+      let mssql_config = cfg.getConfig().mssql;
+      var returndata = [];
+      var connection = new Connection(mssql_config);
+      
+      let siteid    = req.query.siteid;
+      let paramid   = req.query.paramid;
+      let methodid  = req.query.methodid;
+      let startdate = req.query.startdate;
+      let enddate   = req.query.enddate;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err);
+          res.status(400).json(err);
+        } else {
+          // Note that this query uses an index hint.  This is SUPER IMPORTANT.
+          //   Without the hint this query takes several seconds to run.
+          let statement = `SELECT CollectedDate, 
+              min(Value) as ValueMin, max(Value) as ValueMax, avg(Value) as Value
+            FROM Measurement as ms
+              WITH (INDEX(measurement_metadataid_idx))
+            WHERE ms.MetadataID IN (
+              SELECT MetadataID
+              FROM Metadata as md
+              LEFT JOIN SamplePoint as sp
+                on sp.SamplePointID = md.SamplePointID
+              WHERE sp.SiteID = @siteid
+                AND md.ParameterID = @paramid
+                AND md.MethodID = @methodid
+              )
+              AND ms.CollectedDate >= @startdate
+              AND ms.CollectedDate <= @enddate
+              GROUP BY CollectedDate
+              ORDER BY CollectedDate ASC`
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              console.log(err);
+              res.status(400).json(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+          });
+          
+          request.addParameter('siteid',     TYPES.Int, siteid);
+          request.addParameter('paramid',    TYPES.Int, paramid);
+          request.addParameter('methodid',   TYPES.Int, methodid);
+          request.addParameter('startdate',  TYPES.Date, startdate);
+          request.addParameter('enddate',    TYPES.Date, enddate);
+          
+          request.on('row', function(columns) {
+            let newrow = {};
+            columns.forEach((column) => {
+              newrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(newrow);
+          });
+          
+          connection.execSql(request);
+          
+        };
+      });
+    },
+    
     getCountByDtmAndMetaid: function(req, res) {
       let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
       var returndata = {};
       var connection = new Connection(mssql_config);
-      
-      console.log(req.query);
       
       var metaid    = req.query.metaid;
       var startdtm  = req.query.startdtm;
