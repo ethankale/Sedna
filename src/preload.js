@@ -56,7 +56,7 @@ window.setConfig = function(config) {
 };
 
 // PDF Reports
-window.makePDF = function(title, table, svg) {
+window.makePDF = function(title, subtitle, table, svg) {
   let path = dialog.showSaveDialogSync({
     title: "Save the report as",
     defaultPath: ""
@@ -73,10 +73,12 @@ window.makePDF = function(title, table, svg) {
       .font('Helvetica')
       .fontSize(25)
       .text(title, {align: 'center'})
-      .moveDown();
     
     // Subtitle
-    
+    doc
+      .fontSize(12)
+      .text(subtitle, {align: 'center'})
+      .moveDown();
     
     // Daily table
     doc

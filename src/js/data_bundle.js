@@ -39840,8 +39840,7 @@ var vm = new Vue({
   el: '#everythingContainer',
   
   data: {
-    dailySummary: [],
-    dailyReportRows: []
+    dailySummary: []
   },
   
   methods: {
@@ -39859,9 +39858,11 @@ var vm = new Vue({
         // let table    = this.formatWaterYearRows(data);
         let table    = data;
         let siteName = $("#siteSelect :selected").text();
+        let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
+                       $("#wylist :selected").val();
         let svg      = $("#chartContainer svg")[0];
         
-        window.makePDF(siteName, table, svg);
+        window.makePDF(siteName, subtitle, table, svg);
       });
     },
     
