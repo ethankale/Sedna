@@ -88,6 +88,7 @@ window.makePDF = function(title, subtitle, table, svg) {
     const titley = doc.y;
     let maxY = 0;
     
+    let marginleft = 20;
     let colwidth   = 40;
     let lineheight = 12;
     let cellchars  = 10;
@@ -98,14 +99,16 @@ window.makePDF = function(title, subtitle, table, svg) {
     ];
     months.forEach((m, i) => {
       let mstring = m.padStart(cellchars, " ");
-      doc.text(mstring, ((i+1)*colwidth), titley, {align: 'left'});
+      doc.text(mstring, ((i+1)*colwidth)+marginleft, titley, 
+        {align: 'left', lineBreak: false});
     });
     
     let days = [...Array(32).keys()];
     days.forEach((d, i) => {
       let dstring = (d+":").padStart(10);
       if (i > 0) {
-        doc.text(dstring, 0, (i*lineheight)+titley, {align: 'left'})
+        doc.text(dstring, marginleft, (i*lineheight)+titley, 
+          {align: 'left', lineBreak: false})
       };
     });
     
@@ -116,11 +119,12 @@ window.makePDF = function(title, subtitle, table, svg) {
       
       row.valString = row.Value.toFixed(2).padStart(cellchars, " ");
       
-      doc.text(row.valString, row.x, row.y+titley, {align:'left'});
+      doc.text(row.valString, row.x+marginleft, row.y+titley, 
+        {align:'left', lineBreak: false});
     });
     
     // Graph
-    SVGtoPDF(doc, svg, 25, maxY+titley+20, options = {
+    SVGtoPDF(doc, svg, 25+marginleft, maxY+titley+20, options = {
       width:  500,
       height: 200,
       preserveAspectRatio: 'xMidYMin meet',

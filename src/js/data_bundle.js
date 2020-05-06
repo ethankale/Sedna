@@ -39845,6 +39845,7 @@ var vm = new Vue({
   
   methods: {
     clickCreateReport() {
+      this.graphMeasurements(1000);
       this.getDailyMeasurements().done((data) => {
         
         data.forEach((d) => {
@@ -39863,6 +39864,7 @@ var vm = new Vue({
         let svg      = $("#chartContainer svg")[0];
         
         window.makePDF(siteName, subtitle, table, svg);
+        this.graphMeasurements();
       });
     },
     
@@ -39883,6 +39885,53 @@ var vm = new Vue({
         contentType: 'application/json'
       });
       return request;
+    },
+    
+    graphMeasurements(width) {
+      
+      $("#chartContainer").empty();
+      if(measurements.length > 0) {
+        var margin = {top: 10, right: 30, bottom: 30, left: 60},
+            height = 400 - margin.top - margin.bottom;
+        width = width || $("#chartContainer").width() - margin.left - margin.right;
+        
+        // append the svg object to the body of the page
+        var svg = d3.select("#chartContainer")
+          .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform",
+                  "translate(" + margin.left + "," + margin.top + ")");
+
+        //Read the data
+        // Add X axis --> it is a date format
+        var x = d3.scaleTime()
+          .domain(d3.extent(measurements, function(d) { return d.dtm; }))
+          .range([ 0, width ]);
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x)
+            .ticks(3));
+        
+        // Add Y axis
+        var y = d3.scaleLinear()
+          .domain(d3.extent(measurements, function(d) {return d.Value; }))
+          .range([ height, 0 ]);
+        svg.append("g")
+          .call(d3.axisLeft(y));
+        
+        // Add the line
+        svg.append("path")
+          .datum(measurements)
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+            .x(function(d) { return x(d.dtm) })
+            .y(function(d) { return y(d.Value) })
+            )
+      };
     }
   }
 });
@@ -40055,7 +40104,7 @@ function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset
             measurements.forEach(function(d) {
                 d.dtm = Date.parse(d.CollectedDateTime);
             });
-            graphMeasurements();
+            vm.graphMeasurements();
     });
 }
 
@@ -40103,53 +40152,6 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utc
               .text("Could not save file.  Check the file name and folder, and try again.")
         }
     });
-}
-
-function graphMeasurements() {
-  $("#chartContainer").empty();
-  if(measurements.length > 0) {
-    var margin = {top: 10, right: 30, bottom: 30, left: 60},
-        width = $("#chartContainer").width() - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom;
-
-    // append the svg object to the body of the page
-    var svg = d3.select("#chartContainer")
-      .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform",
-              "translate(" + margin.left + "," + margin.top + ")");
-
-    //Read the data
-    // Add X axis --> it is a date format
-    var x = d3.scaleTime()
-      .domain(d3.extent(measurements, function(d) { return d.dtm; }))
-      .range([ 0, width ]);
-    svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x)
-        .ticks(3));
-    
-    // Add Y axis
-    var y = d3.scaleLinear()
-      .domain(d3.extent(measurements, function(d) {return d.Value; }))
-      //domain([0, d3.max(measurements, function(d) { return +d.Value; })])
-      .range([ height, 0 ]);
-    svg.append("g")
-      .call(d3.axisLeft(y));
-    
-    // Add the line
-    svg.append("path")
-      .datum(measurements)
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.5)
-      .attr("d", d3.line()
-        .x(function(d) { return x(d.dtm) })
-        .y(function(d) { return y(d.Value) })
-        )
-  }
 }
 
 function updateDates() {
