@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- REMOVE THIS! -->
+    <script src="http://localhost:8098"></script>
+    
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -20,17 +23,23 @@
         <!-- Navigation - switch between different tables/items to update -->
         <div class="col-3">
           <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          
             <a class="nav-link active" id="v-pills-datetime-tab" data-toggle="pill" 
               href="#v-pills-datetime" role="tab" aria-controls="v-pills-datetime" 
               aria-selected="true">Date and Time Settings</a>
+              
             <a class="nav-link" id="v-pills-server-tab" data-toggle="pill" 
               href="#v-pills-server" role="tab" aria-controls="v-pills-server" 
               aria-selected="false">Server Connection</a>
+              
+            <a class="nav-link" id="v-pills-user-tab" data-toggle="pill" 
+              href="#v-pills-user" role="tab" aria-controls="v-pills-user" 
+              aria-selected="false">Select User</a>
           </div>
         </div>
         
         <!-- Content - forms that show details about each of the tables/items -->
-        <div class="col-9">
+        <div id="settingsContent" class="col-9">
           <div class="tab-content" id="v-pills-tabContent">
             
             <!-- Date/Time settings form -->
@@ -44,7 +53,8 @@
                 <div class="form-row">
                   <label for="dt-utcoffset" class="col-sm-2 col-form-label">UTC Offset</label>
                   <div class="col-sm-2">
-                    <input type="number" class="form-control" id="dt-utcoffset">
+                    <input type="number" class="form-control" id="dt-utcoffset"
+                      v-model="config.utcoffset">
                   </div>
                 </div>
               </form>
@@ -57,7 +67,6 @@
                 the upload conversion; it is the <strong>number of hours to add to UTC</strong>
                 to calculate local time.  This feels backwards, but it's the international
                 standard<br><br>
-                This value is automatically saved to your computer when you change it.<br><br>
                 You can use either negative or positive numbers.  Pacific Standard is 
                 <strong>-8</strong>.
               </p>
@@ -69,55 +78,100 @@
               aria-labelledby="v-pills-server-tab">
               
               <h2>Server Connection Settings</h2>
-              <div id="serverAlert" class="row alert alert-info" role="alert">
-                Change these values if you're having trouble connecting to the database.
-              </div>
               <hr>
               
               <form>
-                 <div class="form-row">
-                   <label for="server-serverName" class="col-sm-4 col-form-label">Server Name</label>
-                   <div class="col-sm-8">
-                     <input type="text" class="form-control" id="server-serverName">
-                   </div>
-                 </div>
-              
-                 <div class="form-row">
-                   <label for="server-database" class="col-sm-4 col-form-label">Database</label>
-                   <div class="col-sm-8">
-                     <input type="text" class="form-control" id="server-database">
-                   </div>
-                 </div>
-              
-                 <div class="form-row">
-                   <label for="server-userName" class="col-sm-4 col-form-label">User Name</label>
-                   <div class="col-sm-8">
-                     <input type="text" class="form-control" id="server-userName">
-                   </div>
-                 </div>
-              
-                 <div class="form-row">
-                   <label for="server-password" class="col-sm-4 col-form-label">Password</label>
-                   <div class="col-sm-8">
-                     <input type="password" class="form-control" id="server-password">
-                   </div>
-                 </div>
+                <div class="form-row">
+                  <label for="server-serverName" class="col-sm-4 col-form-label">Server Name</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="server-serverName"
+                      v-model="config.mssql.server">
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <label for="server-database" class="col-sm-4 col-form-label">Database</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="server-database"
+                      v-model="config.mssql.options.database">
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <label for="server-userName" class="col-sm-4 col-form-label">User Name</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="server-userName"
+                      v-model="config.mssql.authentication.options.userName">
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <label for="server-password" class="col-sm-4 col-form-label">Password</label>
+                  <div class="col-sm-8">
+                    <input type="password" class="form-control" id="server-password"
+                      v-model="config.mssql.authentication.options.password">
+                  </div>
+                </div>
               </form>
               
               <hr>
               
-              <div class="form-row">
-                <div class="col-md-6">
-                  <button id="server-update" type="button" class="btn btn-primary" disabled>Update</button>
+              <div class="row">
+                <div class="col-md-8">
+                  <p>{{ testMessage }}</p>
                 </div>
-                <div class="col-md-6">
-                  <button id="server-test" type="button" class="btn btn-secondary float-right">Test</button>
+                
+                <div class="col-md-3">
+                  <button id="testServer" type="button" class="btn btn-primary float-right"
+                    @click="testServer()" :disabled="dirty">Test</button>
                 </div>
               </div>
+               
+             </div>
+            
+            <!-- User settings form -->
+            <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 
+              aria-labelledby="v-pills-user-tab">
+              
+              <h2>Who Are You?</h2>
+              <hr>
+              
+              <form>
+                <div class="form-group">
+                  <select class="form-control" id="userSelect"
+                    v-model="config.userid" 
+                    v-select="config.userid">
+                    <option 
+                      v-for="user in users" 
+                      v-bind:value="user.UserID" 
+                      v-bind:key="user.UserID">
+                      {{ user.Name }}</option>
+                  </select>
+                </div>
+              </form>
+              <hr>
+              
+              <p>Tell us who you are, so your actions are tagged appropriately.</p>
               
             </div>
           </div>
+          
+          <hr>
+          
+          <div class="form-row">
+            <div class="col-md-6">
+              <button id="settingsSave" type="button" class="btn btn-secondary"
+                @click="setConfig()" :disabled="!dirty">Save</button>
+            </div>
+            
+            <div class="col-md-6">
+              <button id="settingsCancel" type="button" class="btn btn-secondary float-right" 
+                @click="cancelChanges()" :disabled="!dirty">Cancel</button>
+            </div>
+          </div>
+          
         </div>
+      </div>
     </div>
     
     <footer class="footer fixed-bottom">

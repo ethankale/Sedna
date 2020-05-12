@@ -175,19 +175,27 @@ let controller = {
         
         var statement = `SELECT 
             DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
-            ms.Value, qf.Code as Qualifier, sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
-            pm.Name as Parameter, mt.Code as Method
+            ms.Value, qf.Code as Qualifier, ms.Depth_M as Depth_Meters,
+            unit.Symbol as Unit,
+            pm.Name as Parameter, mt.Code as Method,
+            st.Code as SiteCode, st.Name as SiteName,
+            sp.Name as SamplePoint, sp.Latitude, sp.Longitude
           FROM Measurement as ms
+            WITH (INDEX(measurement_metadataid_idx))
           LEFT JOIN Metadata as md
             ON ms.MetadataID = md.MetadataID
           LEFT JOIN SamplePoint as sp
             ON sp.SamplePointID = md.SamplePointID
+          LEFT JOIN Site as st
+            ON st.SiteID = sp.SiteID
           LEFT JOIN Parameter as pm
             ON pm.ParameterID = md.ParameterID
           LEFT JOIN Method as mt
             ON mt.MethodID = md.MethodID
           LEFT JOIN Qualifier as qf
             ON ms.QualifierID = qf.QualifierID
+          LEFT JOIN Unit as unit
+            ON unit.UnitID = md.UnitID
           WHERE sp.SiteID = ${siteid}
             AND md.ParameterID IN (${paramstring})
             AND md.MethodID IN  (${methodstring})
