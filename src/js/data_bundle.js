@@ -39818,8 +39818,8 @@ if (process.env.NODE_ENV === 'production') {
 var lx         = require('luxon');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
-var dataload   = require('./dataload.js')
 let Vue        = require('vue');
+var dataload   = require('./dataload.js');
 
 var sites        = [];
 var sitecurrent  = 0;
@@ -39837,7 +39837,7 @@ var wymarkup     = "";
 var measurements = []
 
 var vm = new Vue({
-  el: '#everythingContainer',
+  el: '#mainContainer',
   
   data: {
     dailySummary: []
@@ -40177,6 +40177,113 @@ let Papa       = require('papaparse');
 let d3         = require('d3');
 let lx         = require('luxon');
 let alqwuutils = require('./utils.js');
+let Vue        = require('vue');
+
+var vm = new Vue({
+  el: '#uploadModal',
+  
+  data: {
+    filePath:       'Select a File...',
+    fileText:       '',
+    fileData:       {
+      meta: {
+        fields: []
+      }
+    },
+    metasFromSite:  [],
+    
+    // Using negative numbers because metadata ids will always be >= zero.
+    metasFixed:     [
+      {
+        MetadataID: -1,
+        Parameter:  "Empty"
+      },
+      {
+        MetadataID: -2,
+        Parameter:  "Date and Time"
+      },
+      {
+        MetadataID: -3,
+        Parameter:  "Flag/qualifier"
+      },
+      {
+        MetadataID: -4,
+        Parameter:  "Depth"
+      },
+    ],
+    measurements:   [],
+    papaConfig:     {
+      quoteChar: '"',
+      header: true, 
+      skipEmptyLines: true,
+      fastMode: false,
+      transformHeader: function(h) {
+        return h.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_ -]/g, '');
+      }
+    }
+  },
+  
+  computed: {
+    headers: function() {
+      return this.fileData.meta.fields;
+    },
+    
+    metas: function() {
+      return this.metasFixed.concat(this.metasFromSite);
+    }
+  },
+  
+  methods: {
+    openCSV() {
+      $("#uploadAlert")
+        .removeClass("alert-danger alert-info alert-success")
+        .addClass("alert-primary")
+        .text("Uploading file now...")
+      
+      let fileParsed = window.openCSV();
+      this.filePath = fileParsed[0];
+      this.fileText = fileParsed[1]; 
+      $("#uploadFileName").text(this.filePath);
+      
+      // Even with the transform header function we may get some column names
+      //   that are invalid selectors.  in theory we could search for the CSS
+      //   valid selector regex -?[_a-zA-Z]+[_a-zA-Z0-9-]* and replace anything
+      //   that doesn't match, but replace with what?
+      
+      this.fileData = Papa.parse(this.fileText, this.papaConfig);
+      
+      if (this.fileData.data.length > 0) {
+        $("#uploadAlert")
+          .removeClass("alert-danger alert-info alert-primary")
+          .addClass("alert-success")
+          .text("File upload complete!")
+        
+        var siteid = $("#siteSelect").val();
+        $.ajax({
+          url:     `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`,
+          method:  'GET',
+          timeout: 3000
+        }).done((metas) => {
+          this.metasFromSite = metas;
+          
+          showColumnSelect();
+          
+          $("#uploadNextButton")
+            .removeClass("d-none disabled")
+            .off('click')
+            .click(() => { reviewData(this.headers, this.fileData); });
+        });
+      } else {
+        $("#uploadAlert")
+          .removeClass("alert-danger alert-info alert-primary")
+          .addClass("alert-danger")
+          .text("Could not read the specified file.  Check the format and try again.")
+      }
+    }
+  }
+  
+});
+
 
 // Difference between supplied times and UTC (measurementtime-UTC), in minutes; -480 in PST
 let utcHours       = alqwuutils.utcoffset;
@@ -40263,101 +40370,14 @@ $(document).ready(function() {
       $("#uploadReviewContainer").addClass("d-none");
       $("#uploadBackButton").addClass("d-none");
       $("#uploadNextButton").addClass("d-none");
-      $("#uploadColumnSelectForm").empty();
-      $("#uploadFileName").text("Select a File...");
+      // $("#uploadColumnSelectForm").empty();
+      // $("#uploadFileName").text("Select a File...");
     });
     
-    $("#openCSVFileButton").click(function() {
-        
-        $("#uploadAlert")
-            .removeClass("alert-danger alert-info alert-success")
-            .addClass("alert-primary")
-            .text("Uploading file now...")
-        
-        var [filePath, fileText] = window.openCSV();
-        $("#uploadFileName").text(filePath);
-        
-        let papaConfig = {
-            //delimiter: ',',
-            quoteChar: '"',
-            header: true, 
-            skipEmptyLines: true,
-            fastMode: false,
-            transformHeader: function(h) {
-                return h.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_ -]/g, '');
-            }
-        };
-        
-        // Even with the transform header function we may get some column names
-        //   that are invalid selectors.  in theory we could search for the CSS
-        //   valid selector regex -?[_a-zA-Z]+[_a-zA-Z0-9-]* and replace anything
-        //   that doesn't match, but replace with what?
-        
-        var fileData = Papa.parse(fileText, papaConfig);
-        
-        if (fileData.data.length > 0) {
-          var headers  = Object.keys(fileData.data[0]);
-          $("#uploadAlert")
-              .removeClass("alert-danger alert-info alert-primary")
-              .addClass("alert-success")
-              .text("File upload complete!")
-          
-          var siteid    = $("#siteSelect").val();
-          $.ajax({url: `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`
-          }).done(function(metas) {
-              var uploadHeaderMarkup = "";
-              headers.forEach(header => {
-                  uploadHeaderMarkup += buildUploadColumnSelect(header, metas);
-              })
-              
-              showColumnSelect();
-              
-              $("#uploadColumnSelectForm")
-                .empty()
-                .append("<form>\n" + uploadHeaderMarkup + "</form>\n");
-              $("#uploadNextButton")
-                .removeClass("d-none disabled")
-                .off('click')
-                .click(function() {reviewData(headers, fileData); });
-          });
-        } else {
-          $("#uploadAlert")
-            .removeClass("alert-danger alert-info alert-primary")
-            .addClass("alert-danger")
-            .text("Could not read the specified file.  Check the format and try again.")
-        }
+    $("#openCSVFileButton").click(() => {
+      vm.openCSV();
     });
 });
-
-
-// There are some magic numbers here (sorry).
-// Using negative numbers because metadata ids will always be positive.
-//   -1 = Empty (ignore the column during import)
-//   -2 = Date and Time
-//   -3 = Flag/qualifier
-//   -4 = Depth
-var buildUploadColumnSelect = function(colname, metas) {
-    var metaoptions = `
-        <option value=-1>Blank</option>\n
-        <option value=-2>Date and Time</option>\n
-        <option value=-3>Flag or Qualifier</option>\n
-        <option value=-4>Depth (meters)</option>\n`;
-    
-    metas.forEach(meta => {
-        metaoptions += `<option
-            value=${meta.MetadataID}
-            data-frequency=${meta.FrequencyMinutes}>
-            ${meta.Parameter} (${meta.Method})
-            </option>\n`
-    });
-    
-    return `<div class="form-group">
-        <label for="uploadHeader${colname}">${colname.trim()}</label>
-        <select class="form-control" id="uploadHeader${colname}">
-        ${metaoptions}
-        </select>
-      </div>\n`
-}
 
 var reviewData = function(headers, fileData) {
     
@@ -40544,14 +40564,9 @@ var reviewData = function(headers, fileData) {
                       mindate = mindate.setZone('UTC');
                       maxdate = maxdate.setZone('UTC');
                       
-                      //mindate = lx.DateTime.fromJSDate(mindate).minus({minutes: utcoffset}).toString();
-                      //maxdate = lx.DateTime.fromJSDate(maxdate).minus({minutes: utcoffset}).toString();
-                      
                       let data = {
                         "metaid":    selectVal,
-                        // "startdtm":  mindate.toLocaleDateString() + " " + mindate.toLocaleTimeString(),
                         "startdtm":  mindate.toString(),
-                        // "enddtm":    maxdate.toLocaleDateString() + " " + maxdate.toLocaleTimeString(),
                         "enddtm":    maxdate.toString(),
                         "utcoffset": utcoffset
                       };
@@ -40564,8 +40579,8 @@ var reviewData = function(headers, fileData) {
                         timeout:     3000
                       }).done(function(data) {
                         let rowcount = parseInt(data.measurementCount);
-                        console.log("Number of existing records: " + rowcount);
-                        console.log(finalData);
+                        // console.log("Number of existing records: " + rowcount);
+                        // console.log(finalData);
                         if (rowcount > 0) {
                           $("#uploadAlert")
                             .removeClass("alert-success  alert-primary  alert-info")
@@ -40680,7 +40695,19 @@ let getQualifiers = function() {
     console.log(err);
   }).always(() => {
   }); 
-}
+};
+
+let setWorkup = function(values) {
+  let request = $.ajax({
+    type:        'POST',
+    url:         'http://localhost:3000/api/v1/workup',
+    data:        values,
+    contentType: 'application/json',
+    dataType:    'json',
+    timeout:     '3000'
+  });
+  return(request);
+};
 
 var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize, completeSteps) {
   console.log("step: " + step + "; lastStep: " + lastStep + "; errors: " + errorCount)
@@ -40828,7 +40855,7 @@ var graphColumn = function(selector, measurements, datecol, valuecol, filledval)
 }
 
 
-},{"./utils.js":42,"d3":32,"luxon":33,"papaparse":34}],42:[function(require,module,exports){
+},{"./utils.js":42,"d3":32,"luxon":33,"papaparse":34,"vue":38}],42:[function(require,module,exports){
 
 exports.calcWaterYear = function(dt) {
     var year = dt.getFullYear()

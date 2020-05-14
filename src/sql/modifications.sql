@@ -159,3 +159,14 @@ CREATE INDEX ConversionValue_idx
 ON ConversionValue (ConversionID)
 GO
 
+ALTER TABLE Workup
+ADD UserID INT NULL
+GO
+ALTER TABLE Workup
+ADD CONSTRAINT User_Creates_Workup_fk FOREIGN KEY (UserID)
+REFERENCES [User] (UserID)
+ON UPDATE CASCADE
+GO
+CREATE INDEX WorkupLoadedBy_idx
+ON [Workup] (UserID)
+GO

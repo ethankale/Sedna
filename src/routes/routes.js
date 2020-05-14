@@ -14,6 +14,7 @@ const sites               = require('../controllers/sites.js');
 const unit                = require('../controllers/unit.js');
 const qualifier           = require('../controllers/qualifier.js');
 const user                = require('../controllers/user.js');
+const workup              = require('../controllers/workup.js');
 
 module.exports = function (app) {
     app.get('/',  function(req, res) {
@@ -21,7 +22,6 @@ module.exports = function (app) {
     });
     
     app.get('/api/v1/test', test.getTest);
-
     
     // Conversions
     app.get('/api/v1/conversionList', conversion.getConversionList);
@@ -108,5 +108,10 @@ module.exports = function (app) {
     app.get('/api/v1/user',     user.getUser);
     app.put('/api/v1/user',     user.updateUser);
     app.post('/api/v1/user',    user.addUser);
+    
+    // Workups
+    app.get('/api/v1/workupList', workup.getWorkupList);
+    app.get('/api/v1/workup',     workup.getWorkup);
+    app.post('/api/v1/workup',    workup.addWorkup);
     
 };

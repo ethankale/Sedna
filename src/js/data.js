@@ -5,8 +5,8 @@
 var lx         = require('luxon');
 var Papa       = require('papaparse');
 var alqwuutils = require('./utils.js');
-var dataload   = require('./dataload.js')
 let Vue        = require('vue');
+var dataload   = require('./dataload.js');
 
 var sites        = [];
 var sitecurrent  = 0;
@@ -24,7 +24,7 @@ var wymarkup     = "";
 var measurements = []
 
 var vm = new Vue({
-  el: '#everythingContainer',
+  el: '#mainContainer',
   
   data: {
     dailySummary: []

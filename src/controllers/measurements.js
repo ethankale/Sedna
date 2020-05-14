@@ -289,7 +289,6 @@ let controller = {
             
           });
           bulkConnection.execBulkLoad(bulkLoad);
-          //console.log("Loaded #" + req.body.loadnumber);
         };
         
         bulkConnection.on('connect', function(err) {

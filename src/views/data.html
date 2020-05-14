@@ -41,7 +41,22 @@
                   </div>
                   
                   <div id="uploadColumnSelectContainer" class="d-none">
-                    <div id="uploadColumnSelectForm" class="row"></div>
+                    <div id="uploadColumnSelectForm" class="row">
+                      <form>
+                        <div v-for="header in headers" class="form-group">
+                          <label v-bind:for="'uploadHeader' + header">
+                            {{ header.trim() }}</label>
+                          <select class="form-control" v-bind:id="'uploadHeader' + header">
+                            <option 
+                              v-for="meta in metas" 
+                              v-bind:value="meta.MetadataID"
+                              v-bind:data-frequency="meta.FrequencyMinutes">
+                                {{ typeof(meta.Method) == 'undefined' ? meta.Parameter : meta.Parameter + ' (' + meta.Method + ')' }}
+                            </option>
+                          </select>
+                        </div>
+                      </form>
+                    </div>
                   </div>
                   
                   <div id="uploadReviewContainer" class="d-none">
@@ -59,7 +74,7 @@
               </div>
               
               <div class="row">
-                <small id="uploadFileName" class="text-muted">Select a File...</small>
+                <small id="uploadFileName" class="text-muted">{{ filePath }}</small>
               </div>
               
               <div class="modal-footer">
@@ -130,67 +145,68 @@
       </div>
       
       <!-- Begin main page content -->
-      <div class="container-fluid" role="main">
-        <h1>Data</h1>
-        <p><a href="index.html">Home</a></p>
-        
-        <div class="row">
-          <div class="col">
-            <div class="form-group">
-              <label for="siteSelect">Monitoring Site</label>
-              <select class="form-control" id="siteSelect">
-                <option>Loading...</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        <div id="date-select-row" class="form-group row">
-            <div class="col-5">
-              <label for="startDate">Start Date</label>
-              <input class="form-control" type="date" id="startDate"></input>
-            </div>
-            
-            <div class="col-5">
-              <label for="endDate">End Date</label>
-              <input class="form-control" type="date" id="endDate"></input>
-            </div>
-            
-            <div class="col-2">
-              <label for="wylist">Water Year</label>
-              <select class="form-control" id="wylist">
-                <option></option>
-              </select>
-            </div>
-        </div>
-        
-        <div class="row border-top">
-          <div id="paramList" class="col-4">
-            <p>Loading Parameters...</p>
-          </div>
-          <div id="chartContainer" class="col-8">
-          </div>
-        </div>
-        
-      </div>
-      
-      <footer class="footer fixed-bottom">
-        <div class="container-fluid">
+      <div id="mainContainer">
+        <div class="container-fluid" role="main">
+          <h1>Data</h1>
+          <p><a href="index.html">Home</a></p>
+          
           <div class="row">
-            <div class="col-4 text-center">
-              <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#uploadModal">Upload Data</button>
-            </div>  
-            <div class="col-4 text-center">
-              <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
-            </div>  
-            <div class="col-4 text-center">
-              <button type="button" class="btn btn-secondary btn-sm" 
-                @click="clickCreateReport()">Create Report</button>
-            </div>  
+            <div class="col">
+              <div class="form-group">
+                <label for="siteSelect">Monitoring Site</label>
+                <select class="form-control" id="siteSelect">
+                  <option>Loading...</option>
+                </select>
+              </div>
+            </div>
           </div>
+          
+          <div id="date-select-row" class="form-group row">
+              <div class="col-5">
+                <label for="startDate">Start Date</label>
+                <input class="form-control" type="date" id="startDate"></input>
+              </div>
+              
+              <div class="col-5">
+                <label for="endDate">End Date</label>
+                <input class="form-control" type="date" id="endDate"></input>
+              </div>
+              
+              <div class="col-2">
+                <label for="wylist">Water Year</label>
+                <select class="form-control" id="wylist">
+                  <option></option>
+                </select>
+              </div>
+          </div>
+          
+          <div class="row border-top">
+            <div id="paramList" class="col-4">
+              <p>Loading Parameters...</p>
+            </div>
+            <div id="chartContainer" class="col-8">
+            </div>
+          </div>
+          
         </div>
-      </footer>
-      
+        
+        <footer class="footer fixed-bottom">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-4 text-center">
+                <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#uploadModal">Upload Data</button>
+              </div>  
+              <div class="col-4 text-center">
+                <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
+              </div>  
+              <div class="col-4 text-center">
+                <button type="button" class="btn btn-secondary btn-sm" 
+                  @click="clickCreateReport()">Create Report</button>
+              </div>  
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
     
   </body>
