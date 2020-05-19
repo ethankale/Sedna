@@ -19,24 +19,20 @@ var vm = new Vue({
     metasFromSite:  [],
     
     // Using negative numbers because metadata ids will always be >= zero.
-    metasFixed:     [
-      {
-        MetadataID: -1,
-        Parameter:  "Empty"
-      },
-      {
-        MetadataID: -2,
-        Parameter:  "Date and Time"
-      },
-      {
-        MetadataID: -3,
-        Parameter:  "Flag/qualifier"
-      },
-      {
-        MetadataID: -4,
-        Parameter:  "Depth"
-      },
-    ],
+    emptyID:        -1,
+    datetimeID:     -2,
+    qualifierID:    -3,
+    depthID:        -4,
+    
+    // columnCount:    0,
+    // datetimeCount:  0,
+    
+    // dtmColName:     "",
+    // depthColName:   "",
+    // qualColName:    "",
+    
+    headerMetadataMap: {},
+    
     measurements:   [],
     papaConfig:     {
       quoteChar: '"',
@@ -54,8 +50,78 @@ var vm = new Vue({
       return this.fileData.meta.fields;
     },
     
+    metasFixed: function() {
+      return [
+        {
+          MetadataID: this.emptyID,
+          Parameter:  "Empty"
+        },
+        {
+          MetadataID: this.datetimeID,
+          Parameter:  "Date and Time"
+        },
+        {
+          MetadataID: this.qualifierID,
+          Parameter:  "Flag/qualifier"
+        },
+        {
+          MetadataID: this.depthID,
+          Parameter:  "Depth"
+        },
+      ]
+    },
+    
     metas: function() {
       return this.metasFixed.concat(this.metasFromSite);
+    },
+    
+    columnCount: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      return metaIDs.filter(m => m != this.emptyID).length;
+    },
+    
+    dtmColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m == this.datetimeID).length;
+      let name    = null;
+      
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m==this.datetimeID);
+        name = k[i];
+      }
+      return name;
+    },
+    
+    qualColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m == this.qualifierID).length;
+      let name    = null;
+      
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m==this.qualifierID);
+        name = k[i];
+      }
+      return name;
+      // return count;
+    },
+    
+    depthColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m == this.depthID).length;
+      let name    = null;
+      
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m==this.depthID);
+        name = k[i];
+      }
+      return name;
+      // return count;
     }
   },
   
@@ -105,6 +171,25 @@ var vm = new Vue({
           .addClass("alert-danger")
           .text("Could not read the specified file.  Check the format and try again.")
       }
+    },
+    
+    reviewHeadingSelection(event, header) {
+      let metaID = event.target.value;
+      
+      // console.log("Triggered reviewHeadingSelection() with " + metaID + " and " + header);
+      
+      // let map = this.headerMetadataMap;
+      // map[header] = metaID;
+      // this.headerMetadataMap = map;
+      
+      this.$set(this.headerMetadataMap, header, metaID);
+      
+      console.log(this.headerMetadataMap);
+      console.log(
+        this.dtmColName   + " | " + 
+        this.qualColName  + " | " + 
+        this.depthColName + " | "
+      );
     }
   }
   
@@ -209,30 +294,11 @@ var reviewData = function(headers, fileData) {
     
     var data = fileData.data;
     
-    var columncount   = 0;
-    var datetimecount = 0;
-    
     $("#uploadReviewTab").empty()
     $("#uploadReviewTabContent").empty()
     
-    // First of two loops (lame).  Pull out the date/time column, and do validation.
-    var dtmColName   = "";
-    var depthColName = "";
-    var qualColName  = "";
-    headers.forEach(header => {
-      var headert   = header.trim();
-      var selectVal = $("#uploadHeader" + header).val();
-      
-      columncount   += selectVal == -1 ? 0 : 1;
-      datetimecount += selectVal == -2 ? 1 : 0;
-      
-      dtmColName   = $("#uploadHeader" + header).val() == -2 ? header : dtmColName;
-      qualColName  = $("#uploadHeader" + header).val() == -3 ? header : qualColName;
-      depthColName = $("#uploadHeader" + header).val() == -4 ? header : depthColName;
-      
-    });
     
-    if (columncount < 2) {
+    if (vm.columncount < 2) {
         $("#uploadAlert")
             .removeClass("alert-success alert-info alert-primary")
             .addClass("alert-danger")
@@ -241,7 +307,7 @@ var reviewData = function(headers, fileData) {
         $("#uploadReviewTab").empty()
         $("#uploadReviewTabContent").empty()
         
-    } else if(datetimecount != 1) {
+    } else if(vm.dtmColName == null) {
         $("#uploadAlert")
             .removeClass("alert-success alert-info alert-primary")
             .addClass("alert-danger")
@@ -260,8 +326,6 @@ var reviewData = function(headers, fileData) {
           var selectName = $("#uploadHeader"+ header + " :selected").text();
           var selectFreq = Number($("#uploadHeader"+ header + " :selected").data('frequency'));
           
-          // Figure out a way to pull out the date column + the selected column
-          
           if (selectVal >= 0) {
             
             var csum = 0;
@@ -271,16 +335,16 @@ var reviewData = function(headers, fileData) {
             data.forEach((d, i, arr) => {
               // Javascript interprets the date in the local time zone,
               //   which will probably have DST.
-              d.jsdate = lx.DateTime.fromJSDate(new Date(d[dtmColName] + utcHoursString))
+              d.jsdate = lx.DateTime.fromJSDate(new Date(d[vm.dtmColName] + utcHoursString))
                 .setZone(utcstring);
               d.dtm = d.jsdate;
               
               d.Value       = d[header].trim() == '' ? NaN  : Number(d[header]);
-              d.Depth_M     = depthColName == ''     ? null : d[depthColName];
+              d.Depth_M     = vm.depthColName == ''  ? null : d[vm.depthColName];
               d.QualifierID = null;
               
-              if (qualColName != '') {
-                let qualifierobj = qualifiers.find(o => o.Code.trim() === d[qualColName]);
+              if (vm.qualColName != '') {
+                let qualifierobj = qualifiers.find(o => o.Code.trim() === d[vm.qualColName]);
                 d.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
               };
               

@@ -46,7 +46,9 @@
                         <div v-for="header in headers" class="form-group">
                           <label v-bind:for="'uploadHeader' + header">
                             {{ header.trim() }}</label>
-                          <select class="form-control" v-bind:id="'uploadHeader' + header">
+                          <select class="form-control" 
+                            v-bind:id="'uploadHeader' + header"
+                            @change="reviewHeadingSelection($event, header)">
                             <option 
                               v-for="meta in metas" 
                               v-bind:value="meta.MetadataID"
