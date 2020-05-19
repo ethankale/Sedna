@@ -43,7 +43,9 @@
                   <div id="uploadColumnSelectContainer" class="d-none">
                     <div id="uploadColumnSelectForm" class="row">
                       <form>
-                        <div v-for="header in headers" class="form-group">
+                        <div class="form-group"
+                          v-for="header in headers"
+                          v-bind:key="header">
                           <label v-bind:for="'uploadHeader' + header">
                             {{ header.trim() }}</label>
                           <select class="form-control" 
@@ -63,8 +65,18 @@
                   
                   <div id="uploadReviewContainer" class="d-none">
                     <div id="uploadReviewTabs">
-                      
-                      <ul class="nav nav-tabs" id="uploadReviewTab" role="tablist">
+                      <ul id="uploadReviewTab" class="nav nav-tabs" role="tablist">
+                        <li v-for="header in headersWithMeta"
+                          class="nav-item">
+                          <a 
+                            class="nav-link" 
+                            data-toggle="tab" 
+                            role="tab" 
+                            v-bind:id="header + '-tab'" 
+                            v-bind:href="'#' + header" 
+                            v-bind:aria-controls="header"
+                          >{{ header.trim() }}</a>
+                        </li>
                       </ul>
                       
                       <div class="tab-content" id="uploadReviewTabContent">

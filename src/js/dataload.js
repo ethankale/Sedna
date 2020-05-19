@@ -24,13 +24,6 @@ var vm = new Vue({
     qualifierID:    -3,
     depthID:        -4,
     
-    // columnCount:    0,
-    // datetimeCount:  0,
-    
-    // dtmColName:     "",
-    // depthColName:   "",
-    // qualColName:    "",
-    
     headerMetadataMap: {},
     
     measurements:   [],
@@ -48,6 +41,16 @@ var vm = new Vue({
   computed: {
     headers: function() {
       return this.fileData.meta.fields;
+    },
+    
+    headersWithMeta: function() {
+      let headers = Object.keys(this.headerMetadataMap);
+      let metas   = Object.values(this.headerMetadataMap);
+      let headersFiltered = [];
+      metas.forEach((m, i) => {
+        if (m >= 0) { headersFiltered.push(headers[i])};
+      });
+      return headersFiltered;
     },
     
     metasFixed: function() {
@@ -132,6 +135,8 @@ var vm = new Vue({
         .addClass("alert-primary")
         .text("Uploading file now...")
       
+      this.headerMetadataMap = {};
+      
       let fileParsed = window.openCSV();
       this.filePath = fileParsed[0];
       this.fileText = fileParsed[1]; 
@@ -176,25 +181,10 @@ var vm = new Vue({
     reviewHeadingSelection(event, header) {
       let metaID = event.target.value;
       
-      // console.log("Triggered reviewHeadingSelection() with " + metaID + " and " + header);
-      
-      // let map = this.headerMetadataMap;
-      // map[header] = metaID;
-      // this.headerMetadataMap = map;
-      
       this.$set(this.headerMetadataMap, header, metaID);
-      
-      console.log(this.headerMetadataMap);
-      console.log(
-        this.dtmColName   + " | " + 
-        this.qualColName  + " | " + 
-        this.depthColName + " | "
-      );
     }
   }
-  
 });
-
 
 // Difference between supplied times and UTC (measurementtime-UTC), in minutes; -480 in PST
 let utcHours       = alqwuutils.utcoffset;
@@ -226,9 +216,9 @@ var showUpload = function() {
       .off("click");
     
     $("#uploadAlert")
-        .removeClass("alert-success alert-danger alert-primary")
-        .addClass("alert-info")
-        .text("Select a File...")
+      .removeClass("alert-success alert-danger alert-primary")
+      .addClass("alert-info")
+      .text("Select a File...")
 };
 
 var showColumnSelect = function() {
@@ -240,11 +230,6 @@ var showColumnSelect = function() {
       .removeClass("d-none")
       .off("click")
       .click(() => { showUpload(); });
-    
-    $("#uploadNextButton")
-      .removeClass("d-none")
-      .off("click")
-      .click(function() {reviewData(headers, fileData); });
     
     $("#uploadAlert")
       .removeClass("alert-success alert-danger alert-primary")
@@ -281,8 +266,6 @@ $(document).ready(function() {
       $("#uploadReviewContainer").addClass("d-none");
       $("#uploadBackButton").addClass("d-none");
       $("#uploadNextButton").addClass("d-none");
-      // $("#uploadColumnSelectForm").empty();
-      // $("#uploadFileName").text("Select a File...");
     });
     
     $("#openCSVFileButton").click(() => {
@@ -294,17 +277,15 @@ var reviewData = function(headers, fileData) {
     
     var data = fileData.data;
     
-    $("#uploadReviewTab").empty()
-    $("#uploadReviewTabContent").empty()
+    $("#uploadReviewTabContent").empty();
     
-    
+    // This isn't working properly.
     if (vm.columncount < 2) {
         $("#uploadAlert")
             .removeClass("alert-success alert-info alert-primary")
             .addClass("alert-danger")
             .text("You must select at least a date/time field and one parameter.")
             
-        $("#uploadReviewTab").empty()
         $("#uploadReviewTabContent").empty()
         
     } else if(vm.dtmColName == null) {
@@ -313,13 +294,9 @@ var reviewData = function(headers, fileData) {
             .addClass("alert-danger")
             .text("You must select one and only one date/time field.")
             
-        $("#uploadReviewTab").empty()
         $("#uploadReviewTabContent").empty()
         
     } else {
-    
-    // Second loop.  Now that we have the date/time column,
-    //   and we validated the data, we can do everything else.
         headers.forEach(header => {
           var headert    = header.trim();
           var selectVal  = $("#uploadHeader" + header).val();
@@ -361,12 +338,6 @@ var reviewData = function(headers, fileData) {
             let dataFilled = isNaN(selectFreq) ? data : fillGaps(data, selectFreq, "dtm", "Value");
             
             cmis += (dataFilled.length - data.length);
-            
-            $("#uploadReviewTab").append(
-              `<li class="nav-item">
-                <a class="nav-link" id="${header}-tab" data-toggle="tab" href="#${header}" role="tab" aria-controls="${header}">${headert}</a>
-              </li>\n`
-            );
             
             $("#uploadReviewTabContent").append(
               `<div class="tab-pane fade" id="${header}" role="tabpanel" aria-labelledby="${header}-tab">
