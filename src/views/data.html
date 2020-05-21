@@ -72,14 +72,79 @@
                             class="nav-link" 
                             data-toggle="tab" 
                             role="tab" 
-                            v-bind:id="header + '-tab'" 
-                            v-bind:href="'#' + header" 
-                            v-bind:aria-controls="header"
-                          >{{ header.trim() }}</a>
+                            v-bind:id="header.name + '-tab'" 
+                            v-bind:href="'#' + header.name" 
+                            v-bind:aria-controls="header.name"
+                          >{{ header.name.trim() }}</a>
                         </li>
                       </ul>
                       
                       <div class="tab-content" id="uploadReviewTabContent">
+                        <div 
+                          v-for="header in headersWithMeta"
+                          class="tab-pane fade" 
+                          v-bind:id="header.name" 
+                          role="tabpanel" 
+                          v-bind:aria-labelledby="header.name + '-tab'">
+                          
+                          <h5 class="row mt-3">{{ header.metaName }}</h5>
+                          
+                          <div v-bind:id="'graph' + header.name"></div>
+                          
+                          <table class="table">
+                            <tbody>
+                              <tr> <th scope="row">Count</th>       <td>{{ header.measurements.length }}</tr>
+                              <tr> <th scope="row">Sum</th>         <td>{{ header.csum.toFixed(2) }}</tr>
+                              <tr> <th scope="row">Missing/Bad</th> <td>{{ header.cmis }}</tr>
+                              <tr> <th scope="row">Max</th>         <td>{{ header.cmax }}</tr>
+                              <tr> <th scope="row">Min</th>         <td>{{ header.cmin }}</tr>
+                            </tbody>
+                          </table>
+                          
+                          <form>
+                            <div class="row">
+                              <div class="col-2">
+                                <label v-bind:for="'offset' + header.name">Offset</label>
+                              </div>
+                              <div class="col-3">
+                                <input 
+                                  type="text" 
+                                  class="form-control" 
+                                  v-bind:id="'offset' + header.name" 
+                                  placeholder="0">
+                              </div>
+                              
+                              <div class="col-2">
+                                <label v-bind:for="'drift' + header.name">Drift</label>
+                              </div>
+                              <div class="col-3">
+                                <input 
+                                  type="text" 
+                                  class="form-control" 
+                                  v-bind:id="'drift' + header.name" 
+                                  placeholder="0">
+                              </div>
+                              
+                              <div class="col-2">
+                                <button 
+                                  v-bind:id="'adjust' + header.name" 
+                                  @click="changeOffsetOrDrift(header.name, header.frequency, header.decimals)"
+                                  type="button" 
+                                  class="btn btn-primary float-right">Adjust</button>
+                              </div>
+                            </div>
+                            <br>
+                            <div class="row">
+                              <div class="col-12">
+                                <button 
+                                  v-bind:id="'upload' + header.name" 
+                                  type="button" 
+                                  class="btn btn-outline-primary float-right">Upload</button>
+                              </div>
+                            </div>
+                          </form>
+                          
+                        </div>
                       </div>
                       
                     </div>
