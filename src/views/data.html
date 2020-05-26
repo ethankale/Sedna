@@ -142,7 +142,9 @@
                                   v-bind:id="'upload' + header.name" 
                                   @click="clickUpload(header)"
                                   type="button" 
-                                  class="btn btn-outline-primary float-right"> {{ uploadButtonText }} </button>
+                                  class="btn btn-outline-primary float-right"> 
+                                    {{ header.nOverlap > 0 ? 'Delete' : 'Upload' }} 
+                                </button>
                               </div>
                             </div>
                             

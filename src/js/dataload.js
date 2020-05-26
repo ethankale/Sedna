@@ -96,6 +96,7 @@ var vm = new Vue({
           h.drift     = metas[i].drift;
           h.frequency = metas[i].frequency;
           h.decimals  = metas[i].decimals;
+          h.nOverlap  = metas[i].nOverlap;
           
           let r = this.formatDataForUpload(
             h.name, 
@@ -203,10 +204,7 @@ var vm = new Vue({
   
   methods: {
     openCSV() {
-      $("#uploadAlert")
-        .removeClass("alert-danger alert-info alert-success")
-        .addClass("alert-primary")
-        .text("Uploading file now...")
+      this.setNotice('alert-primary', 'Uploading file now...');
       
       this.headerMetadataMap = {};
       
@@ -223,10 +221,7 @@ var vm = new Vue({
       this.fileData = Papa.parse(this.fileText, this.papaConfig);
       
       if (this.fileData.data.length > 0) {
-        $("#uploadAlert")
-          .removeClass("alert-danger alert-info alert-primary")
-          .addClass("alert-success")
-          .text("File upload complete!")
+        this.setNotice('alert-success', 'File upload complete!');
         
         var siteid = $("#siteSelect").val();
         $.ajax({
@@ -241,14 +236,11 @@ var vm = new Vue({
           $("#uploadNextButton")
             .removeClass("d-none disabled")
             .off('click')
-            .click(() => { reviewData(this.headers, this.fileData); });
+            .click(() => { reviewData(); });
         });
       } else {
-        $("#uploadAlert")
-          .removeClass("alert-danger alert-info alert-primary")
-          .addClass("alert-danger")
-          .text("Could not read the specified file.  Check the format and try again.")
-      }
+        this.setNotice('alert-danger', 'Could not read the specified file.  Check the format and try again.');
+      };
     },
     
     reviewHeadingSelection(event, header) {
@@ -268,7 +260,8 @@ var vm = new Vue({
         "offset":    0,
         "drift":     0,
         "frequency": frequency,
-        "decimals":  decimals};
+        "decimals":  decimals,
+        "nOverlap":  0};
       
       this.$set(this.headerMetadataMap, header, metaObj);
     },
@@ -526,27 +519,46 @@ var vm = new Vue({
             dataType: 'json',
             timeout: 8000
           }).done((data) => {
-            // console.log("Server says: " + data);
             if (data != 'Success') {
               errors += m.length;
-              // console.log("Upload failed for Post #" + i/stepSize);
             } else {
               successes += m.length;
-              // console.log("Upload succeeded for Post #" + i/stepSize);
             }
-            //console.log("Loaded Post #" + i/stepSize);
           }).fail((err) => {
-            // console.log("Upload failed for Post #" + i/stepSize);
             errors += m.length;
+          }).always(() => {
+            
+            if (errors > 0) {
+              let msg = "Loading in progress.  Encountered errors with " +
+                errors + " records out of " +
+                (errors + successes) + "so far.";
+              this.setNotice('alert-warning', msg);
+            } else {
+              let msg = "Loading in progress.  Successfully loaded " +
+                successes + " records so far.";
+              this.setNotice('alert-info', msg);
+            };
           })
         );
       };
       
       Promise.all(calls)
       .then((result) => {
-        console.log("All loads completed.");
-        console.log("Errors: " + errors + "; Successes: " + successes);
-        this.setWorkup(headerWithMeta);
+        // console.log("All loads completed.");
+        // console.log("Errors: " + errors + "; Successes: " + successes);
+        if (errors > 0) {
+          let msg = "Loading complete.  Encountered errors with " +
+            errors + " records out of " +
+            (errors + successes);
+          this.setNotice('alert-danger', msg);
+        } else {
+          let msg = "Loading complete.  Successfully loaded " +
+            successes + " records.";
+          this.setNotice('alert-success', msg);
+        };
+        if (successes > 0) {
+          this.setWorkup(headerWithMeta);
+        };
       })
     },
     
@@ -574,19 +586,30 @@ var vm = new Vue({
     },
     
     clickUpload(headerWithMeta) {
-      if (this.nOverlappingMeasurements == 0) {
+      let headerMeta = this.headerMetadataMap[headerWithMeta.name];
+      let nOverlap   = headerMeta.nOverlap;
+      
+      
+      if (nOverlap == 0) {
         this.getMeasurementCount(headerWithMeta)
           .then((data) => { 
-            this.nOverlappingMeasurements = data.measurementCount;
-            if (this.nOverlappingMeasurements == 0) {
+          
+            headerMeta.nOverlap = data.measurementCount;
+            this.$set(this.headerMetadataMap, headerWithMeta.name, headerMeta);
+            
+            if (data.measurementCount == 0) {
               this.uploadMeasurements(headerWithMeta);
+            } else {
+              this.setNotice('alert-warning', 
+                'Found ' + data.measurementCount + ' existing measurements.  Delete?');
             };
           });
       } else {
         this.deleteMeasurements(headerWithMeta)
           .then(() => {
-            console.log("Deleted " + this.nOverlappingMeasurements + " measurements.");
-            this.uploadMeasurements(headerWithMeta);
+            this.setNotice('alert-info', 'Deleted ' + nOverlap + ' measurements.');
+            headerMeta.nOverlap = 0;
+            this.$set(this.headerMetadataMap, headerWithMeta.name, headerMeta);
           });
       };
     },
@@ -615,6 +638,13 @@ var vm = new Vue({
       delete this.fileData.data;
     },
     
+    setNotice(cls, msg) {
+      $("#uploadAlert")
+        .removeClass("alert-success alert-danger alert-primary alert-info")
+        .addClass(cls)
+        .text(msg);
+    },
+    
     roundToDecimal(number, decimal) {
       return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
     }
@@ -640,10 +670,7 @@ var showUpload = function() {
       .addClass("disabled")
       .off("click");
     
-    $("#uploadAlert")
-      .removeClass("alert-success alert-danger alert-primary")
-      .addClass("alert-info")
-      .text("Select a File...")
+    vm.setNotice('alert-info', 'Select a file...');
 };
 
 var showColumnSelect = function() {
@@ -656,10 +683,7 @@ var showColumnSelect = function() {
       .off("click")
       .click(() => { showUpload(); });
     
-    $("#uploadAlert")
-      .removeClass("alert-success alert-danger alert-primary")
-      .addClass("alert-info")
-      .text("Match the CSV headers with the correct metadata.")
+    vm.setNotice('alert-info', 'Match the CSV headers with the correct metadata.');
 };
 
 // From column selection to data review
@@ -677,10 +701,7 @@ var showReview = function() {
     $("#uploadNextButton")
       .addClass("d-none");
     
-    $("#uploadAlert")
-        .removeClass("alert-success alert-danger alert-primary")
-        .addClass("alert-info")
-        .text("Review uploaded data for accuracy.")
+    vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
 };
 
 $(document).ready(function() {
@@ -698,69 +719,12 @@ $(document).ready(function() {
     });
 });
 
-var reviewData = function(headers, fileData) {
+var reviewData = function() {
   
-  var data = fileData.data;
+  showReview();
   
-  // $("#uploadReviewTabContent").empty();
-  
-  // This isn't working properly.
-  if (vm.columncount < 2) {
-    $("#uploadAlert")
-      .removeClass("alert-success alert-info alert-primary")
-      .addClass("alert-danger")
-      .text("You must select at least a date/time field and one parameter.")
-      
-    // $("#uploadReviewTabContent").empty()
-      
-  } else if(vm.dtmColName == null) {
-    $("#uploadAlert")
-      .removeClass("alert-success alert-info alert-primary")
-      .addClass("alert-danger")
-      .text("You must select one and only one date/time field.")
-      
-    // $("#uploadReviewTabContent").empty()
+  $('#uploadReviewTab a:first').tab('show')
     
-  } else {
-    headers.forEach(header => {
-      var headert    = header.trim();
-      var metaid     = $("#uploadHeader" + header).val();
-      var selectName = $("#uploadHeader"+ header + " :selected").text();
-      var selectFreq = Number($("#uploadHeader"+ header + " :selected").data('frequency'));
-    })
-    
-    showReview();
-    
-    $('#uploadReviewTab a:first').tab('show')
-    
-  };
 };
-
-
-
-
-var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize, completeSteps) {
-  console.log("step: " + step + "; lastStep: " + lastStep + "; errors: " + errorCount)
-  if (completeSteps < (lastStep-stepSize)) {
-    $("#uploadAlert")
-      .removeClass(" alert-success alert-primary alert-danger")
-      .addClass("alert-info")
-      .text("Loading data; errors = " + errorCount)
-  } else {
-    if (errorCount == 0) {
-      let countText = step == 1 ? " 1 record!": step + " records!"
-      $("#uploadAlert")
-        .removeClass("  alert-primary  alert-info alert-danger")
-        .addClass("alert-success")
-        .text("Successfully loaded " + countText);
-    } else {
-      $("#uploadAlert")
-        .removeClass("alert-success alert-primary  alert-info ")
-        .addClass("alert-danger")
-        .text("Failed to load " + Math.min(errorCount*stepSize, lastStep) + " records, out of " + lastStep + ".")
-    };
-  };
-}
-
 
 
