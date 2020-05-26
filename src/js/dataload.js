@@ -9,6 +9,10 @@ var vm = new Vue({
   el: '#uploadModal',
   
   data: {
+    utcHours: alqwuutils.utcoffset,
+    
+    qualifiers: [],
+    
     filePath: 'Select a File...',
     fileText: '',
     fileData: {
@@ -25,8 +29,9 @@ var vm = new Vue({
     depthID:     -4,
     
     headerMetadataMap: {},
-    
     measurements:      [],
+    
+    nOverlappingMeasurements: 0,
     
     papaConfig:     {
       quoteChar: '"',
@@ -40,6 +45,37 @@ var vm = new Vue({
   },
   
   computed: {
+    
+    utcoffset: function() {
+      return Math.floor(this.utcHours*60)
+    },
+    
+    utcHoursString: function() {
+      return this.utcHours < 0 ? this.utcHours.toString() : "+" + this.utcHours.toString();
+    },
+    
+    currentoffset: function() {
+      return lx.DateTime.fromJSDate(new Date()).o;
+    },
+    
+    utcstring: function() {
+      return alqwuutils.utcOffsetString(this.utcoffset);
+    },
+    
+    status: function() {
+      let status = "selecting_file";
+      if (typeof(this.fileData.data) === 'undefined') {
+        status = "selecting_file";
+      } else if (this.dtmColName === null || this.columnCount < 2) {
+        status = "matching_headers";
+      } else if (this.nOverlappingMeasurments > 0) {
+        status = "ready_to_delete";
+      } else {
+        status = "ready_to_upload";
+      };
+      return status;
+    },
+    
     headers: function() {
       return this.fileData.meta.fields;
     },
@@ -71,10 +107,12 @@ var vm = new Vue({
           );
           
           h.measurements = r[0];
-          h.cmis  = r[1];
-          h.csum  = r[2];
-          h.cmax  = r[3];
-          h.cmin  = r[4];
+          h.cmis         = r[1];
+          h.csum         = r[2];
+          h.cmax         = r[3];
+          h.cmin         = r[4];
+          h.mindate      = r[5];
+          h.maxdate      = r[6];
           // h.cmean = r[5];
           
           headersFiltered.push(h);
@@ -156,7 +194,10 @@ var vm = new Vue({
         name = k[i];
       }
       return name;
-      // return count;
+    },
+    
+    uploadButtonText: function() {
+      return this.nOverlappingMeasurements > 0 ? "Delete" : "Upload";
     }
   },
   
@@ -241,16 +282,18 @@ var vm = new Vue({
       let csum  = 0;
       let cmax  = Number(data[0][header]);
       let cmin  = Number(data[0][header]);
+      let mindate   = lx.DateTime.local(3000,01,01);
+      let maxdate   = lx.DateTime.local(1000,01,01);
       // let cmean = Number(data[0][header]);
       
       let stepchange = 0;
       
       let firstdate = lx.DateTime
-        .fromJSDate(new Date(data[0][this.dtmColName] + utcHoursString))
-        .setZone(utcstring);
+        .fromJSDate(new Date(data[0][this.dtmColName] + this.utcHoursString))
+        .setZone(this.utcstring);
       let lastdate  = lx.DateTime
-        .fromJSDate(new Date(data[data.length-1][this.dtmColName] + utcHoursString))
-        .setZone(utcstring); 
+        .fromJSDate(new Date(data[data.length-1][this.dtmColName] + this.utcHoursString))
+        .setZone(this.utcstring); 
       
       if (frequency != null) {
         let differenceInMinutes = lastdate.diff(firstdate, 'minutes').as('minutes');
@@ -266,8 +309,8 @@ var vm = new Vue({
         // Javascript interprets the date in the local time zone,
         //   which will probably have DST.
         d2.jsdate = lx.DateTime
-          .fromJSDate(new Date(d[this.dtmColName] + utcHoursString))
-          .setZone(utcstring);
+          .fromJSDate(new Date(d[this.dtmColName] + this.utcHoursString))
+          .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
         
         // console.time("Set Values");
@@ -278,17 +321,21 @@ var vm = new Vue({
         d2.MeasurementCommentID = null;
         d2.MeasurementQualityID = null;
         d2.MetadataID           = metaid;
-        d2.CollectedDTMOffset   = utcoffset;
+        d2.CollectedDTMOffset   = this.utcoffset;
         
         d2.Value = this.roundToDecimal((d2.ValueOriginal + ((stepchange*n) + offset)), decimals);
         
         if (this.qualColName != '') {
-          let qualifierobj = qualifiers.find(o => o.Code.trim() === d[this.qualColName]);
+          let qualifierobj = this.qualifiers.find(o => o.Code.trim() === d[this.qualColName]);
           d2.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
         };
         // console.timeEnd("Set Values");
         
         // console.time("Update stats");
+        
+        mindate = d2.CollectedDTM > mindate ? mindate : d2.CollectedDTM;
+        maxdate = d2.CollectedDTM < maxdate ? maxdate : d2.CollectedDTM;
+        
         let newVal = d2.Value;
         if (isNaN(newVal)) {
           cmis += 1;
@@ -337,7 +384,7 @@ var vm = new Vue({
       });
       // cmean = csum/returnData.length;
       
-      return [returnData, cmis, csum, cmin, cmax];
+      return [returnData, cmis, csum, cmin, cmax, mindate, maxdate];
     },
     
     changeOffsetOrDrift(header, frequency, decimals) {
@@ -419,21 +466,128 @@ var vm = new Vue({
           );
     },
     
+    getMeasurementCount(headerWithMeta) {
+      
+      let data = {
+        "metaid":    headerWithMeta.metaid,
+        "startdtm":  headerWithMeta.mindate.toString(),
+        "enddtm":    headerWithMeta.maxdate.toString(),
+        "utcoffset": this.utcoffset
+      };
+      
+      return $.ajax({
+        url:         'http://localhost:3000/api/v1/getMeasurementCount',
+        contentType: 'application/json',
+        type:        'GET',
+        data:        data,
+        timeout:     3000
+      });
+    },
+    
+    deleteMeasurements(headerWithMeta) {
+      let body = {
+        'MetadataID': headerWithMeta.metaid,
+        'MinDtm':     headerWithMeta.mindate, 
+        'MaxDtm':     headerWithMeta.maxdate
+      };
+      
+      return $.ajax({
+        type: 'DELETE',
+        url: 'http://localhost:3000/api/v1/measurements',
+        contentType: 'application/json',
+        data: JSON.stringify(body),
+        dataType: 'json',
+        timeout: 3000
+      });
+    },
+    
+    uploadMeasurements(headerWithMeta) {
+      let h             = headerWithMeta;
+      let errors        = 0;
+      let successes     = 0;
+      let completeSteps = 0;
+      let stepSize      = 30;    // The max number of rows to bulk insert.
+      for (let i=0; i<h.measurements.length; i+=stepSize) {
+        let dataToLoad = {'metaid': h.metaid,
+                          'offset': this.utcoffset,
+                          'loadnumber': i/stepSize,
+                          'measurements': h.measurements.slice(i, i+stepSize)};
+        //console.log("Starting Post #" + i/stepSize);
+        
+        $.ajax({
+          type: 'POST',
+          url: 'http://localhost:3000/api/v1/measurements',
+          contentType: 'application/json',
+          data: JSON.stringify(dataToLoad),
+          dataType: 'json',
+          timeout: 8000
+        }).done((data) => {
+          console.log("Server says: " + data);
+          if (data != 'Success') {
+            errors += 1;
+            console.log("Upload failed for Post #" + i/stepSize);
+          } else {
+            successes += 1;
+            console.log("Upload succeeded for Post #" + i/stepSize);
+          }
+          //console.log("Loaded Post #" + i/stepSize);
+        }).fail((err) => {
+          console.log("Upload failed for Post #" + i/stepSize);
+          errors += 1;
+        }).always(() => {
+          // displayLoadStatus(errors, successes, i, finalData.length, stepSize, completeSteps);
+          // completeSteps += stepSize;
+        }); 
+      };
+    },
+    
+    clickUpload(headerWithMeta) {
+      if (this.nOverlappingMeasurements == 0) {
+        this.getMeasurementCount(headerWithMeta)
+          .then((data) => { 
+            this.nOverlappingMeasurements = data.measurementCount;
+            if (this.nOverlappingMeasurements == 0) {
+              this.uploadMeasurements(headerWithMeta);
+            };
+          });
+      } else {
+        this.deleteMeasurements(headerWithMeta)
+          .then(() => {
+            console.log("Deleted " + this.nOverlappingMeasurements + " measurements.");
+            this.uploadMeasurements(headerWithMeta);
+          });
+      };
+    },
+    
+    getQualifiers() {
+      $.ajax({
+        type:        'GET',
+        url:         'http://localhost:3000/api/v1/qualifierList',
+        contentType: 'application/json',
+        dataType:    'json',
+        timeout:     3000
+      }).done((data) => {
+        this.qualifiers = data;
+      }).fail((err) => {
+        console.log(err);
+      }).always(() => {
+      }); 
+    },
+    
+    reset() {
+      this.filePath                = '';
+      this.fileText                = '';
+      this.headerMetadataMap       = {};
+      this.nOverlappingMeasurments = 0;
+      
+      delete this.fileData.data;
+    },
+    
     roundToDecimal(number, decimal) {
       return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
     }
   }
 });
-
-// Difference between supplied times and UTC (measurementtime-UTC), in minutes; -480 in PST
-let utcHours       = alqwuutils.utcoffset;
-let utcoffset      = Math.floor(utcHours*60);
-let utcHoursString = utcHours < 0 ? utcHours.toString() : "+" + utcHours.toString()
-// Difference between computer time and UTC (comptime-UTC), in minutes; -480 in PST and -420 in PDT
-let currentoffset  = lx.DateTime.fromJSDate(new Date()).o
-let utcstring      = alqwuutils.utcOffsetString(utcoffset);
-// Globals
-let qualifiers = [];
 
 // Generic functions
 
@@ -474,7 +628,7 @@ var showColumnSelect = function() {
       .removeClass("alert-success alert-danger alert-primary")
       .addClass("alert-info")
       .text("Match the CSV headers with the correct metadata.")
-}
+};
 
 // From column selection to data review
 var showReview = function() {
@@ -498,7 +652,7 @@ var showReview = function() {
 };
 
 $(document).ready(function() {
-    getQualifiers();
+    vm.getQualifiers();
     $("#siteSelect").change(function() {
       $("#uploadCSVContainer").removeClass("d-none");
       $("#uploadColumnSelectContainer").addClass("d-none");
@@ -550,105 +704,8 @@ var reviewData = function(headers, fileData) {
   };
 };
 
-var uploadMeasurements = function(finalData, metaid) {
-  let errors        = 0;
-  let successes     = 0;
-  let completeSteps = 0;
-  let stepSize      = 30;    // The max number of rows to bulk insert.
-  for (let i=0; i<finalData.length; i+=stepSize) {
-    let dataToLoad = {'metaid': metaid,
-                      'offset': utcoffset,
-                      'loadnumber': i/stepSize,
-                      'measurements': finalData.slice(i, i+stepSize)};
-    //console.log("Starting Post #" + i/stepSize);
-    
-    $.ajax({
-      type: 'POST',
-      url: 'http://localhost:3000/api/v1/measurements',
-      contentType: 'application/json',
-      data: JSON.stringify(dataToLoad),
-      dataType: 'json',
-      timeout: 8000
-    }).done((data) => {
-          console.log("Server says: " + data);
-          if (data != 'Success') {
-            errors += 1;
-          } else {
-            successes += 1;
-          }
-          //console.log("Loaded Post #" + i/stepSize);
-    }).fail((err) => {
-          console.log("Upload failed for Post #" + i/stepSize);
-          errors += 1;
-    }).always(() => {
-      displayLoadStatus(errors, successes, i, finalData.length, stepSize, completeSteps);
-      completeSteps += stepSize;
-    }); 
-  };
-}
 
-let deleteMeasurements = function(metaid, mindtm, maxdtm, finalData) {
-  let body = {
-    'MetadataID': metaid,
-    'MinDtm': mindtm, 
-    // 'MinDtm': new lx.DateTime(mindtm).minus({minutes: utcoffset}), 
-    'MaxDtm': maxdtm
-    // 'MaxDtm': new lx.DateTime(maxdtm).minus({minutes: utcoffset})
-  };
-  
-  console.log(body);
-  
-  $.ajax({
-    type: 'DELETE',
-    url: 'http://localhost:3000/api/v1/measurements',
-    contentType: 'application/json',
-    data: JSON.stringify(body),
-    dataType: 'json',
-    timeout: 3000
-  }).done((data) => {
-    console.log("Server says: " + data);
-    $("#uploadAlert")
-      .removeClass("alert-info  alert-primary alert-danger")
-      .addClass("alert-success")
-      .text("Deleted data");
-    uploadMeasurements(finalData, metaid);
-    //console.log("Loaded Post #" + i/stepSize);
-  }).fail((err) => {
-    console.log(err);
-    $("#uploadAlert")
-      .removeClass("alert-info alert-success alert-primary ")
-      .addClass("alert-danger")
-      .text("Failed to delete data");
-  }).always(() => {
-  }); 
-};
 
-let getQualifiers = function() {
-  $.ajax({
-    type:        'GET',
-    url:         'http://localhost:3000/api/v1/qualifierList',
-    contentType: 'application/json',
-    dataType:    'json',
-    timeout:     3000
-  }).done((data) => {
-    qualifiers = data;
-  }).fail((err) => {
-    console.log(err);
-  }).always(() => {
-  }); 
-};
-
-let setWorkup = function(values) {
-  let request = $.ajax({
-    type:        'POST',
-    url:         'http://localhost:3000/api/v1/workup',
-    data:        values,
-    contentType: 'application/json',
-    dataType:    'json',
-    timeout:     '3000'
-  });
-  return(request);
-};
 
 var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepSize, completeSteps) {
   console.log("step: " + step + "; lastStep: " + lastStep + "; errors: " + errorCount)
@@ -674,84 +731,4 @@ var displayLoadStatus = function(errorCount, successCount, step, lastStep, stepS
 }
 
 
-let finalReview = function(header, dataFilled, metaid) {
-  graphColumn("#graph"+header, dataFilled, 'dtm', 'Value');
-  
-  let dataAdjusted = [];
-  
-  $("#correct"+header).click(() => {
-    dataAdjusted = clickCorrect(header, dataFilled);
-  });
-  
-  $("#upload"+header).click(() => {
-    clickUpload(header, dataFilled, dataAdjusted, metaid);
-  });
-};
-
-let clickUpload = function(header, dataFilled, dataAdjusted, metaid) {
-  $("#uploadAlert")
-    .removeClass("alert-success  alert-primary alert-danger")
-    .addClass("alert-info")
-    .text("Uploading data...")
-  
-  let interimData = dataAdjusted.length > 0 ? dataAdjusted : dataFilled;
-  let finalData = [];
-  let mindate   = lx.DateTime.local(3000,01,01);
-  let maxdate   = lx.DateTime.local(1000,01,01);
-  
-  interimData.forEach((d, i, arr) => {
-    let d_new = {};
-    
-    // Use the values that were adjusted for offset and drift; 
-    //   if no adjustment was performed, use the original values.
-    d_new.Value        = typeof d[vm.adjustedColName] == 'undefined' ? d.Value : d[vm.adjustedColName];
-    d_new.CollectedDTM = d.dtm;
-    d_new.QualifierID  = d.QualifierID;
-    d_new.Depth_M      = d.Depth_M;
-    
-    // Not using these (yet), so leave null.
-    d_new.MeasurementCommentID = null;
-    d_new.MeasurementQualityID = null;
-    
-    mindate = d_new.CollectedDTM > mindate ? mindate : d_new.CollectedDTM;
-    maxdate = d_new.CollectedDTM < maxdate ? maxdate : d_new.CollectedDTM;
-    
-    finalData.push(d_new);
-  });
-  
-  mindate = mindate.setZone('UTC');
-  maxdate = maxdate.setZone('UTC');
-  
-  let data = {
-    "metaid":    metaid,
-    "startdtm":  mindate.toString(),
-    "enddtm":    maxdate.toString(),
-    "utcoffset": utcoffset
-  };
-  
-  $.ajax({
-    url:         'http://localhost:3000/api/v1/getMeasurementCount',
-    contentType: 'application/json',
-    type:        'GET',
-    data:        data,
-    timeout:     3000
-  }).done(function(data) {
-    let rowcount = parseInt(data.measurementCount);
-    if (rowcount > 0) {
-      $("#uploadAlert")
-        .removeClass("alert-success alert-primary alert-info")
-        .addClass("alert-danger")
-        .text("There are already " + rowcount + " records in the database.  Overwrite?")
-      
-      $(`#upload${header}`).text("Overwrite?");
-      $(`#upload${header}`).off("click");
-      $(`#upload${header}`).click(() => { 
-        deleteMeasurements(metaid, mindate, maxdate, finalData) 
-      });
-    
-    } else {
-      uploadMeasurements(finalData, metaid);
-    };
-  });
-};
 

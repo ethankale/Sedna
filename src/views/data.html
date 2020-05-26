@@ -133,15 +133,19 @@
                                   class="btn btn-primary float-right">Adjust</button>
                               </div>
                             </div>
+                            
                             <br>
+                            
                             <div class="row">
                               <div class="col-12">
                                 <button 
                                   v-bind:id="'upload' + header.name" 
+                                  @click="clickUpload(header)"
                                   type="button" 
-                                  class="btn btn-outline-primary float-right">Upload</button>
+                                  class="btn btn-outline-primary float-right"> {{ uploadButtonText }} </button>
                               </div>
                             </div>
+                            
                           </form>
                           
                         </div>
@@ -158,8 +162,10 @@
               
               <div class="modal-footer">
                 
-                <button id="uploadBackButton" type="button" class="btn btn-primary">Restart</button>
-                <button id="uploadNextButton" type="button" class="btn btn-primary">Next</button>
+                <button id="uploadBackButton" type="button" class="btn btn-primary"
+                  @click="reset()">Restart</button>
+                <button id="uploadNextButton" type="button" class="btn btn-primary"
+                  v-bind:disabled="status != 'ready_to_upload'">Next</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               </div>
             </div>

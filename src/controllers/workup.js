@@ -114,7 +114,6 @@ let controller = {
       request.addParameter('FileName',   TYPES.VarChar,   FileName);
       request.addParameter('DataStarts', TYPES.DateTime2, DataStarts, { nullable: false, scale: 0 });
       request.addParameter('DataEnds',   TYPES.DateTime2, DataEnds, { nullable: false, scale: 0 });
-      request.addParameter('LoadedOn',   TYPES.DateTime2, LoadedOn, { nullable: false, scale: 0 });
       request.addParameter('MetadataID', TYPES.Int,       MetadataID);
       request.addParameter('UserID',     TYPES.Int,       UserID);
       
