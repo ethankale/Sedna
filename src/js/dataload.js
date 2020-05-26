@@ -507,38 +507,70 @@ var vm = new Vue({
       let successes     = 0;
       let completeSteps = 0;
       let stepSize      = 30;    // The max number of rows to bulk insert.
+      
+      let calls         = [];
+      
       for (let i=0; i<h.measurements.length; i+=stepSize) {
+        let m = h.measurements.slice(i, i+stepSize)
         let dataToLoad = {'metaid': h.metaid,
                           'offset': this.utcoffset,
                           'loadnumber': i/stepSize,
-                          'measurements': h.measurements.slice(i, i+stepSize)};
+                          'measurements': m};
         //console.log("Starting Post #" + i/stepSize);
-        
-        $.ajax({
-          type: 'POST',
-          url: 'http://localhost:3000/api/v1/measurements',
-          contentType: 'application/json',
-          data: JSON.stringify(dataToLoad),
-          dataType: 'json',
-          timeout: 8000
-        }).done((data) => {
-          console.log("Server says: " + data);
-          if (data != 'Success') {
-            errors += 1;
-            console.log("Upload failed for Post #" + i/stepSize);
-          } else {
-            successes += 1;
-            console.log("Upload succeeded for Post #" + i/stepSize);
-          }
-          //console.log("Loaded Post #" + i/stepSize);
-        }).fail((err) => {
-          console.log("Upload failed for Post #" + i/stepSize);
-          errors += 1;
-        }).always(() => {
-          // displayLoadStatus(errors, successes, i, finalData.length, stepSize, completeSteps);
-          // completeSteps += stepSize;
-        }); 
+        calls.push(
+          $.ajax({
+            type: 'POST',
+            url:  'http://localhost:3000/api/v1/measurements',
+            contentType: 'application/json',
+            data: JSON.stringify(dataToLoad),
+            dataType: 'json',
+            timeout: 8000
+          }).done((data) => {
+            // console.log("Server says: " + data);
+            if (data != 'Success') {
+              errors += m.length;
+              // console.log("Upload failed for Post #" + i/stepSize);
+            } else {
+              successes += m.length;
+              // console.log("Upload succeeded for Post #" + i/stepSize);
+            }
+            //console.log("Loaded Post #" + i/stepSize);
+          }).fail((err) => {
+            // console.log("Upload failed for Post #" + i/stepSize);
+            errors += m.length;
+          })
+        );
       };
+      
+      Promise.all(calls)
+      .then((result) => {
+        console.log("All loads completed.");
+        console.log("Errors: " + errors + "; Successes: " + successes);
+        this.setWorkup(headerWithMeta);
+      })
+    },
+    
+    setWorkup(headerWithMeta) {
+      let dataToLoad = {
+        FileName:   this.filePath,
+        MetadataID: headerWithMeta.metaid,
+        UserID:     window.getConfig().userid,
+        offset:     this.utcoffset,
+        DataStarts: headerWithMeta.mindate,
+        DataEnds:  headerWithMeta.maxdate
+      };
+      $.ajax({
+        type:        'POST',
+        url:         'http://localhost:3000/api/v1/workup',
+        contentType: 'application/json',
+        data:        JSON.stringify(dataToLoad),
+        dataType:    'json',
+        timeout:     3000
+      }).done((data) => {
+        console.log("Workup loaded");
+      }).fail((err) => {
+        console.log("Workup load failed; " + err);
+      });
     },
     
     clickUpload(headerWithMeta) {
