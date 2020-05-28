@@ -31,8 +31,6 @@ var vm = new Vue({
     headerMetadataMap: {},
     measurements:      [],
     
-    nOverlappingMeasurements: 0,
-    
     papaConfig:     {
       quoteChar: '"',
       header: true, 
@@ -68,8 +66,6 @@ var vm = new Vue({
         status = "selecting_file";
       } else if (this.dtmColName === null || this.columnCount < 2) {
         status = "matching_headers";
-      } else if (this.nOverlappingMeasurments > 0) {
-        status = "ready_to_delete";
       } else {
         status = "ready_to_upload";
       };
@@ -195,10 +191,6 @@ var vm = new Vue({
         name = k[i];
       }
       return name;
-    },
-    
-    uploadButtonText: function() {
-      return this.nOverlappingMeasurements > 0 ? "Delete" : "Upload";
     }
   },
   
@@ -460,7 +452,6 @@ var vm = new Vue({
     },
     
     getMeasurementCount(headerWithMeta) {
-      
       let data = {
         "metaid":    headerWithMeta.metaid,
         "startdtm":  headerWithMeta.mindate.toString(),
@@ -633,7 +624,6 @@ var vm = new Vue({
       this.filePath                = '';
       this.fileText                = '';
       this.headerMetadataMap       = {};
-      this.nOverlappingMeasurments = 0;
       
       delete this.fileData.data;
     },

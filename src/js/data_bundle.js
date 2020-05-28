@@ -39837,10 +39837,45 @@ var wymarkup     = "";
 var measurements = []
 
 var vm = new Vue({
-  el: '#mainContainer',
+  el: '#vueWrapper',
   
   data: {
-    dailySummary: []
+    dailySummary: [],
+    
+    utcHours: alqwuutils.utcoffset,
+    
+    downloadStartDateString: '',
+    downloadEndDateString: ''
+  },
+  
+  computed: {
+    utcoffset: function() {
+      return Math.floor(this.utcHours*60)
+    },
+    
+    utcHoursString: function() {
+      return this.utcHours < 0 ? this.utcHours.toString() : "+" + this.utcHours.toString();
+    },
+    
+    currentoffset: function() {
+      return lx.DateTime.fromJSDate(new Date()).o;
+    },
+    
+    utcstring: function() {
+      return alqwuutils.utcOffsetString(this.utcoffset);
+    },
+    
+    downloadStartDate: function() {
+      return lx.DateTime
+        .fromJSDate(new Date(this.downloadStartDateString + vm.utcstring))
+        .setZone(vm.utcstring);
+    },
+    
+    downloadEndDate: function() {
+      return lx.DateTime
+        .fromJSDate(new Date(this.downloadEndDateString + vm.utcstring))
+        .setZone(vm.utcstring);
+    },
   },
   
   methods: {
@@ -39948,12 +39983,11 @@ $(document).ready(function() {
     $("#downloadParameterSelect").select2();
     
     $("#downloadDataButton").click(function() {
-        var startdtm  = new Date($("#downloadStartDate").val());
-        var enddtm    = new Date($("#downloadEndDate").val());
         var paramList = $("#downloadParameterSelect").val();
         var filename  = $("#downloadFileName").val();
         
-        if (paramList.length > 0 && !isNaN(startdtm) && !isNaN(enddtm) && filename.length > 0) {
+        if (paramList.length > 0 && !isNaN(vm.downloadStartDate) &&
+          !isNaN(vm.downloadEndDate) && filename.length > 0) {
             var paramids  = [];
             var methodids = [];
             paramList.forEach(param => {
@@ -39968,10 +40002,7 @@ $(document).ready(function() {
             downloadMeasurements(
                 sitecurrent, 
                 paramids, 
-                methodids,
-                startdtm,
-                enddtm, 
-                alqwuutils.utcoffset*-1
+                methodids
             );
         } else {
             $("#downloadAlert")
@@ -39998,10 +40029,11 @@ $(document).ready(function() {
         wycurrent = $("#wylist").val();
         var firstdtm  = new Date(`${wycurrent-1}-10-01T00:00:00`);
         var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
-
         
-        $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
-        $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
+        // $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
+        vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
+        // $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
+        vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
         
         updateDates();
     });
@@ -40064,8 +40096,10 @@ function loadParamList(siteid) {
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
             
-            $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
-            $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
+            // $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
+            vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
+            // $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
+            vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
             
             paramcurrent  = $(this).data("paramid");
             methodcurrent = $(this).data("methodid");
@@ -40108,25 +40142,24 @@ function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset
     });
 }
 
-function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm, utcoffset) {
+function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-    
-    var startdtmstring = startdtm.toLocaleDateString("en-US", dateoptions);
-    var enddtmstring   = enddtm.toLocaleDateString("en-US", dateoptions);
     
     var paramidsString  = "";
     var methodidsString = "";
     
-    paramids.forEach(paramid => { paramidsString += "&paramids=" + paramid })
+    paramids.forEach(paramid   => { paramidsString  += "&paramids=" + paramid })
     methodids.forEach(methodid => { methodidsString += "&methodids=" + methodid })
+    
     
     var url = 'http://localhost:3000/api/v1/getMeasurementDetails' +
         '?siteid='      + siteid +
         paramidsString  +
         methodidsString +
-        '&startdtm='    + startdtmstring +
-        '&enddtm='      + enddtmstring +
-        '&utcoffset='   + utcoffset;
+        '&startdtm='    + vm.downloadStartDate.toISO() +
+        '&enddtm='      + vm.downloadEndDate.plus({days: 1}).toISO();
+    
+    console.log(url);
     
     $.ajax({url: url
     }).done(function(data) {
@@ -40205,8 +40238,6 @@ var vm = new Vue({
     headerMetadataMap: {},
     measurements:      [],
     
-    nOverlappingMeasurements: 0,
-    
     papaConfig:     {
       quoteChar: '"',
       header: true, 
@@ -40242,8 +40273,6 @@ var vm = new Vue({
         status = "selecting_file";
       } else if (this.dtmColName === null || this.columnCount < 2) {
         status = "matching_headers";
-      } else if (this.nOverlappingMeasurments > 0) {
-        status = "ready_to_delete";
       } else {
         status = "ready_to_upload";
       };
@@ -40369,10 +40398,6 @@ var vm = new Vue({
         name = k[i];
       }
       return name;
-    },
-    
-    uploadButtonText: function() {
-      return this.nOverlappingMeasurements > 0 ? "Delete" : "Upload";
     }
   },
   
@@ -40634,7 +40659,6 @@ var vm = new Vue({
     },
     
     getMeasurementCount(headerWithMeta) {
-      
       let data = {
         "metaid":    headerWithMeta.metaid,
         "startdtm":  headerWithMeta.mindate.toString(),
@@ -40807,7 +40831,6 @@ var vm = new Vue({
       this.filePath                = '';
       this.fileText                = '';
       this.headerMetadataMap       = {};
-      this.nOverlappingMeasurments = 0;
       
       delete this.fileData.data;
     },

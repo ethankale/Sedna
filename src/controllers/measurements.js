@@ -158,6 +158,7 @@ let controller = {
     getDetails: function (req, res) {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
+        
         var returndata = [];
         var connection = new Connection(mssql_config);
         
@@ -166,14 +167,23 @@ let controller = {
         var siteid    = req.query.siteid;
         var paramids  = req.query.paramids;
         var methodids = req.query.methodids;
-        var startdtm  = req.query.startdtm;
-        var enddtm    = req.query.enddtm;
-        var utcoffset = req.query.utcoffset;
+        
+        // These strings are assumed to be ISO compliant, with the correct UTC offset.
+        var startdtm  = lx.DateTime
+              .fromISO(req.query.startdtm)
+              .toJSDate();
+        var enddtm    = lx.DateTime
+              .fromISO(req.query.enddtm)
+              .toJSDate();
+        
+        console.log("startdtm = " + startdtm + "; enddtm = " + enddtm);
         
         var paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
         var methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
         
-        var statement = `SELECT 
+      connection.on('connect', function(err) {
+        let returndata = [];
+        let statement = `SELECT 
             DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
             ms.Value, qf.Code as Qualifier, ms.Depth_M as Depth_Meters,
             unit.Symbol as Unit,
@@ -199,17 +209,33 @@ let controller = {
           WHERE sp.SiteID = ${siteid}
             AND md.ParameterID IN (${paramstring})
             AND md.MethodID IN  (${methodstring})
-            AND ms.CollectedDateTime >= '${startdtm}'
-            AND ms.CollectedDateTime <= '${enddtm}'
+            AND ms.CollectedDateTime >= @startdtm
+            AND ms.CollectedDateTime <= @enddtm
           ORDER BY CollectedDateTime ASC`;
         
-        connection.on('connect', function(err) {
-          if(err) {
-            console.log('Error: ', err)
+        let request = new Request(statement, function(err, rowCount) {
+          if (err) {
+            res.status(400).end();
+            console.log(err);
           } else {
-            sqlfunctions.executeSelect(statement, connection, res);
+            res.status(200).json(returndata);
           }
+          connection.close();
         });
+        
+        request.on('row', function(columns) {
+          let temprow = {};
+          columns.forEach(function(column) {
+              temprow[[column.metadata.colName]] = column.value;
+          });
+          returndata.push(temprow);
+        });
+        
+        request.addParameter('startdtm', TYPES.DateTimeOffset, startdtm);
+        request.addParameter('enddtm',   TYPES.DateTimeOffset, enddtm);
+        
+        connection.execSql(request);
+      });
     },
     
     addMeasurements: function (req, res) {
@@ -227,16 +253,16 @@ let controller = {
         let multiplier     = 10;
         
         const callbackBus    = {
-            requestComplete: false,
-            bulkConnected: false,
-            get loadMeasurement() {
-                if(this.requestComplete & this.bulkConnected) {
-                    loadBulkMeasurements(multiplier, metaid, offset, measurements);
-                    //return req.body.measurements;
-                } else {
-                    //return "Waiting for request or bulk connect, or both";
-                }
+          requestComplete: false,
+          bulkConnected: false,
+          get loadMeasurement() {
+            if(this.requestComplete & this.bulkConnected) {
+              loadBulkMeasurements(multiplier, metaid, offset, measurements);
+              //return req.body.measurements;
+            } else {
+              //return "Waiting for request or bulk connect, or both";
             }
+          }
         };
         
         let loadBulkMeasurements = function(multiplier, metaid, offset, measurements) {
