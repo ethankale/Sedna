@@ -36,6 +36,11 @@ var vm = new Vue({
   },
   
   computed: {
+    
+    config: function() {
+      return window.getConfig();
+    },
+    
     utcoffset: function() {
       return Math.floor(this.utcHours*60)
     },

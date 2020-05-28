@@ -219,7 +219,8 @@
                 <div id="downloadFileNameRow" class="form-group row">
                   <div class="col">
                     <label for="downloadFileName">File Name</label>
-                    <input id="downloadFileName" class="form-control">
+                    <input id="downloadFileName" class="form-control"
+                      v-bind:value="config.userDefaultPath + 'data.csv'">
                     </input>
                   </div>
                 </div>

@@ -12278,7 +12278,8 @@ var vm = new Vue({
         },
       },
       utcoffset: 8,
-      userid: null
+      userid: null,
+      userDefaultPath: 'c:/data/'
     },
     lastSave: new Date(),
     testStatus: null
