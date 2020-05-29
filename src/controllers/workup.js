@@ -11,24 +11,55 @@ let controller = {
     let mssql_config = cfg.getConfig().mssql;
     let connection = new Connection(mssql_config);
     
-    let active    = req.query.active;
-    
-    let statement = `SELECT [WorkupID]
-      ,[FileName]
-      ,[DataStarts]
-      ,[DataEnds]
-      ,[LoadedOn]
-      ,[MetadataID]
-      ,[UserID]
-      FROM [Workup]
-      ORDER BY [LoadedOn]`;
-    
+    let spID    = req.query.spID;
+    console.log(spID);
     connection.on('connect', function(err) {
+      
       if(err) {
         console.log('Error: ', err)
         res.status(400).end();
       } else {
-        sqlfunctions.executeSelect(statement, connection, res);
+        let statement = `SELECT 
+           wu.[WorkupID]
+          ,wu.[FileName]
+          ,wu.[DataStarts]
+          ,wu.[DataEnds]
+          ,wu.[LoadedOn]
+          ,wu.[MetadataID]
+          ,wu.[UserID]
+          ,usr.Name
+          FROM [Workup] AS wu
+          LEFT JOIN Metadata AS md
+            ON wu.MetadataID = md.MetadataID
+          LEFT JOIN [User] AS usr
+            ON wu.UserID = usr.UserID
+          WHERE md.SamplePointID = @spID
+          ORDER BY [LoadedOn] DESC`;
+        
+        let returndata = [];
+        
+        let request = new Request(statement, function(err, rowCount) {
+          if (err) {
+            res.status(400).end();
+            console.log(err);
+          } else {
+            res.status(200).json(returndata);
+          }
+          connection.close();
+        });
+        
+        request.on('row', function(columns) {
+          let temprow = {};
+          columns.forEach(function(column) {
+              temprow[[column.metadata.colName]] = column.value;
+          });
+          returndata.push(temprow);
+        });
+        
+        request.addParameter('spID', TYPES.Int, spID);
+        
+        connection.execSql(request);
+        
       }
     });
   },

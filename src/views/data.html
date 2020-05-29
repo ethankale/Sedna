@@ -248,6 +248,17 @@
               </div>
               
               <div class="modal-body">
+                <div class="row"
+                  v-for="workup in workups">
+                  <div class='col'>
+                    <h6> {{ workup.FileName }} </h6>
+                    <p> {{  
+                      `${workup.Name} - ${workup.DataStarts.toLocaleString()} to 
+                      ${workup.DataEnds.toLocaleString()}; loaded on 
+                      ${workup.LoadedOn.toLocaleString()}` }}
+                    </p>
+                  </div>
+                </div>
               </div>
               
               <div class="modal-footer">

@@ -34,6 +34,7 @@ var vm = new Vue({
   data: {
     samplePoints: [],
     dailySummary: [],
+    workups:      [],
     
     spID: null,
     
@@ -108,10 +109,12 @@ var vm = new Vue({
     },
     
     changeSamplePoint() {
+      console.log('changeSamplePoint');
       measurements = [];
       // sitecurrent = $("#siteSelect").val();
       // $("#downloadFileName").val("c:/data/data.csv");
       $("#chartContainer").empty();
+      this.getWorkups();
       loadParamList();
     },
     
@@ -143,6 +146,29 @@ var vm = new Vue({
         contentType: 'application/json'
       }).done((data) => {
         this.samplePoints = data;
+      })
+    },
+    
+    getWorkups() {
+      console.log('getWorkups');
+      let query = {
+        spID: this.spID,
+      };
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/workupList`,
+        method:'GET',
+        timeout: 3000,
+        data: query,
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        let wu = data;
+        wu.forEach((w) => {
+          w.DataStarts = lx.DateTime.fromISO(w.DataStarts);
+          w.DataEnds   = lx.DateTime.fromISO(w.DataEnds);
+          w.LoadedOn   = lx.DateTime.fromISO(w.LoadedOn);
+        })
+        this.workups = wu;
       })
     },
     
@@ -191,10 +217,6 @@ var vm = new Vue({
             .y(function(d) { return y(d.Value) })
             )
       };
-    },
-    
-    getWorkups() {
-      
     }
   }
 });
