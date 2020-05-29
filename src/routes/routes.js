@@ -61,6 +61,7 @@ module.exports = function (app) {
     
     // Metadata (or Data Record)
     app.get('/api/v1/getMetadatasBySite',   sites.getMetadatasBySite);
+    app.get('/api/v1/metadataBySamplePt',   metadata.getMetadatasBySamplePoint);
     app.get('/api/v1/metadataList',         metadata.getMetadataList);
     app.get('/api/v1/metadataDetails',      metadata.getMetadataDetails);
     app.put('/api/v1/metadata',             metadata.updateMetadata);
@@ -73,13 +74,14 @@ module.exports = function (app) {
     app.post('/api/v1/method',      method.addMethod);
     
     // Sample Points
-    app.get('/api/v1/samplePointList',  samplepoints.getSamplePointList);
-    app.get('/api/v1/samplePoint',      samplepoints.getSamplePointDetails);
-    app.put('/api/v1/samplePoint',      samplepoints.updateSamplePoint);
-    app.post('/api/v1/samplePoint',     samplepoints.addSamplePoint);
+    app.get('/api/v1/samplePointList',    samplepoints.getSamplePointList);
+    app.get('/api/v1/samplePoint',        samplepoints.getSamplePointDetails);
+    app.put('/api/v1/samplePoint',        samplepoints.updateSamplePoint);
+    app.post('/api/v1/samplePoint',       samplepoints.addSamplePoint);
     
     // Parameters
     app.get('/api/v1/parameterList',    parameter.getParameterList);
+    app.get('/api/v1/paramsBySamplePt', parameter.getParamsBySamplePoint);
     app.get('/api/v1/parameter',        parameter.getParameterDetails);
     app.put('/api/v1/parameter',        parameter.updateParameter);
     app.post('/api/v1/parameter',       parameter.addParameter);

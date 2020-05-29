@@ -39821,10 +39821,6 @@ var alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 var dataload   = require('./dataload.js');
 
-var sites        = [];
-var sitecurrent  = 0;
-var sitesMarkup  = "";
-
 var params        = [];
 var paramcurrent  = 0;
 var methodcurrent = 0;
@@ -39836,11 +39832,23 @@ var wymarkup     = "";
 
 var measurements = []
 
+Vue.directive('select', {
+  twoWay: true,
+  bind: function (el, binding, vnode) {
+    $(el).select2().on("select2:select", (e) => {
+      el.dispatchEvent(new Event('change', { target: e.target }));
+    });
+  },
+});
+
 var vm = new Vue({
   el: '#vueWrapper',
   
   data: {
+    samplePoints: [],
     dailySummary: [],
+    
+    spID: null,
     
     utcHours: alqwuutils.utcoffset,
     
@@ -39849,6 +39857,10 @@ var vm = new Vue({
   },
   
   computed: {
+    
+    siteID: function() {
+      return this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
+    },
     
     config: function() {
       return window.getConfig();
@@ -39908,9 +39920,17 @@ var vm = new Vue({
       });
     },
     
+    changeSamplePoint() {
+      measurements = [];
+      // sitecurrent = $("#siteSelect").val();
+      // $("#downloadFileName").val("c:/data/data.csv");
+      $("#chartContainer").empty();
+      loadParamList();
+    },
+    
     getDailyMeasurements() {
       let query = {
-        siteid:    sitecurrent,
+        spID:      this.spID,
         paramid:   paramcurrent,
         methodid:  methodcurrent,
         startdate: $("#startDate").val(),
@@ -39925,6 +39945,18 @@ var vm = new Vue({
         contentType: 'application/json'
       });
       return request;
+    },
+    
+    getSamplePoints() {
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/samplePointList`,
+        method:'GET',
+        timeout: 3000,
+        dataType: 'json',
+        contentType: 'application/json'
+      }).done((data) => {
+        this.samplePoints = data;
+      })
     },
     
     graphMeasurements(width) {
@@ -39972,57 +40004,48 @@ var vm = new Vue({
             .y(function(d) { return y(d.Value) })
             )
       };
+    },
+    
+    getWorkups() {
+      
     }
   }
 });
 
 $(document).ready(function() {
+    $("#downloadParameterSelect").select2({ width: '100%' });
+    $("#spSelect").select2({ width: '100%' });
     
-    /*
-    window.onerror = function(msg, url, line, col, error) {
-        console.log(msg + "; " + line + "; " + col);
-        console.log(error);
-    }
-    */
-    
-    $("#downloadParameterSelect").select2();
+    vm.getSamplePoints();
     
     $("#downloadDataButton").click(function() {
-        var paramList = $("#downloadParameterSelect").val();
-        var filename  = $("#downloadFileName").val();
-        
-        if (paramList.length > 0 && !isNaN(vm.downloadStartDate) &&
-          !isNaN(vm.downloadEndDate) && filename.length > 0) {
-            var paramids  = [];
-            var methodids = [];
-            paramList.forEach(param => {
-                paramids.push(param.split("|")[0]);
-                methodids.push(param.split("|")[1]);
-            });
-            $("#downloadAlert")
-                .removeClass("alert-danger alert-info alert-success")
-                .addClass("alert-primary")
-                .text("Downloading now...")
-            
-            downloadMeasurements(
-                sitecurrent, 
-                paramids, 
-                methodids
-            );
-        } else {
-            $("#downloadAlert")
-                .removeClass("alert-primary alert-info alert-success")
-                .addClass("alert-danger")
-                .text("Valid start date, end date, parameters, and file name are all required.");
-        };
-    });
-    
-    $("#siteSelect").change(function() {
-        measurements = [];
-        sitecurrent = $("#siteSelect").val();
-        $("#downloadFileName").val("c:/data/data.csv");
-        $("#chartContainer").empty();
-        loadParamList(sitecurrent);
+      var paramList = $("#downloadParameterSelect").val();
+      var filename  = $("#downloadFileName").val();
+      
+      if (paramList.length > 0 && !isNaN(vm.downloadStartDate) &&
+        !isNaN(vm.downloadEndDate) && filename.length > 0) {
+          var paramids  = [];
+          var methodids = [];
+          paramList.forEach(param => {
+            paramids.push(param.split("|")[0]);
+            methodids.push(param.split("|")[1]);
+          });
+          $("#downloadAlert")
+            .removeClass("alert-danger alert-info alert-success")
+            .addClass("alert-primary")
+            .text("Downloading now...")
+          
+          downloadMeasurements(
+            vm.spID, 
+            paramids, 
+            methodids
+          );
+      } else {
+        $("#downloadAlert")
+          .removeClass("alert-primary alert-info alert-success")
+          .addClass("alert-danger")
+          .text("Valid start date, end date, parameters, and file name are all required.");
+      };
     });
     
     // These are the two date inputs - start and end date
@@ -40042,28 +40065,17 @@ $(document).ready(function() {
         
         updateDates();
     });
-    
-    loadSites();
 });
 
-
-function loadSites() {
-    $.ajax({url: "http://localhost:3000/api/v1/getSites"
-    }).done(function(data) {
-        sites = data;
-        sites.forEach(site => sitesMarkup += '<option value="' + 
-            site.SiteID + '">' + 
-            site.Code + ': ' + site.Name + '</option>\n');
-        $('#siteSelect')
-            .empty()
-            .append(sitesMarkup)
-            .change()
-            .select2();
-    });
-}
-
-function loadParamList(siteid) {
-    $.ajax({url: `http://localhost:3000/api/v1/getParamsBySite?siteid=${siteid}`
+function loadParamList() {
+    let ajaxData = {
+      spID: vm.spID
+    };
+    $.ajax({
+      url:     'http://localhost:3000/api/v1/paramsBySamplePt',
+      data:    ajaxData,
+      method:  'GET',
+      timeout: 3000
     }).done(function(data) {
         params = data;
         paramMarkup = "";
@@ -40101,9 +40113,7 @@ function loadParamList(siteid) {
             var wateryear = alqwuutils.calcWaterYear(lastdtm);
             var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
             
-            // $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
             vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-            // $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
             vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
             
             paramcurrent  = $(this).data("paramid");
@@ -40124,17 +40134,13 @@ function loadParamList(siteid) {
 }
 
 function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
-    var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
-    
-    var startdtmstring = startdtm.toLocaleDateString("en-US", dateoptions);
-    var enddtmstring   = enddtm.toLocaleDateString("en-US", dateoptions);
     
     var url = 'http://localhost:3000/api/v1/getMeasurements' +
-        '?siteid='    + siteid +
+        '?spID='      + vm.spID +
         '&paramid='   + paramid +
         '&methodid='  + methodid +
-        '&startdtm='  + startdtmstring +
-        '&enddtm='    + enddtmstring +
+        '&startdtm='  + startdtm +
+        '&enddtm='    + enddtm +
         '&utcoffset=' + utcoffset
     
     $.ajax({url: url
@@ -40147,7 +40153,7 @@ function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset
     });
 }
 
-function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm) {
+function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
     
     var paramidsString  = "";
@@ -40158,13 +40164,13 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm) {
     
     
     var url = 'http://localhost:3000/api/v1/getMeasurementDetails' +
-        '?siteid='      + siteid +
+        '?spID='        + spID +
         paramidsString  +
         methodidsString +
         '&startdtm='    + vm.downloadStartDate.toISO() +
         '&enddtm='      + vm.downloadEndDate.plus({days: 1}).toISO();
     
-    console.log(url);
+    // console.log(url);
     
     $.ajax({url: url
     }).done(function(data) {
@@ -40193,18 +40199,18 @@ function downloadMeasurements(siteid, paramids, methodids, startdtm, enddtm) {
 }
 
 function updateDates() {
-    var startdtm = new Date($("#startDate").val());
-    var enddtm   = new Date($("#endDate").val());
+    // var startdtm = new Date($("#startDate").val());
+    // var enddtm   = new Date($("#endDate").val());
     
-    $("#downloadStartDate").val($("#startDate").val());
-    $("#downloadEndDate").val($("#endDate").val());
+    // $("#downloadStartDate").val($("#startDate").val());
+    // $("#downloadEndDate").val($("#endDate").val());
     
     loadMeasurements(
-        sitecurrent, 
+        vm.siteID, 
         paramcurrent, 
         methodcurrent,
-        startdtm,
-        enddtm, 
+        vm.downloadStartDate.toISODate(),
+        vm.downloadEndDate.toISODate(), 
         alqwuutils.utcoffset*-1
     );
 }
@@ -40427,21 +40433,27 @@ var vm = new Vue({
       if (this.fileData.data.length > 0) {
         this.setNotice('alert-success', 'File upload complete!');
         
-        var siteid = $("#siteSelect").val();
-        $.ajax({
-          url:     `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`,
-          method:  'GET',
-          timeout: 3000
-        }).done((metas) => {
-          this.metasFromSite = metas;
-          
-          showColumnSelect();
-          
-          $("#uploadNextButton")
-            .removeClass("d-none disabled")
-            .off('click')
-            .click(() => { reviewData(); });
-        });
+        var spID = $("#spSelect").val();
+        
+        if (typeof(spID) != 'undefined') {
+        
+          $.ajax({
+            url:     `http://localhost:3000/api/v1/metadataBySamplePt?spID=${spID}`,
+            method:  'GET',
+            timeout: 3000
+          }).done((metas) => {
+            this.metasFromSite = metas;
+            
+            showColumnSelect();
+            
+            $("#uploadNextButton")
+              .removeClass("d-none disabled")
+              .off('click')
+              .click(() => { reviewData(); });
+          });
+        } else {
+          this.setNotice('alert-danger', 'There was a problem finding this sample point.');
+        }
       } else {
         this.setNotice('alert-danger', 'Could not read the specified file.  Check the format and try again.');
       };

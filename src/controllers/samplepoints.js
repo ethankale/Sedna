@@ -14,7 +14,10 @@ let controller = {
     
     let active    = req.query.active;
     
-    let statement = `SELECT SamplePointID, st.Code + ': ' + st.Name + ' (' + sp.Name + ')' as Name
+    let statement = `SELECT 
+        SamplePointID, 
+        sp.SiteID,
+        st.Code + ': ' + st.Name + ' (' + sp.Name + ')' as Name
       FROM SamplePoint as sp
       INNER JOIN Site as st
       ON sp.SiteID = st.SiteID`

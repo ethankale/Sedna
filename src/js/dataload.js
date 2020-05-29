@@ -215,21 +215,27 @@ var vm = new Vue({
       if (this.fileData.data.length > 0) {
         this.setNotice('alert-success', 'File upload complete!');
         
-        var siteid = $("#siteSelect").val();
-        $.ajax({
-          url:     `http://localhost:3000/api/v1/getMetadatasBySite?siteid=${siteid}`,
-          method:  'GET',
-          timeout: 3000
-        }).done((metas) => {
-          this.metasFromSite = metas;
-          
-          showColumnSelect();
-          
-          $("#uploadNextButton")
-            .removeClass("d-none disabled")
-            .off('click')
-            .click(() => { reviewData(); });
-        });
+        var spID = $("#spSelect").val();
+        
+        if (typeof(spID) != 'undefined') {
+        
+          $.ajax({
+            url:     `http://localhost:3000/api/v1/metadataBySamplePt?spID=${spID}`,
+            method:  'GET',
+            timeout: 3000
+          }).done((metas) => {
+            this.metasFromSite = metas;
+            
+            showColumnSelect();
+            
+            $("#uploadNextButton")
+              .removeClass("d-none disabled")
+              .off('click')
+              .click(() => { reviewData(); });
+          });
+        } else {
+          this.setNotice('alert-danger', 'There was a problem finding this sample point.');
+        }
       } else {
         this.setNotice('alert-danger', 'Could not read the specified file.  Check the format and try again.');
       };

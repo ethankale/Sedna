@@ -1,15 +1,13 @@
 "use strict";
 
-let Connection = require('tedious').Connection;
-let TYPES      = require('tedious').TYPES;
-let Request    = require('tedious').Request;
+let { Connection, TYPES, Request} = require('tedious');
+let cfg = require('./config.js')
 
 const sqlfunctions = require('./sqlexecutefunction.js');
 
 let controller = {
     
     getMetadataList: function (req, res) {
-        let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
@@ -42,8 +40,60 @@ let controller = {
         });
     },
     
+    getMetadatasBySamplePoint: function (req, res) {
+      let mssql_config = cfg.getConfig().mssql;
+      var connection = new Connection(mssql_config);
+      
+      var spID    = req.query.spID;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err)
+        } else {
+          
+          let statement = `SELECT md.MetadataID, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
+            md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints
+            FROM Metadata as md
+            INNER JOIN SamplePoint as sp
+            ON md.SamplePointID = sp.SamplePointID
+            INNER JOIN Parameter as pm
+            ON pm.ParameterID = md.ParameterID
+            INNER JOIN Method as mt
+            ON mt.MethodID = md.MethodID
+            INNER JOIN Unit as un
+            ON un.UnitID = md.UnitID
+            WHERE sp.SamplePointID = @spID
+            AND md.Active = 1`
+          
+          let returndata = [];
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              res.status(400).end();
+              console.log(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+            connection.close();
+          });
+          
+          request.on('row', function(columns) {
+            let thisrow = {}
+            columns.forEach(function(column) {
+                thisrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(thisrow);
+          });
+          
+          request.addParameter('spID', TYPES.Int, spID)
+          
+          connection.execSql(request);
+          
+        }
+      });
+    },
+    
     getMetadataDetails: function (req, res) {
-        let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);
         
@@ -86,7 +136,6 @@ let controller = {
     },
     
     updateMetadata: function (req, res) {
-      let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
       let connection     = new Connection(mssql_config);
       
@@ -132,7 +181,6 @@ let controller = {
     },
     
     addMetadata: function (req, res) {
-      let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
       let connection = new Connection(mssql_config);
       

@@ -14,7 +14,7 @@ let controller = {
         var returndata = [];
         var connection = new Connection(mssql_config);
         
-        var siteid    = req.query.siteid;
+        var spID      = req.query.spID;
         var paramid   = req.query.paramid;
         var methodid  = req.query.methodid;
         var startdtm  = req.query.startdtm;
@@ -26,14 +26,14 @@ let controller = {
           FROM Measurement as ms
           LEFT JOIN Metadata as md
             on ms.MetadataID = md.MetadataID
-          LEFT JOIN SamplePoint as sp
-            on sp.SamplePointID = md.SamplePointID
-          WHERE sp.SiteID = ${siteid}
-          AND md.ParameterID = ${paramid}
-          AND md.MethodID = ${methodid}
+          WHERE md.SamplePointID = ${spID}
+          AND md.ParameterID     = ${paramid}
+          AND md.MethodID        = ${methodid}
           AND ms.CollectedDateTime > DATEADD(hour, ${utcoffset}, '${startdtm}')
           AND ms.CollectedDateTime < DATEADD(hour, ${utcoffset}, '${enddtm}')
           ORDER BY CollectedDateTime ASC`;
+        
+        // console.log(statement);
         
         connection.on('connect', function(err) {
           if(err) {
@@ -50,7 +50,7 @@ let controller = {
       var returndata = [];
       var connection = new Connection(mssql_config);
       
-      let siteid    = req.query.siteid;
+      let spID      = req.query.spID;
       let paramid   = req.query.paramid;
       let methodid  = req.query.methodid;
       let startdate = req.query.startdate;
@@ -66,13 +66,11 @@ let controller = {
           let statement = `SELECT CollectedDate, 
               min(Value) as ValueMin, max(Value) as ValueMax, avg(Value) as Value
             FROM Measurement as ms
-              WITH (INDEX(measurement_metadataid_idx))
+            
             WHERE ms.MetadataID IN (
               SELECT MetadataID
               FROM Metadata as md
-              LEFT JOIN SamplePoint as sp
-                on sp.SamplePointID = md.SamplePointID
-              WHERE sp.SiteID = @siteid
+              WHERE md.SamplePointID = @spID
                 AND md.ParameterID = @paramid
                 AND md.MethodID = @methodid
               )
@@ -80,6 +78,7 @@ let controller = {
               AND ms.CollectedDate <= @enddate
               GROUP BY CollectedDate
               ORDER BY CollectedDate ASC`
+            // WITH (INDEX(measurement_metadataid_idx))
           
           let request = new Request(statement, function(err, rowCount) {
             if (err) {
@@ -90,7 +89,7 @@ let controller = {
             }
           });
           
-          request.addParameter('siteid',     TYPES.Int, siteid);
+          request.addParameter('spID',       TYPES.Int, spID);
           request.addParameter('paramid',    TYPES.Int, paramid);
           request.addParameter('methodid',   TYPES.Int, methodid);
           request.addParameter('startdate',  TYPES.Date, startdate);
@@ -159,27 +158,25 @@ let controller = {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         
-        var returndata = [];
-        var connection = new Connection(mssql_config);
+        let spID      = req.query.spID;
+        let paramids  = req.query.paramids;
+        let methodids = req.query.methodids;
         
-        //console.log(req.query);
-        
-        var siteid    = req.query.siteid;
-        var paramids  = req.query.paramids;
-        var methodids = req.query.methodids;
+        let returndata = [];
+        let connection = new Connection(mssql_config);
         
         // These strings are assumed to be ISO compliant, with the correct UTC offset.
-        var startdtm  = lx.DateTime
+        let startdtm  = lx.DateTime
               .fromISO(req.query.startdtm)
               .toJSDate();
-        var enddtm    = lx.DateTime
+        let enddtm    = lx.DateTime
               .fromISO(req.query.enddtm)
               .toJSDate();
         
         console.log("startdtm = " + startdtm + "; enddtm = " + enddtm);
         
-        var paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
-        var methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
+        let paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
+        let methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
         
       connection.on('connect', function(err) {
         let returndata = [];
@@ -206,7 +203,7 @@ let controller = {
             ON ms.QualifierID = qf.QualifierID
           LEFT JOIN Unit as unit
             ON unit.UnitID = md.UnitID
-          WHERE sp.SiteID = ${siteid}
+          WHERE md.SamplePointID = @spID
             AND md.ParameterID IN (${paramstring})
             AND md.MethodID IN  (${methodstring})
             AND ms.CollectedDateTime >= @startdtm
@@ -233,6 +230,7 @@ let controller = {
         
         request.addParameter('startdtm', TYPES.DateTimeOffset, startdtm);
         request.addParameter('enddtm',   TYPES.DateTimeOffset, enddtm);
+        request.addParameter('spID',     TYPES.Int,            spID);
         
         connection.execSql(request);
       });

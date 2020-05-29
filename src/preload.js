@@ -57,13 +57,16 @@ window.setConfig = function(config) {
 
 // PDF Reports
 window.makePDF = function(title, subtitle, table, svg) {
+  let defaultPath = window.getConfig().userDefaultPath;
+  // console.log(defaultPath);
+  
   let path = dialog.showSaveDialogSync({
     title: "Save the report as",
-    defaultPath: ""
+    defaultPath: defaultPath
   });
   
   if (typeof path == 'undefined') {
-    console.log("User cancelled save.")
+    // console.log("User cancelled save.")
   } else {
     const doc = new PDFDocument();
     doc.pipe(createWriteStream(path));
@@ -124,7 +127,7 @@ window.makePDF = function(title, subtitle, table, svg) {
     });
     
     // Graph
-    SVGtoPDF(doc, svg, 25+marginleft, maxY+titley+20, options = {
+    SVGtoPDF(doc, svg, 56, 550, options = {
       width:  500,
       height: 200,
       preserveAspectRatio: 'xMidYMin meet',
