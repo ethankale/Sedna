@@ -74,7 +74,7 @@ window.makePDF = function(title, subtitle, table, svg) {
     // Title
     doc
       .font('Helvetica')
-      .fontSize(25)
+      .fontSize(16)
       .text(title, {align: 'center'})
     
     // Subtitle
@@ -127,7 +127,7 @@ window.makePDF = function(title, subtitle, table, svg) {
     });
     
     // Graph
-    SVGtoPDF(doc, svg, 56, 550, options = {
+    SVGtoPDF(doc, svg, 56, 570, options = {
       width:  500,
       height: 200,
       preserveAspectRatio: 'xMidYMin meet',

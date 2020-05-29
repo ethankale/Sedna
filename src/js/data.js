@@ -97,7 +97,7 @@ var vm = new Vue({
         
         // let table    = this.formatWaterYearRows(data);
         let table    = data;
-        let siteName = $("#siteSelect :selected").text();
+        let siteName = $("#spSelect :selected").text();
         let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
                        $("#wylist :selected").val();
         let svg      = $("#chartContainer svg")[0];
@@ -201,7 +201,10 @@ var vm = new Vue({
 
 $(document).ready(function() {
     $("#downloadParameterSelect").select2({ width: '100%' });
-    $("#spSelect").select2({ width: '100%' });
+    $("#spSelect").select2({ 
+      width:       '100%', 
+      placeholder: 'Select a Sample Point'
+    });
     
     vm.getSamplePoints();
     
@@ -269,22 +272,22 @@ function loadParamList() {
         var downloadParamMarkup = "";
         
         params.forEach(param => {
-            param.maxdtm = new Date(param.maxdtm);
-            param.mindtm = new Date(param.mindtm);
-            paramMarkup += `<a href="#"
-                data-paramid=${param.ParameterID} 
-                data-methodid=${param.MethodID} 
-                data-lastcollectdtm=${param.maxdtm.toLocaleDateString()} 
-                data-firstcollectdtm=${param.mindtm.toLocaleDateString()} 
-                class="list-group-item list-group-item-action">
-                <h5>${param.Name}</h5>
-                <small>${param.Method}</small>
-                </a>\n`;
-            
-            downloadParamMarkup += `<option 
-                value=${param.ParameterID}|${param.MethodID}>
-                ${param.Name} (${param.Method})
-                </option>`
+          param.maxdtm = new Date(param.maxdtm);
+          param.mindtm = new Date(param.mindtm);
+          paramMarkup += `<a href="#"
+            data-paramid=${param.ParameterID} 
+            data-methodid=${param.MethodID} 
+            data-lastcollectdtm=${param.maxdtm.toLocaleDateString()} 
+            data-firstcollectdtm=${param.mindtm.toLocaleDateString()} 
+            class="list-group-item list-group-item-action">
+            <h5>${param.Name}</h5>
+            <small>${param.Method}</small>
+            </a>\n`;
+          
+          downloadParamMarkup += `<option 
+            value=${param.ParameterID}|${param.MethodID}>
+            ${param.Name} (${param.Method})
+            </option>`
             
         });
         paramMarkup = '<div class="list-group list-group-flush">' + paramMarkup + "</div>";

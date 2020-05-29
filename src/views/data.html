@@ -274,8 +274,8 @@
                     v-on:change="changeSamplePoint()">
                     <option 
                       v-for="sp in samplePoints" 
-                      v-bind:value="sp.SamplePointID" 
-                      v-bind:key="sp.SamplePointID">
+                      v-bind:key="sp.SamplePointID"
+                      v-bind:value="sp.SamplePointID">
                       {{ sp.Name }}</option>
                   </select>
                 </div>
