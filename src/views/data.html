@@ -389,7 +389,7 @@
             
             <div class="row border-top">
               <div id="paramList" class="col-4">
-                <p>Loading Parameters...</p>
+                <p v-show="spID != null">Loading Parameters...</p>
               </div>
               <div id="chartContainer" class="col-8">
               </div>
@@ -401,17 +401,36 @@
             <div class="container-fluid">
               <div class="row">
                 <div class="col-3 text-center">
-                  <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#uploadModal">Upload Data</button>
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm" 
+                    data-toggle="modal" 
+                    data-target="#uploadModal"
+                    v-bind:disabled="spID == null"
+                    >Upload Data</button>
                 </div>  
                 <div class="col-3 text-center">
-                  <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#downloadModal">Download Data</button>
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm" 
+                    data-toggle="modal" 
+                    data-target="#downloadModal"
+                    v-bind:disabled="spID == null">Download Data</button>
                 </div>  
                 <div class="col-3 text-center">
-                  <button type="button" class="btn btn-secondary btn-sm" 
-                    @click="clickCreateReport()">Create Report</button>
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm" 
+                    @click="clickCreateReport()"
+                    v-bind:disabled="spID == null">Create Report</button>
                 </div>  
                 <div class="col-3 text-center">
-                  <button type="button" class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#workupModal">Show Workups</button>
+                  <button 
+                    type="button" 
+                    class="btn btn-secondary btn-sm" 
+                    data-toggle="modal" 
+                    data-target="#workupModal"
+                    v-bind:disabled="spID == null">Show Workups</button>
                 </div>  
               </div>
               <br>
