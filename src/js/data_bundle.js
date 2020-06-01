@@ -40250,12 +40250,12 @@ let Vue        = require('vue');
 
 var vm = new Vue({
   el: '#uploadModal',
-  
+
   data: {
     utcHours: alqwuutils.utcoffset,
-    
+
     qualifiers: [],
-    
+
     filePath: 'Select a File...',
     fileText: '',
     fileData: {
@@ -40264,7 +40264,7 @@ var vm = new Vue({
       }
     },
     metasFromSite:     [],
-    
+
     singleMeasureData: {
       'metaid':  null,
       'offset':  null,
@@ -40280,19 +40280,21 @@ var vm = new Vue({
         }
       ]
     },
-    
+
+    singleMeasureExists: false,
+
     // Using negative numbers because metadata ids will always be >= zero.
     emptyID:     -1,
     datetimeID:  -2,
     qualifierID: -3,
     depthID:     -4,
-    
+
     headerMetadataMap: {},
     measurements:      [],
-    
+
     papaConfig:     {
       quoteChar: '"',
-      header: true, 
+      header: true,
       skipEmptyLines: true,
       fastMode: false,
       transformHeader: function(h) {
@@ -40300,25 +40302,25 @@ var vm = new Vue({
       }
     }
   },
-  
+
   computed: {
-    
+
     utcoffset: function() {
       return Math.floor(this.utcHours*60)
     },
-    
+
     utcHoursString: function() {
       return this.utcHours < 0 ? this.utcHours.toString() : "+" + this.utcHours.toString();
     },
-    
+
     currentoffset: function() {
       return lx.DateTime.fromJSDate(new Date()).o;
     },
-    
+
     utcstring: function() {
       return alqwuutils.utcOffsetString(this.utcoffset);
     },
-    
+
     status: function() {
       let status = "selecting_file";
       if (typeof(this.fileData.data) === 'undefined') {
@@ -40330,11 +40332,11 @@ var vm = new Vue({
       };
       return status;
     },
-    
+
     headers: function() {
       return this.fileData.meta.fields;
     },
-    
+
     headersWithMeta: function() {
       let headers = Object.keys(this.headerMetadataMap);
       let metas   = Object.values(this.headerMetadataMap);
@@ -40343,7 +40345,7 @@ var vm = new Vue({
         if (m.metaid >= 0) {
           let h = {};
           let metaname = this.metas.filter((meta) => { return meta.MetadataID == m.metaid})[0].Parameter;
-          
+
           h.name      = headers[i];
           h.metaName  = metaname;
           h.metaid    = metas[i].metaid;
@@ -40352,16 +40354,16 @@ var vm = new Vue({
           h.frequency = metas[i].frequency;
           h.decimals  = metas[i].decimals;
           h.nOverlap  = metas[i].nOverlap;
-          
+
           let r = this.formatDataForUpload(
-            h.name, 
-            h.offset, 
-            h.drift, 
-            h.frequency, 
-            h.decimals, 
+            h.name,
+            h.offset,
+            h.drift,
+            h.frequency,
+            h.decimals,
             h.metaid
           );
-          
+
           h.measurements = r[0];
           h.cmis         = r[1];
           h.csum         = r[2];
@@ -40370,15 +40372,15 @@ var vm = new Vue({
           h.mindate      = r[5];
           h.maxdate      = r[6];
           // h.cmean = r[5];
-          
+
           headersFiltered.push(h);
           this.graphColumn(h);
         };
       });
-      
+
       return headersFiltered;
     },
-    
+
     metasFixed: function() {
       return [
         {
@@ -40399,21 +40401,21 @@ var vm = new Vue({
         },
       ]
     },
-    
+
     metas: function() {
       return this.metasFixed.concat(this.metasFromSite);
     },
-    
+
     columnCount: function() {
       let metaIDs = Object.values(this.headerMetadataMap);
       return metaIDs.filter(m => m.metaid != this.emptyID).length;
     },
-    
+
     dtmColName: function() {
       let metaIDs = Object.values(this.headerMetadataMap);
       let count   = metaIDs.filter(m => m.metaid == this.datetimeID).length;
       let name    = null;
-      
+
       if (count === 1) {
         let k = Object.keys(this.headerMetadataMap);
         let v = metaIDs;
@@ -40422,12 +40424,12 @@ var vm = new Vue({
       }
       return name;
     },
-    
+
     qualColName: function() {
       let metaIDs = Object.values(this.headerMetadataMap);
       let count   = metaIDs.filter(m => m.metaid == this.qualifierID).length;
       let name    = null;
-      
+
       if (count === 1) {
         let k = Object.keys(this.headerMetadataMap);
         let v = Object.values(this.headerMetadataMap);
@@ -40437,12 +40439,12 @@ var vm = new Vue({
       return name;
       // return count;
     },
-    
+
     depthColName: function() {
       let metaIDs = Object.values(this.headerMetadataMap);
       let count   = metaIDs.filter(m => m.metaid == this.depthID).length;
       let name    = null;
-      
+
       if (count === 1) {
         let k = Object.keys(this.headerMetadataMap);
         let v = Object.values(this.headerMetadataMap);
@@ -40450,39 +40452,43 @@ var vm = new Vue({
         name = k[i];
       }
       return name;
+    },
+
+    singleMeasureUploadBtnText: function() {
+      return this.singleMeasureExists ? "Overwrite" : "Upload";
     }
   },
-  
+
   methods: {
     openCSV() {
       this.setNotice('alert-primary', 'Uploading file now...');
-      
+
       this.headerMetadataMap = {};
-      
+
       let fileParsed = window.openCSV();
       this.filePath = fileParsed[0];
-      this.fileText = fileParsed[1]; 
+      this.fileText = fileParsed[1];
       $("#uploadFileName").text(this.filePath);
-      
+
       // Even with the transform header function we may get some column names
       //   that are invalid selectors.  in theory we could search for the CSS
       //   valid selector regex -?[_a-zA-Z]+[_a-zA-Z0-9-]* and replace anything
       //   that doesn't match, but replace with what?
-      
+
       this.fileData = Papa.parse(this.fileText, this.papaConfig);
-      
+
       if (this.fileData.data.length > 0) {
         this.setNotice('alert-success', 'File upload complete!');
-        
+
         var spID = $("#spSelect").val();
-        
+
         if (spID != null) {
-        
+
           this.getMetas(spID).done((metas) => {
             this.metasFromSite = metas;
-            
+
             showColumnSelect();
-            
+
             $("#uploadNextButton")
               .removeClass("d-none disabled")
               .off('click')
@@ -40495,7 +40501,7 @@ var vm = new Vue({
         this.setNotice('alert-danger', 'Could not read the specified file.  Check the format and try again.');
       };
     },
-    
+
     getMetas(spID) {
       return $.ajax({
         url:     `http://localhost:3000/api/v1/metadataBySamplePt?spID=${spID}`,
@@ -40503,7 +40509,7 @@ var vm = new Vue({
         timeout: 3000
       })
     },
-    
+
     reviewHeadingSelection(event, header) {
       let metaID    = event.target.value;
       let frequency = null;
@@ -40523,15 +40529,15 @@ var vm = new Vue({
         "frequency": frequency,
         "decimals":  decimals,
         "nOverlap":  0};
-      
+
       this.$set(this.headerMetadataMap, header, metaObj);
     },
-    
+
     // Assumes data are supplied in chronological order, oldest to newest
     formatDataForUpload(header, offset, drift, frequency, decimals, metaid) {
       let data       = this.fileData.data;
       let returnData = [];
-      
+
       let cmis  = 0;
       let csum  = 0;
       let cmax  = Number(data[0][header]);
@@ -40539,24 +40545,24 @@ var vm = new Vue({
       let mindate   = lx.DateTime.local(3000,01,01);
       let maxdate   = lx.DateTime.local(1000,01,01);
       // let cmean = Number(data[0][header]);
-      
+
       let stepchange = 0;
-      
+
       let firstdate = lx.DateTime
         .fromJSDate(new Date(data[0][this.dtmColName] + this.utcHoursString))
         .setZone(this.utcstring);
       let lastdate  = lx.DateTime
         .fromJSDate(new Date(data[data.length-1][this.dtmColName] + this.utcHoursString))
-        .setZone(this.utcstring); 
-      
+        .setZone(this.utcstring);
+
       if (frequency != null) {
         let differenceInMinutes = lastdate.diff(firstdate, 'minutes').as('minutes');
         let totalTimesteps      = (differenceInMinutes/frequency)+1;
         let missingTimesteps    = totalTimesteps - data.length;
-        
+
         stepchange = drift/(totalTimesteps-1);
       };
-      
+
       let n = 0;
       data.forEach((d, i, arr) => {
         let d2 = {};
@@ -40566,9 +40572,9 @@ var vm = new Vue({
           .fromJSDate(new Date(d[this.dtmColName] + this.utcHoursString))
           .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
-        
+
         // console.time("Set Values");
-        
+
         d2.ValueOriginal        = d[header].trim() == ''   ? NaN  : Number(d[header]);
         d2.Depth_M              = this.depthColName == ''  ? null : d[this.depthColName];
         d2.QualifierID          = null;
@@ -40576,20 +40582,20 @@ var vm = new Vue({
         d2.MeasurementQualityID = null;
         d2.MetadataID           = metaid;
         d2.CollectedDTMOffset   = this.utcoffset;
-        
+
         d2.Value = this.roundToDecimal((d2.ValueOriginal + ((stepchange*n) + offset)), decimals);
-        
+
         if (this.qualColName != '') {
           let qualifierobj = this.qualifiers.find(o => o.Code.trim() === d[this.qualColName]);
           d2.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
         };
         // console.timeEnd("Set Values");
-        
+
         // console.time("Update stats");
-        
+
         mindate = d2.CollectedDTM > mindate ? mindate : d2.CollectedDTM;
         maxdate = d2.CollectedDTM < maxdate ? maxdate : d2.CollectedDTM;
-        
+
         let newVal = d2.Value;
         if (isNaN(newVal)) {
           cmis += 1;
@@ -40599,7 +40605,7 @@ var vm = new Vue({
           cmin = newVal < cmin ? newVal : cmin;
         };
         // console.timeEnd("Update stats");
-        
+
         // Now that we've calculated all the values, find determine if there's
         //   a gap between this entry and the last one entered.  If not,
         //   just push the new object; if so, set values to NaN and push.
@@ -40610,19 +40616,19 @@ var vm = new Vue({
         } else {
           let lastPushedDate          = returnData[returnData.length-1].CollectedDTM;
           let currentDateLessInterval = d2.CollectedDTM.plus({minutes: frequency*-1});
-          
+
           let diffMinutes = currentDateLessInterval.diff(lastPushedDate, 'minutes').as('minutes');
           let nToInsert   = diffMinutes/frequency;
-          
+
           cmis += nToInsert;
-          
+
           if (nToInsert <= 0) {
             returnData.push(d2);
             n += 1;
           } else {
             for (let j=1; j<=nToInsert; j++) {
               let d_copy = {...d2};
-              
+
               d_copy.CollectedDTM  = lastPushedDate.plus({minutes: j*frequency});
               d_copy.ValueOriginal = NaN;
               d_copy.Value         = NaN;
@@ -40637,27 +40643,27 @@ var vm = new Vue({
         // console.timeEnd("Gap filling");
       });
       // cmean = csum/returnData.length;
-      
+
       return [returnData, cmis, csum, cmin, cmax, mindate, maxdate];
     },
-    
+
     changeOffsetOrDrift(header, frequency, decimals) {
       let offset = Number($("#offset" + header).val());
       let drift  = Number($("#drift"  + header).val());
-      
+
       let headerMeta = this.headerMetadataMap[header];
-      
+
       headerMeta.offset = offset;
       headerMeta.drift  = drift;
-      
+
       this.$set(this.headerMetadataMap, header, headerMeta);
     },
-    
+
     // Measurements needs be an object with 'dtm' and 'Value' arrays
     graphColumn(headerWithMeta) {
       let selector     = '#graph' + headerWithMeta.name;
       let measurements = headerWithMeta.measurements;
-      
+
       $(selector).empty();
       let margin = {top: 10, right: 60, bottom: 30, left: 60},
           width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
@@ -40680,21 +40686,21 @@ var vm = new Vue({
         .attr("transform", "translate(0," + height + ")")
         .call(d3.axisBottom(x)
           .ticks(3));
-      
+
       let valueExtent  = d3.extent(measurements, function(d) {return d.ValueOriginal; });
       let filledExtent = d3.extent(measurements, function(d) {return d.Value; });
-      
+
       let yextent = [d3.min(valueExtent.concat(filledExtent)), d3.max(valueExtent.concat(filledExtent))]
-      
+
       // console.log(valueExtent + " - " + filledExtent + " - " + yextent);
-      
+
       // Add Y axis
       let y = d3.scaleLinear()
         .domain(yextent)
         .range([ height, 0 ]);
       svg.append("g")
         .call(d3.axisLeft(y));
-      
+
       // Add the line for filled & adjusted data
       svg.append("path")
         .datum(measurements)
@@ -40706,7 +40712,7 @@ var vm = new Vue({
           .x(function(d) { return x(new Date(d.CollectedDTM)) })
           .y(function(d) { return y(d.Value) })
           );
-      
+
       // Add the line for original data
       svg.append("path")
         .datum(measurements)
@@ -40719,7 +40725,7 @@ var vm = new Vue({
           .y(function(d) { return y(d.ValueOriginal) })
           );
     },
-    
+
     getMeasurementCount(headerWithMeta) {
       let data = {
         "metaid":    headerWithMeta.metaid,
@@ -40727,7 +40733,7 @@ var vm = new Vue({
         "enddtm":    headerWithMeta.maxdate.toString(),
         "utcoffset": this.utcoffset
       };
-      
+
       return $.ajax({
         url:         'http://localhost:3000/api/v1/getMeasurementCount',
         contentType: 'application/json',
@@ -40736,14 +40742,14 @@ var vm = new Vue({
         timeout:     3000
       });
     },
-    
+
     deleteMeasurements(headerWithMeta) {
       let body = {
         'MetadataID': headerWithMeta.metaid,
-        'MinDtm':     headerWithMeta.mindate, 
+        'MinDtm':     headerWithMeta.mindate,
         'MaxDtm':     headerWithMeta.maxdate
       };
-      
+
       return $.ajax({
         type: 'DELETE',
         url: 'http://localhost:3000/api/v1/measurements',
@@ -40753,16 +40759,16 @@ var vm = new Vue({
         timeout: 3000
       });
     },
-    
+
     uploadMeasurements(headerWithMeta) {
       let h             = headerWithMeta;
       let errors        = 0;
       let successes     = 0;
       let completeSteps = 0;
       let stepSize      = 30;    // The max number of rows to bulk insert.
-      
+
       let calls         = [];
-      
+
       for (let i=0; i<h.measurements.length; i+=stepSize) {
         let m = h.measurements.slice(i, i+stepSize)
         let dataToLoad = {'metaid': h.metaid,
@@ -40787,7 +40793,7 @@ var vm = new Vue({
           }).fail((err) => {
             errors += m.length;
           }).always(() => {
-            
+
             if (errors > 0) {
               let msg = "Loading in progress.  Encountered errors with " +
                 errors + " records out of " +
@@ -40801,7 +40807,7 @@ var vm = new Vue({
           })
         );
       };
-      
+
       Promise.all(calls)
       .then((result) => {
         // console.log("All loads completed.");
@@ -40821,7 +40827,7 @@ var vm = new Vue({
         };
       })
     },
-    
+
     setWorkup(headerWithMeta) {
       let dataToLoad = {
         FileName:   this.filePath,
@@ -40844,23 +40850,23 @@ var vm = new Vue({
         console.log("Workup load failed; " + err);
       });
     },
-    
+
     clickUpload(headerWithMeta) {
       let headerMeta = this.headerMetadataMap[headerWithMeta.name];
       let nOverlap   = headerMeta.nOverlap;
-      
-      
+
+
       if (nOverlap == 0) {
         this.getMeasurementCount(headerWithMeta)
-          .then((data) => { 
-          
+          .then((data) => {
+
             headerMeta.nOverlap = data.measurementCount;
             this.$set(this.headerMetadataMap, headerWithMeta.name, headerMeta);
-            
+
             if (data.measurementCount == 0) {
               this.uploadMeasurements(headerWithMeta);
             } else {
-              this.setNotice('alert-warning', 
+              this.setNotice('alert-warning',
                 'Found ' + data.measurementCount + ' existing measurements.  Delete?');
             };
           });
@@ -40873,7 +40879,7 @@ var vm = new Vue({
           });
       };
     },
-    
+
     getQualifiers() {
       $.ajax({
         type:        'GET',
@@ -40888,80 +40894,113 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
       }).always(() => {
-      }); 
+      });
     },
-    
+
     showSingleMeasurement() {
       let spID = $("#spSelect").val();
       if (spID != null) {
-      
+
         this.getMetas(spID).done((metas) => {
           this.metasFromSite = metas;
         });
-        
+
         this.filePath = "Single Measurement"
-        
+
         $("#uploadColumnSelectContainer").addClass("d-none");
         $("#uploadCSVContainer").addClass("d-none");
         $("#uploadReviewContainer").addClass("d-none");
         $("#addSingleMeasurement").removeClass("d-none");
-        
+
         $("#uploadBackButton")
           .removeClass("d-none")
           .off("click")
           .click(() => { showUpload(); });
-        
+
         $("#uploadNextButton")
           .addClass("d-none");
-        
+
         vm.setNotice('alert-info', 'Fill in details to load a single measurement.');
-        
+
       } else {
         this.setNotice('alert-danger', 'There was a problem finding this sample point.');
       };
     },
-    
+
+    clickUploadSingleMeasure() {
+
+      if (this.singleMeasureExists) {
+        let deletePayload = {
+          'metaid':  this.singleMeasureData.metaid,
+          'mindate': this.singleMeasureData.measurements[0].CollectedDTM,
+          'maxdate': this.singleMeasureData.measurements[0].CollectedDTM
+        };
+        this.deleteMeasurements(deletePayload)
+        .done((data) => {
+          this.setSingleMeasure()
+          .done((data) => {
+            this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
+            this.singleMeasureExists = false;
+          })
+          .fail((err) => {
+            this.setNotice('alert-warning', 'Deleted existing measurement, but could not add the new one.');
+          })
+        })
+        .fail((err) => {
+          this.setNotice('alert-warning', 'Could not delete existing measurement.');
+        })
+      } else {
+        this.setSingleMeasure()
+        .done((data) => {
+          this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
+          this.singleMeasureExists = false;
+        })
+        .fail((err)=> {
+          if (err.status == 409) {
+            this.setNotice('alert-warning', 'This measurement already exists in the database.  Overwrite?');
+            this.singleMeasureExists = true;
+          } else {
+            this.setNotice('alert-danger', 'Upload failed.  Server message: ' + err.responseText);
+          };
+        });
+      };
+    },
+
     setSingleMeasure() {
       let dtString = this.singleMeasureData.datestr;
       this.singleMeasureData.offset = this.utcoffset;
-      
+
       this.singleMeasureData.measurements[0].CollectedDTM = lx.DateTime
           .fromJSDate(new Date(dtString + this.utcHoursString))
           .setZone(this.utcstring);
-      
+
       let ajaxData = JSON.stringify(this.singleMeasureData);
-      console.log(ajaxData);
-      
-      $.ajax({
+
+      return $.ajax({
         url:      'http://localhost:3000/api/v1/measurements',
         contentType: 'application/json',
         method:   'POST',
         timeout:  3000,
         dataType: 'json',
         data:     ajaxData
-      }).done((data) => {
-        this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
-      }).fail((err)=> {
-        this.setNotice('alert-danger', 'Upload failed.  Server message: ' + err.responseText);
-        // console.log(err);
       });
     },
-    
+
     reset() {
       this.filePath                = '';
       this.fileText                = '';
       this.headerMetadataMap       = {};
-      
+
       delete this.fileData.data;
     },
-    
+
     setNotice(cls, msg) {
       $("#uploadAlert")
         .removeClass("alert-success alert-danger alert-primary alert-info")
         .addClass(cls)
         .text(msg);
     },
-    
+
     roundToDecimal(number, decimal) {
       return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
     }
@@ -40978,16 +41017,16 @@ var showUpload = function() {
     $("#uploadReviewContainer").addClass("d-none");
     $("#addSingleMeasurement").addClass("d-none");
     $("#uploadFileName").text("Select a File...");
-    
+
     $("#uploadBackButton")
       .addClass("d-none")
       .off("click");
-    
+
     $("#uploadNextButton")
       .removeClass("d-none")
       .addClass("disabled")
       .off("click");
-    
+
     vm.setNotice('alert-info', 'Select a file...');
 };
 
@@ -41001,7 +41040,7 @@ var showColumnSelect = function() {
       .removeClass("d-none")
       .off("click")
       .click(() => { showUpload(); });
-    
+
     vm.setNotice('alert-info', 'Match the CSV headers with the correct metadata.');
 };
 
@@ -41012,15 +41051,15 @@ var showReview = function() {
     $("#uploadCSVContainer").addClass("d-none");
     $("#uploadReviewContainer").removeClass("d-none");
     $("#addSingleMeasurement").addClass("d-none");
-    
+
     $("#uploadBackButton")
       .removeClass("d-none")
       .off("click")
       .click(() => { showUpload(); });
-    
+
     $("#uploadNextButton")
       .addClass("d-none");
-    
+
     vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
 };
 
@@ -41033,18 +41072,18 @@ $(document).ready(function() {
       $("#uploadBackButton").addClass("d-none");
       $("#uploadNextButton").addClass("d-none");
     });
-    
+
     $("#openCSVFileButton").click(() => {
       vm.openCSV();
     });
 });
 
 var reviewData = function() {
-  
+
   showReview();
-  
+
   $('#uploadReviewTab a:first').tab('show')
-    
+
 };
 
 
