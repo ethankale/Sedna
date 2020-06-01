@@ -237,7 +237,6 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
-        console.log(req.body);
         
         if (Object.keys(req.body).length === 0) {
           res.status(400).json("No data sent.  ");
@@ -275,8 +274,12 @@ let controller = {
           let bulkLoad = bulkConnection.newBulkLoad('Measurement', options, function (err, rowCount) {
             if (err) {
               console.log("Could not run the bulk load for measurements.  " + err);
-              //throw err;
-              res.status(400).json("Could not load data.  " + err);
+              console.log(err.number);
+              if (err.number == 2601) {
+                res.status(409).json("One or more records for that data record and date/time already exist.");
+              } else {
+                res.status(400).json("Could not load data.  " + err);
+              };
             } else {
               res.status(200).json("Success");
             };
@@ -293,6 +296,8 @@ let controller = {
           bulkLoad.addColumn('QualifierID',          TYPES.Int,       { nullable: true });
           bulkLoad.addColumn('Depth_M',              TYPES.Numeric,   { nullable: true, precision: 6, scale: 2 });
           
+          let errorMsg = '';
+          
           measurements.forEach( (measurement, index) => {
             
             let measurement_new = {};
@@ -305,7 +310,7 @@ let controller = {
               .setZone(offsetstring)
               .setZone('UTC', {keepLocalTime: true })
               .toJSDate();
-              
+            
             measurement_new.Value                = val;
             measurement_new.MetadataID           = metaid;
             measurement_new.CollectedDTMOffset   = offset;
@@ -314,12 +319,20 @@ let controller = {
             measurement_new.QualifierID          = measurement.QualifierID;
             measurement_new.Depth_M              = measurement.Depth_M;
             
-            bulkLoad.addRow(measurement_new);
-            // if (index%10 == 0) { console.log(measurement) };
-            // if (index%10 == 0) { console.log(measurement_new) };
-            
+            if (isNaN(measurement_new.CollectedDTM) || measurement_new.CollectedDTM == null) {
+              errorMsg += ('Bad date in measurement #' + index + '; ')
+            } else {
+              bulkLoad.addRow(measurement_new);
+            };
           });
-          bulkConnection.execBulkLoad(bulkLoad);
+          
+          console.log(errorMsg);
+          
+          if (errorMsg.length > 0) {
+            res.status(400).json(errorMsg);
+          } else {
+            bulkConnection.execBulkLoad(bulkLoad);
+          };
         };
         
         bulkConnection.on('connect', function(err) {

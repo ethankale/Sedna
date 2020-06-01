@@ -40942,8 +40942,8 @@ var vm = new Vue({
       }).done((data) => {
         this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
       }).fail((err)=> {
-        this.setNotice('alert-danger', 'Upload failed; change parameters and try again.');
-        console.log(err);
+        this.setNotice('alert-danger', 'Upload failed.  Server message: ' + err.responseText);
+        // console.log(err);
       });
     },
     

@@ -65,7 +65,8 @@
                       </div>
                       
                       <div class="row">
-                        <label for="singleMeasureDate">Date and Time</label>
+                        <label for="singleMeasureDate">Date and Time 
+                          <small class="text-muted">(year-month-day hour:minute)</small></label>
                         <input 
                           id="singleMeasureDate"
                           type="text"
@@ -105,6 +106,7 @@
                           <button 
                             class="btn btn-outline-primary float-right" 
                             type="button"
+                            v-bind:disabled="singleMeasureData.datestr.length < 16"
                             @click="setSingleMeasure()">Upload</button>
                         </div>
                       </div>
