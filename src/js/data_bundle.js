@@ -40265,6 +40265,22 @@ var vm = new Vue({
     },
     metasFromSite:     [],
     
+    singleMeasureData: {
+      'metaid':  null,
+      'offset':  null,
+      'datestr': '',
+      'measurements': [
+        {
+          'Value':                null,
+          'CollectedDTM':         null,
+          'MeasurementCommentID': null,
+          'MeasurementQualityID': null,
+          'QualifierID':          null,
+          'Depth_M':              null
+        }
+      ]
+    },
+    
     // Using negative numbers because metadata ids will always be >= zero.
     emptyID:     -1,
     datetimeID:  -2,
@@ -40460,13 +40476,9 @@ var vm = new Vue({
         
         var spID = $("#spSelect").val();
         
-        if (typeof(spID) != 'undefined') {
+        if (spID != null) {
         
-          $.ajax({
-            url:     `http://localhost:3000/api/v1/metadataBySamplePt?spID=${spID}`,
-            method:  'GET',
-            timeout: 3000
-          }).done((metas) => {
+          this.getMetas(spID).done((metas) => {
             this.metasFromSite = metas;
             
             showColumnSelect();
@@ -40482,6 +40494,14 @@ var vm = new Vue({
       } else {
         this.setNotice('alert-danger', 'Could not read the specified file.  Check the format and try again.');
       };
+    },
+    
+    getMetas(spID) {
+      return $.ajax({
+        url:     `http://localhost:3000/api/v1/metadataBySamplePt?spID=${spID}`,
+        method:  'GET',
+        timeout: 3000
+      })
     },
     
     reviewHeadingSelection(event, header) {
@@ -40862,11 +40882,69 @@ var vm = new Vue({
         dataType:    'json',
         timeout:     3000
       }).done((data) => {
-        this.qualifiers = data;
+        let firstQualifier = {Code: "", QualifierID: null};
+        let q = [firstQualifier].concat(data);
+        this.qualifiers = q;
       }).fail((err) => {
         console.log(err);
       }).always(() => {
       }); 
+    },
+    
+    showSingleMeasurement() {
+      let spID = $("#spSelect").val();
+      if (spID != null) {
+      
+        this.getMetas(spID).done((metas) => {
+          this.metasFromSite = metas;
+        });
+        
+        this.filePath = "Single Measurement"
+        
+        $("#uploadColumnSelectContainer").addClass("d-none");
+        $("#uploadCSVContainer").addClass("d-none");
+        $("#uploadReviewContainer").addClass("d-none");
+        $("#addSingleMeasurement").removeClass("d-none");
+        
+        $("#uploadBackButton")
+          .removeClass("d-none")
+          .off("click")
+          .click(() => { showUpload(); });
+        
+        $("#uploadNextButton")
+          .addClass("d-none");
+        
+        vm.setNotice('alert-info', 'Fill in details to load a single measurement.');
+        
+      } else {
+        this.setNotice('alert-danger', 'There was a problem finding this sample point.');
+      };
+    },
+    
+    setSingleMeasure() {
+      let dtString = this.singleMeasureData.datestr;
+      this.singleMeasureData.offset = this.utcoffset;
+      
+      this.singleMeasureData.measurements[0].CollectedDTM = lx.DateTime
+          .fromJSDate(new Date(dtString + this.utcHoursString))
+          .setZone(this.utcstring);
+      
+      let ajaxData = JSON.stringify(this.singleMeasureData);
+      console.log(ajaxData);
+      
+      $.ajax({
+        url:      'http://localhost:3000/api/v1/measurements',
+        contentType: 'application/json',
+        method:   'POST',
+        timeout:  3000,
+        dataType: 'json',
+        data:     ajaxData
+      }).done((data) => {
+        this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
+      }).fail((err)=> {
+        this.setNotice('alert-danger', 'Upload failed; change parameters and try again.');
+        console.log(err);
+      });
     },
     
     reset() {
@@ -40894,10 +40972,11 @@ var vm = new Vue({
 
 // From column selection back to CSV upload
 var showUpload = function() {
-    console.log("showUpload");
+    // console.log("showUpload");
     $("#uploadCSVContainer").removeClass("d-none");
     $("#uploadColumnSelectContainer").addClass("d-none");
     $("#uploadReviewContainer").addClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
     $("#uploadFileName").text("Select a File...");
     
     $("#uploadBackButton")
@@ -40913,10 +40992,11 @@ var showUpload = function() {
 };
 
 var showColumnSelect = function() {
-    console.log("showColumnSelect");
+    // console.log("showColumnSelect");
     $("#uploadCSVContainer").addClass("d-none");
     $("#uploadColumnSelectContainer").removeClass("d-none");
     $("#uploadReviewContainer").addClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
     $("#uploadBackButton")
       .removeClass("d-none")
       .off("click")
@@ -40927,10 +41007,11 @@ var showColumnSelect = function() {
 
 // From column selection to data review
 var showReview = function() {
-    console.log("showReview");
+    // console.log("showReview");
     $("#uploadColumnSelectContainer").addClass("d-none");
     $("#uploadCSVContainer").addClass("d-none");
     $("#uploadReviewContainer").removeClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
     
     $("#uploadBackButton")
       .removeClass("d-none")

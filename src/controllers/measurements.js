@@ -237,6 +237,13 @@ let controller = {
     },
     
     addMeasurements: function (req, res) {
+        console.log(req.body);
+        
+        if (Object.keys(req.body).length === 0) {
+          res.status(400).json("No data sent.  ");
+          return;
+        }
+        
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         
@@ -290,7 +297,7 @@ let controller = {
             
             let measurement_new = {};
             let val = null;
-            if (measurement.Value != null) {
+            if (measurement.Value != null && measurement.Value != '') {
               val = Math.round(measurement.Value*multiplier)/multiplier;
             };
             measurement_new.CollectedDTM = lx.DateTime
