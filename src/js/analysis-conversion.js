@@ -356,18 +356,40 @@ var vm = new Vue({
             this.conversionState = 'initial';
             this.notificationText = `Loaded ${successes} measurements; failed to load ${errors}.`;
             
-            this.measurements = [];
-            this.newLine = '';
-            this.oldLine = '';
-            
-            this.valids = 0;
-            this.nulls = 0;
-            this.recordsToOverwrite = 0;
-            this.loadErrorCount = 0;
+            this.setWorkup()
+            .always((data) => {
+              this.measurements = [];
+              this.newLine = '';
+              this.oldLine = '';
+              
+              this.valids = 0;
+              this.nulls = 0;
+              this.recordsToOverwrite = 0;
+              this.loadErrorCount = 0;
+            });
             
           };
         }); 
       };
+    },
+    
+    setWorkup(headerWithMeta) {
+      let dataToLoad = {
+        FileName:   "Calculated",
+        MetadataID: this.newDRID,
+        UserID:     window.getConfig().userid,
+        offset:     this.utcoffset,
+        DataStarts: this.minMeasurementDate,
+        DataEnds:   this.maxMeasurementDate
+      };
+      return $.ajax({
+        type:        'POST',
+        url:         'http://localhost:3000/api/v1/workup',
+        contentType: 'application/json',
+        data:        JSON.stringify(dataToLoad),
+        dataType:    'json',
+        timeout:     3000
+      });
     },
     
     clickConvert: function() {

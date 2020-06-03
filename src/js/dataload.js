@@ -602,7 +602,7 @@ var vm = new Vue({
         dataType:    'json',
         timeout:     3000
       }).done((data) => {
-        console.log("Workup loaded");
+        // console.log("Workup loaded");
       }).fail((err) => {
         console.log("Workup load failed; " + err);
       });
@@ -731,7 +731,6 @@ var vm = new Vue({
     
     setSingleMeasure() {
       let ajaxData = JSON.stringify(this.singleMeasureData);
-
       return $.ajax({
         url:      'http://localhost:3000/api/v1/measurements',
         contentType: 'application/json',

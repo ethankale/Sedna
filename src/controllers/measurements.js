@@ -173,7 +173,7 @@ let controller = {
               .fromISO(req.query.enddtm)
               .toJSDate();
         
-        console.log("startdtm = " + startdtm + "; enddtm = " + enddtm);
+        // console.log("startdtm = " + startdtm + "; enddtm = " + enddtm);
         
         let paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
         let methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
