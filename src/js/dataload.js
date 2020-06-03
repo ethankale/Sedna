@@ -685,7 +685,11 @@ var vm = new Vue({
     },
 
     clickUploadSingleMeasure() {
-
+      let workupPayload = {
+        'metaid':  this.singleMeasureData.metaid,
+        'mindate': this.singleMeasureData.measurements[0].CollectedDTM,
+        'maxdate': this.singleMeasureData.measurements[0].CollectedDTM
+      };
       if (this.singleMeasureExists) {
         let deletePayload = {
           'metaid':  this.singleMeasureData.metaid,
@@ -698,6 +702,7 @@ var vm = new Vue({
           .done((data) => {
             this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
             this.singleMeasureExists = false;
+            this.setWorkup(workupPayload);
           })
           .fail((err) => {
             this.setNotice('alert-warning', 'Deleted existing measurement, but could not add the new one.');
@@ -711,6 +716,7 @@ var vm = new Vue({
         .done((data) => {
           this.setNotice('alert-success', 'Successfully uploaded a single measurement.');
           this.singleMeasureExists = false;
+          this.setWorkup(workupPayload);
         })
         .fail((err)=> {
           if (err.status == 409) {
@@ -722,15 +728,8 @@ var vm = new Vue({
         });
       };
     },
-
+    
     setSingleMeasure() {
-      let dtString = this.singleMeasureData.datestr;
-      this.singleMeasureData.offset = this.utcoffset;
-
-      this.singleMeasureData.measurements[0].CollectedDTM = lx.DateTime
-          .fromJSDate(new Date(dtString + this.utcHoursString))
-          .setZone(this.utcstring);
-
       let ajaxData = JSON.stringify(this.singleMeasureData);
 
       return $.ajax({
@@ -742,7 +741,17 @@ var vm = new Vue({
         data:     ajaxData
       });
     },
+    
+    singleMeasureDTMChange() {
+      let dtString = this.singleMeasureData.datestr;
+      this.singleMeasureData.offset = this.utcoffset;
 
+      this.singleMeasureData.measurements[0].CollectedDTM = lx.DateTime
+          .fromJSDate(new Date(dtString + this.utcHoursString))
+          .setZone(this.utcstring);
+      this.singleMeasureExists = false;
+    },
+    
     reset() {
       this.filePath                = '';
       this.fileText                = '';
