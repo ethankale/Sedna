@@ -39,6 +39,8 @@ var vm = new Vue({
     measurements: [],
     params:       [],
     
+    waterYears:   [],
+    
     spID: null,
     
     utcHours: alqwuutils.utcoffset,
@@ -48,6 +50,10 @@ var vm = new Vue({
   },
   
   computed: {
+    
+    disableReport: function() {
+      return this.spID === null || this.waterYears.length !== 1
+    },
     
     siteID: function() {
       return this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
@@ -59,6 +65,8 @@ var vm = new Vue({
     
     // Assumes dailySummary data are in order, oldest to newest
     dailyFormatted: function() {
+      this.waterYears = [];
+      
       let daily = [];
       let dtOld = lx.DateTime
         .fromISO(this.dailySummary[0].CollectedDate)
@@ -75,24 +83,34 @@ var vm = new Vue({
           let d_new       = {...d};
           dtOld = dt.plus({'minutes':0});
           
-          d_new.month     = dt.month;
-          d_new.day       = dt.day;
-          d_new.dtm       = dt.toJSDate();
+          d_new.year  = dt.year;
+          d_new.month = dt.month;
+          d_new.day   = dt.day;
+          d_new.wy    = d_new.month < 10 ? d_new.year : d_new.year+1;
+          d_new.dtm   = dt.toJSDate();
+          
+          if (this.waterYears.findIndex(wy => wy === d_new.wy) === -1) {
+            this.waterYears.push(d_new.wy);
+          };
           
           daily.push(d_new);
         } else {
           while (diff >= 1) {
-            let d_new       = {...d};
-            let dtCurrent = dtOld.plus({'days':1});
+            let d_new      = {...d};
+            let dtCurrent  = dtOld.plus({'days':1});
             
+            d_new.year     = dtCurrent.year;
             d_new.month    = dtCurrent.month;
             d_new.day      = dtCurrent.day;
+            d_new.wy       = d_new.month < 10 ? d_new.year : d_new.year+1;
             d_new.dtm      = dtCurrent.toJSDate();
             d_new.Value    = diff == 1 ? d_new.Value : null;
             d_new.ValueMax = diff == 1 ? d_new.ValueMax : null;
             d_new.ValueMin = diff == 1 ? d_new.ValueMin : null;
             
-            console.log(dtCurrent.toJSDate());
+            if (this.waterYears.findIndex(wy => wy === d_new.wy) === -1) {
+              this.waterYears.push(d_new.wy);
+            };
             
             dtOld = dtCurrent.plus({'minutes':0});
             daily.push(d_new);
@@ -134,9 +152,20 @@ var vm = new Vue({
   
   methods: {
     clickCreateReport() {
+      // To modify this to create one page per water year, we'll have to:
+      //   1: save the list of water years and the start & end dates locally
+      //   2: loop through the saved list of water years
+      //   3: for each loop, set the startdatestring and enddate string 
+      //   4: download the data for the water year
+      //   5: update the graph
+      //   6: save the title, subtitle, data, and graph to an Array
+      //   7: complete for loop
+      //   8: reset the start and end dates to their original values, download & graph data
+      
+      // Really not sure I want to do this yet.  Maybe just disable the report if there's more
+      //   than one wy present.
+      
       this.graphMeasurements(1000);
-      // this.getDailyMeasurements().done((data) => {
-        // this.dailySummary = data;
         
         let table    = this.dailyFormatted;
         let siteName = $("#spSelect :selected").text();

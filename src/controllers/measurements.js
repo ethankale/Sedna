@@ -61,12 +61,9 @@ let controller = {
           console.log('Error: ', err);
           res.status(400).json(err);
         } else {
-          // Note that this query uses an index hint.  This is SUPER IMPORTANT.
-          //   Without the hint this query takes several seconds to run.
           let statement = `SELECT CollectedDate, 
               min(Value) as ValueMin, max(Value) as ValueMax, avg(Value) as Value
             FROM Measurement as ms
-            
             WHERE ms.MetadataID IN (
               SELECT MetadataID
               FROM Metadata as md
@@ -78,7 +75,6 @@ let controller = {
               AND ms.CollectedDate <= @enddate
               GROUP BY CollectedDate
               ORDER BY CollectedDate ASC`
-            // WITH (INDEX(measurement_metadataid_idx))
           
           let request = new Request(statement, function(err, rowCount) {
             if (err) {
