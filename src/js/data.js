@@ -57,15 +57,48 @@ var vm = new Vue({
       return window.getConfig();
     },
     
+    // Assumes dailySummary data are in order, oldest to newest
     dailyFormatted: function() {
       let daily = [];
-      this.dailySummary.forEach((d) => {
-        let d_new = {...d};
-        let dt      = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
-        d_new.month     = dt.month;
-        d_new.day       = dt.day;
-        d_new.dtm       = dt.toJSDate();
-        daily.push(d_new);
+      let dtOld = lx.DateTime
+        .fromISO(this.dailySummary[0].CollectedDate)
+        .minus({ days:1 })
+        .setZone('UTC');
+      
+      this.dailySummary.forEach((d,i,arr) => {
+        let dt          = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
+        let diff        = dt.diff(dtOld, 'days').days;
+        
+        // console.log("diff = " + diff);
+        
+        if (diff === 1) {
+          let d_new       = {...d};
+          dtOld = dt.plus({'minutes':0});
+          
+          d_new.month     = dt.month;
+          d_new.day       = dt.day;
+          d_new.dtm       = dt.toJSDate();
+          
+          daily.push(d_new);
+        } else {
+          while (diff >= 1) {
+            let d_new       = {...d};
+            let dtCurrent = dtOld.plus({'days':1});
+            
+            d_new.month    = dtCurrent.month;
+            d_new.day      = dtCurrent.day;
+            d_new.dtm      = dtCurrent.toJSDate();
+            d_new.Value    = diff == 1 ? d_new.Value : null;
+            d_new.ValueMax = diff == 1 ? d_new.ValueMax : null;
+            d_new.ValueMin = diff == 1 ? d_new.ValueMin : null;
+            
+            console.log(dtCurrent.toJSDate());
+            
+            dtOld = dtCurrent.plus({'minutes':0});
+            daily.push(d_new);
+            diff -= 1;
+          };
+        };
       });
       return daily;
     },
@@ -210,18 +243,10 @@ var vm = new Vue({
           .range([ height, 0 ]);
         
         let area = d3.area()
+          .defined(d => { return d.ValueMin!=null & d.ValueMax!=null; })
           .x(d => x(d.dtm))
           .y0(d => y(d.ValueMin))
           .y1(d => y(d.ValueMax));
-        
-        // Add the axes
-        svg.append("g")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x)
-            .ticks(3));
-
-        svg.append("g")
-          .call(d3.axisLeft(y));
         
         // Add the range polygon
         svg.append("path")
@@ -236,9 +261,19 @@ var vm = new Vue({
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
           .attr("d", d3.line()
-            .x(function(d) { return x(d.dtm) })
-            .y(function(d) { return y(d.Value) })
+            .defined(d => { return d.Value!=null; })
+            .x(d => { return x(d.dtm) })
+            .y(d => { return y(d.Value) })
             )
+          
+        // Add the axes
+        svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x)
+            .ticks(3));
+        
+        svg.append("g")
+          .call(d3.axisLeft(y));
       };
     },
     
