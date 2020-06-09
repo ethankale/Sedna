@@ -8,7 +8,7 @@ var alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 var dataload   = require('./dataload.js');
 
-var params        = [];
+// var params        = [];
 var paramcurrent  = 0;
 var methodcurrent = 0;
 var paramMarkup   = "";
@@ -17,7 +17,7 @@ var wylist       = [];
 var wycurrent    = 0;
 var wymarkup     = "";
 
-var measurements = []
+// var measurements = []
 
 Vue.directive('select', {
   twoWay: true,
@@ -33,15 +33,18 @@ var vm = new Vue({
   
   data: {
     samplePoints: [],
-    dailySummary: [],
     workups:      [],
+    dailySummary: [],
+    
+    measurements: [],
+    params:       [],
     
     spID: null,
     
     utcHours: alqwuutils.utcoffset,
     
-    downloadStartDateString: '',
-    downloadEndDateString: ''
+    downloadStartDateString: lx.DateTime.fromJSDate(new Date()).toISODate(),
+    downloadEndDateString: lx.DateTime.fromJSDate(new Date()).minus({'days': 30}).toISODate()
   },
   
   computed: {
@@ -52,6 +55,19 @@ var vm = new Vue({
     
     config: function() {
       return window.getConfig();
+    },
+    
+    dailyFormatted: function() {
+      let daily = [];
+      this.dailySummary.forEach((d) => {
+        let d_new = {...d};
+        let dt      = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
+        d_new.month     = dt.month;
+        d_new.day       = dt.day;
+        d_new.dtm       = dt.toJSDate();
+        daily.push(d_new);
+      });
+      return daily;
     },
     
     utcoffset: function() {
@@ -86,18 +102,10 @@ var vm = new Vue({
   methods: {
     clickCreateReport() {
       this.graphMeasurements(1000);
-      this.getDailyMeasurements().done((data) => {
+      // this.getDailyMeasurements().done((data) => {
+        // this.dailySummary = data;
         
-        data.forEach((d) => {
-          let dt      = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
-          d.month     = dt.month;
-          d.day       = dt.day;
-        });
-        
-        this.dailySummary = data;
-        
-        // let table    = this.formatWaterYearRows(data);
-        let table    = data;
+        let table    = this.dailyFormatted;
         let siteName = $("#spSelect :selected").text();
         let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
                        $("#wylist :selected").val();
@@ -105,14 +113,10 @@ var vm = new Vue({
         
         window.makePDF(siteName, subtitle, table, svg);
         this.graphMeasurements();
-      });
+      // });
     },
     
     changeSamplePoint() {
-      console.log('changeSamplePoint');
-      measurements = [];
-      // sitecurrent = $("#siteSelect").val();
-      // $("#downloadFileName").val("c:/data/data.csv");
       $("#chartContainer").empty();
       this.getWorkups();
       loadParamList();
@@ -123,9 +127,10 @@ var vm = new Vue({
         spID:      this.spID,
         paramid:   paramcurrent,
         methodid:  methodcurrent,
-        startdate: $("#startDate").val(),
-        enddate:   $("#endDate").val()
+        startdate: this.downloadStartDateString,
+        enddate:   this.downloadEndDateString
       };
+      
       let request = $.ajax({
         url: `http://localhost:3000/api/v1/getMeasurementsDaily`,
         method:'GET',
@@ -150,7 +155,6 @@ var vm = new Vue({
     },
     
     getWorkups() {
-      console.log('getWorkups');
       let query = {
         spID: this.spID,
       };
@@ -175,7 +179,7 @@ var vm = new Vue({
     graphMeasurements(width) {
       
       $("#chartContainer").empty();
-      if(measurements.length > 0) {
+      if(vm.dailyFormatted.length > 0) {
         var margin = {top: 10, right: 30, bottom: 30, left: 60},
             height = 400 - margin.top - margin.bottom;
         width = width || $("#chartContainer").width() - margin.left - margin.right;
@@ -189,26 +193,45 @@ var vm = new Vue({
             .attr("transform",
                   "translate(" + margin.left + "," + margin.top + ")");
 
-        //Read the data
-        // Add X axis --> it is a date format
-        var x = d3.scaleTime()
-          .domain(d3.extent(measurements, function(d) { return d.dtm; }))
+        // Create the scale functions
+        let x = d3.scaleTime()
+          .domain(d3.extent(this.dailyFormatted, function(d) { return d.dtm; }))
           .range([ 0, width ]);
+        
+        // Get the extent of the combined extents of the min and max values
+        let yExtent = d3.extent( 
+          [].concat(
+            d3.extent(vm.dailyFormatted, function(d) {return d.ValueMax; }),
+            d3.extent(vm.dailyFormatted, function(d) {return d.ValueMin; })),
+          function(d) {return d});
+        
+        let y = d3.scaleLinear()
+          .domain(yExtent)
+          .range([ height, 0 ]);
+        
+        let area = d3.area()
+          .x(d => x(d.dtm))
+          .y0(d => y(d.ValueMin))
+          .y1(d => y(d.ValueMax));
+        
+        // Add the axes
         svg.append("g")
           .attr("transform", "translate(0," + height + ")")
           .call(d3.axisBottom(x)
             .ticks(3));
-        
-        // Add Y axis
-        var y = d3.scaleLinear()
-          .domain(d3.extent(measurements, function(d) {return d.Value; }))
-          .range([ height, 0 ]);
+
         svg.append("g")
           .call(d3.axisLeft(y));
         
+        // Add the range polygon
+        svg.append("path")
+          .datum(vm.dailyFormatted)
+          .attr("d", area)
+          .attr("fill", "lightblue");
+        
         // Add the line
         svg.append("path")
-          .datum(measurements)
+          .datum(vm.dailyFormatted)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
@@ -217,6 +240,16 @@ var vm = new Vue({
             .y(function(d) { return y(d.Value) })
             )
       };
+    },
+    
+    updateDates() {
+      this.getDailyMeasurements().done((data) => {
+        this.dailySummary = data;
+        this.graphMeasurements();
+      }).fail((err) => {
+        console.log("Ran into an error with getDailyMeasurements");
+        console.log(err);
+      });
     }
   }
 });
@@ -262,7 +295,7 @@ $(document).ready(function() {
     
     // These are the two date inputs - start and end date
     $("#date-select-row input").change(function() {
-        updateDates();
+        vm.updateDates();
     });
     
     $("#wylist").change(function() {
@@ -270,12 +303,10 @@ $(document).ready(function() {
         var firstdtm  = new Date(`${wycurrent-1}-10-01T00:00:00`);
         var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
         
-        // $("#startDate").val(lx.DateTime.fromJSDate(firstdtm).toISODate());
         vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-        // $("#endDate").val(lx.DateTime.fromJSDate(lastdtm).toISODate());
         vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
         
-        updateDates();
+        vm.updateDates();
     });
 });
 
@@ -289,22 +320,12 @@ function loadParamList() {
       method:  'GET',
       timeout: 3000
     }).done(function(data) {
-        params = data;
-        paramMarkup = "";
+        vm.params = data;
         var downloadParamMarkup = "";
         
-        params.forEach(param => {
+        vm.params.forEach(param => {
           param.maxdtm = new Date(param.maxdtm);
           param.mindtm = new Date(param.mindtm);
-          paramMarkup += `<a href="#"
-            data-paramid=${param.ParameterID} 
-            data-methodid=${param.MethodID} 
-            data-lastcollectdtm=${param.maxdtm.toLocaleDateString()} 
-            data-firstcollectdtm=${param.mindtm.toLocaleDateString()} 
-            class="list-group-item list-group-item-action">
-            <h5>${param.Name}</h5>
-            <small>${param.Method}</small>
-            </a>\n`;
           
           downloadParamMarkup += `<option 
             value=${param.ParameterID}|${param.MethodID}>
@@ -312,12 +333,9 @@ function loadParamList() {
             </option>`
             
         });
-        paramMarkup = '<div class="list-group list-group-flush">' + paramMarkup + "</div>";
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
         
-        $('#paramList').empty().append(paramMarkup);
-        $("#paramList div a").click(function() {
-            
+        $("#paramList").on('click', 'div a', function() {
             $("#paramList div a").removeClass('active');
             $(this).addClass('active');
             
@@ -339,11 +357,11 @@ function loadParamList() {
             $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
             //$('#wylist').val(wylist[wylist.length-1]);
             
-            updateDates();
+            vm.updateDates();
         });
         $("#paramList div a:first").click();
     });
-}
+};
 
 function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
     
@@ -357,13 +375,13 @@ function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset
     
     $.ajax({url: url
         }).done(function(data) {
-            measurements = data;
-            measurements.forEach(function(d) {
+            vm.measurements = data;
+            vm.measurements.forEach(function(d) {
                 d.dtm = Date.parse(d.CollectedDateTime);
             });
             vm.graphMeasurements();
     });
-}
+};
 
 function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
@@ -381,8 +399,6 @@ function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
         methodidsString +
         '&startdtm='    + vm.downloadStartDate.toISO() +
         '&enddtm='      + vm.downloadEndDate.plus({days: 1}).toISO();
-    
-    // console.log(url);
     
     $.ajax({url: url
     }).done(function(data) {
@@ -408,21 +424,4 @@ function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
               .text("Could not save file.  Check the file name and folder, and try again.")
         }
     });
-}
-
-function updateDates() {
-    // var startdtm = new Date($("#startDate").val());
-    // var enddtm   = new Date($("#endDate").val());
-    
-    // $("#downloadStartDate").val($("#startDate").val());
-    // $("#downloadEndDate").val($("#endDate").val());
-    
-    loadMeasurements(
-        vm.siteID, 
-        paramcurrent, 
-        methodcurrent,
-        vm.downloadStartDate.toISODate(),
-        vm.downloadEndDate.toISODate(), 
-        alqwuutils.utcoffset*-1
-    );
-}
+};
