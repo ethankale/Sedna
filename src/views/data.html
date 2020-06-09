@@ -350,42 +350,48 @@
             <h1>Data</h1>
             <p><a href="index.html">Home</a></p>
             
-            <div class="row">
-              <div class="col">
-                <div class="form-group">
-                  <select class="form-control" id="spSelect"
-                    v-model="spID" 
-                    v-select="spID"
-                    v-on:change="changeSamplePoint()">
-                    <option 
-                      v-for="sp in samplePoints" 
-                      v-bind:key="sp.SamplePointID"
-                      v-bind:value="sp.SamplePointID">
-                      {{ sp.Name }}</option>
-                  </select>
+            <form>
+            
+              <div class="row">
+                <div class="col">
+                  <div class="form-group">
+                    <select class="form-control" id="spSelect"
+                      v-model="spID" 
+                      v-select="spID"
+                      v-on:change="changeSamplePoint()">
+                      <option 
+                        v-for="sp in samplePoints" 
+                        v-bind:key="sp.SamplePointID"
+                        v-bind:value="sp.SamplePointID">
+                        {{ sp.Name }}</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div id="date-select-row" class="form-group row">
+              
+              <div id="date-select-row" class="form-group row">
                 <div class="col-5">
                   <label for="startDate">Start Date</label>
                   <input class="form-control" type="date" id="startDate"
+                    v-bind:class="{ 'is-invalid': !downloadStartDateString }"
                     v-model="downloadStartDateString"></input>
                 </div>
                 
                 <div class="col-5">
                   <label for="endDate">End Date</label>
                   <input class="form-control" type="date" id="endDate"
+                    v-bind:class="{ 'is-invalid': !downloadEndDateString }"
                     v-model="downloadEndDateString"></input>
                 </div>
-                
-                <div class="col-2">
-                  <label for="wylist">Water Year</label>
-                  <select class="form-control" id="wylist">
-                    <option></option>
-                  </select>
-                </div>
+              
+              </form>
+              
+              <div class="col-2">
+                <label for="wylist">Water Year</label>
+                <select class="form-control" id="wylist">
+                  <option></option>
+                </select>
+              </div>
             </div>
             
             <div class="row border-top">
