@@ -4,7 +4,15 @@ A water database for high-rate data, individual data points, and everything in b
 
 Getting Started
 ---------------
-TBD.  No pre-compiled binaries yet.
+To install the application:
+
+1: Get access to an MSSQL instance (2016 or above).  You can install the Express version on your desktop from https://www.microsoft.com/en-us/sql-server/sql-server-downloads.
+2: Run the database install/setup script, included in this repo at ./src/sql/schema.sql.
+3: Set up a user with read/write access on the newly created database.
+4: Download the program (currently, grab it from Github, I guess).
+5: Open the program, and immediate go to settings, and put in the SQL Server info for the DB and the user you created.
+
+That should do it.  Most likely issue is with the user; make sure the user you create & use has permission to read, write, and delete for every table in the database.
 
 Development
 -----------
