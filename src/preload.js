@@ -5,6 +5,11 @@ const { dialog, app } = require('electron').remote;
 
 const configFileName = 'alqwuconfig.json';
 
+// Required to make testing work properly
+if (process.env.NODE_ENV === 'test') {
+  window.electronRequire = require
+}
+
 window.writeText = function (text, filepath) {
   try {
       writeFileSync(filepath, text)
