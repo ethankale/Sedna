@@ -3,7 +3,7 @@
   <head>
   
     <!-- REMOVE THIS! -->
-    <!-- <script src="http://localhost:8098"></script> -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -111,28 +111,35 @@
               </form>
               
               <div id="site-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="site-edit" type="button" class="btn btn-primary"
-                    @click="clickEditSite()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="site-new" type="button" class="btn btn-secondary"
-                    @click="newSiteClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="site-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelSite()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <!-- <div class="form-row"> -->
+                <!-- <div class="col-md-2"> -->
+                  <!-- <button id="site-edit" type="button" class="btn btn-primary" -->
+                    <!-- @click="clickEditSite()" :disabled="creatingNew"> {{ editButtonText }}</button> -->
+                <!-- </div> -->
+                <!-- <div class="col-md-8"> -->
+                  <!-- <button id="site-new" type="button" class="btn btn-secondary" -->
+                    <!-- @click="newSiteClick()" :disabled="dirty"> {{ newButtonText }}</button> -->
+                <!-- </div> -->
+                <!-- <div class="col-md-2"> -->
+                  <!-- <button id="site-cancel" type="button" class="btn btn-secondary float-right" -->
+                    <!-- @click="cancelSite()" :disabled="locked">Cancel</button> -->
+                <!-- </div> -->
+              <!-- </div> -->
+              
+              <new-edit-cancel
+                v-bind:editstate="editstate"
+                v-on:click-edit-site  ="clickEditSite()"
+                v-on:click-new-site   ="clickNewSite()"
+                v-on:click-cancel-site="clickCancelSite()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="siteForm">
-                <fieldset id="siteFieldset" :disabled="locked">
+                <fieldset id="siteFieldset" :disabled="editstate==='view'">
                   
                   <div class="form-group row">
                     <label for="site-code" class="col-sm-2 col-form-label">Code</label>

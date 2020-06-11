@@ -17,15 +17,56 @@ $(document).ready(function() {
   $("#siteSelect").select2({ width: '100%' });
 });
 
+Vue.component('new-edit-cancel', {
+  props: {'editstate': String},
+  computed: {
+    editButtonText: function() {
+      return this.editstate === 'edit' ? 'Save' : 'Edit';
+    },
+    newButtonText: function() {
+      return this.editstate === 'new' ? 'Save' : 'New';
+    },
+    editDisabled: function() {
+      return this.editstate === 'new' ? true : false;
+    },
+    newDisabled: function() {
+      return this.editstate === 'edit' ? true : false;
+    },
+    cancelDisabled: function() {
+      return this.editstate === 'view' ? true : false;
+    }
+  },
+  template: `
+    <div class="form-row">
+    
+      <div class="col-md-2">
+        <button id="site-edit" type="button" class="btn btn-primary"
+          @click="$emit('click-edit-site')" :disabled="editDisabled"> {{ editButtonText }}</button>
+      </div>
+      
+      <div class="col-md-8">
+        <button id="site-new" type="button" class="btn btn-secondary"
+          @click="$emit('click-new-site')" :disabled="newDisabled"> {{ newButtonText }}</button>
+      </div>
+      
+      <div class="col-md-2">
+        <button id="site-cancel" type="button" class="btn btn-secondary float-right"
+          @click="$emit('click-cancel-site')" :disabled="cancelDisabled">Cancel</button>
+      </div>
+      
+    </div>
+  `
+})
+
 var vm = new Vue({
   el: '#v-pills-site',
   data: {
     sites: [],
     siteID: 0,
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Site.",
     currentSite: {
       SiteID:           null,
@@ -40,18 +81,8 @@ var vm = new Vue({
       MetadataCount:    0
     }
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
   mounted: function () {
     let self = this;
-    
     self.updateSiteList();
   },
   methods: {
@@ -75,15 +106,16 @@ var vm = new Vue({
     },
     
     getCurrentSite: function(SiteID) {
-      this.locked = true;
+      // this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/site?siteid=${SiteID}&utcoffset=${utcoffset}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentSite = data[0];
-        this.dirty = false;
+        // this.dirty = false;
         this.error = false;
+        this.editstate = 'view';
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Site.";
       }).fail((err) => {
         console.log(err);
@@ -102,9 +134,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
         this.error  = false;
-        this.locked = true;
+        this.editstate = 'view';
         this.notificationText = "Successfully updated!";
         this.updateSiteList(this.siteID);
       }).fail((err) => {
@@ -114,11 +145,12 @@ var vm = new Vue({
       });
     },
     
-    newSiteClick: function() {
-      if (this.creatingNew) {
-        this.saveNewSite();
-      } else {
+    clickNewSite: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewSite();
+      } else {
+        this.saveNewSite();
       };
     },
     
@@ -127,8 +159,6 @@ var vm = new Vue({
         this.currentSite[prop] = null;
       };
       this.currentSite.Active = true;
-      this.creatingNew        = true;
-      this.locked             = false;
       this.notificationText   = "Fill in fields below.  'Save' to create new Site."
     },
     
@@ -145,10 +175,9 @@ var vm = new Vue({
         this.siteID = data;
         this.updateSiteList(this.siteID);
         this.currentSite.SiteID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = true;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -156,23 +185,26 @@ var vm = new Vue({
       });
     },
     
-    cancelSite: function() {
+    clickCancelSite: function() {
       this.getCurrentSite(this.siteID);
-      
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditSite: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateSite();
-      }
+      };
+      // if (this.locked) {
+        // this.locked = false;
+        // this.dirty  = true;
+        // this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      // } else {
+        // this.updateSite();
+      // }
     },
   }
 })

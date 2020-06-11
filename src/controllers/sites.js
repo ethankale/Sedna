@@ -125,6 +125,8 @@ let controller = {
       let mssql_config = cfg.getConfig().mssql;
       let connection = new Connection(mssql_config);
       
+      // console.log(req.body);
+      
       let lastid = 0;
       
       let statement = `INSERT INTO [Site]
@@ -136,7 +138,7 @@ let controller = {
         
         var request = new Request(statement, function(err, rowCount) {
           if (err) {
-            res.status(400).end();
+            res.status(400).json(err);
             console.log(err);
           } else {
             res.status(200).json(lastid);
@@ -148,13 +150,13 @@ let controller = {
           lastid = columns[0].value;
         });
         
-        request.addParameter('code', TYPES.VarChar, req.body.code);
-        request.addParameter('name', TYPES.VarChar, req.body.name);
-        request.addParameter('address', TYPES.VarChar, req.body.address);
-        request.addParameter('city', TYPES.VarChar, req.body.city);
-        request.addParameter('zip', TYPES.VarChar, req.body.zip);
-        request.addParameter('description', TYPES.VarChar, req.body.description);
-        request.addParameter('active', TYPES.Bit, req.body.active);
+        request.addParameter('code',        TYPES.VarChar, req.body.Code);
+        request.addParameter('name',        TYPES.VarChar, req.body.Name);
+        request.addParameter('address',     TYPES.VarChar, req.body.Address);
+        request.addParameter('city',        TYPES.VarChar, req.body.City);
+        request.addParameter('zip',         TYPES.VarChar, req.body.ZipCode);
+        request.addParameter('description', TYPES.VarChar, req.body.Description);
+        request.addParameter('active',      TYPES.Bit,     req.body.Active);
         
         connection.execSql(request);
       });
