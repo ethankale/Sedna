@@ -8,18 +8,22 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
   app.quit();
 }
 
+if (module.hot) {
+  module.hot.accept();
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 900,
     webPreferences: {
-        preload: path.join(app.getAppPath(), './src/preload.js')
+        preload: path.join(app.getAppPath(), './src/main/preload.js')
     }
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, './views/index.html'));
+  mainWindow.loadFile(path.join(__dirname, '../renderer/views/index.html'));
   //mainWindow.loadURL("http://localhost:3000/");
 
   // Open the DevTools.
@@ -54,9 +58,4 @@ app.on('activate', () => {
 
 let configpath = app.getPath('userData') + "/config.json";
 console.log(configpath);
-
-
-
-
-
 

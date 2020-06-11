@@ -33170,8 +33170,8 @@ var vm = new Vue({
 
 },{"vue":37}],47:[function(require,module,exports){
 
-let alqwuutils     = require('./utils.js');
-let Vue = require('vue')
+let alqwuutils = require('./utils.js');
+let Vue        = require('vue')
 
 let utcoffset  = alqwuutils.utcoffset;
 
@@ -33277,14 +33277,12 @@ var vm = new Vue({
     },
     
     getCurrentSite: function(SiteID) {
-      // this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/site?siteid=${SiteID}&utcoffset=${utcoffset}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentSite = data[0];
-        // this.dirty = false;
         this.error = false;
         this.editstate = 'view';
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Site.";
@@ -33369,13 +33367,6 @@ var vm = new Vue({
       } else {
         this.updateSite();
       };
-      // if (this.locked) {
-        // this.locked = false;
-        // this.dirty  = true;
-        // this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
-      // } else {
-        // this.updateSite();
-      // }
     },
   }
 })

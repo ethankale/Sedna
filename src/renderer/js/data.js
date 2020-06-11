@@ -2,20 +2,19 @@
 // Node modules.  Remember to run browserify every time to bundle this.
 // browserify src/js/data.js -o src/js/data_bundle.js
 
-var lx         = require('luxon');
-var Papa       = require('papaparse');
-var alqwuutils = require('./utils.js');
+let lx         = require('luxon');
+let Papa       = require('papaparse');
+let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
-var dataload   = require('./dataload.js');
+let dataload   = require('./dataload.js');
 
-// var params        = [];
-var paramcurrent  = 0;
-var methodcurrent = 0;
-var paramMarkup   = "";
+let paramcurrent  = 0;
+let methodcurrent = 0;
+let paramMarkup   = "";
 
-var wylist       = [];
-var wycurrent    = 0;
-var wymarkup     = "";
+let wylist       = [];
+let wycurrent    = 0;
+let wymarkup     = "";
 
 // var measurements = []
 
