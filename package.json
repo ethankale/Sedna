@@ -5,7 +5,7 @@
   "description": "A desktop application for managing hydrologic data",
   "main": "src/main/index.js",
   "scripts": {
-    "compile": "sh compile.sh",
+    "build": "webpack",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
@@ -57,7 +57,6 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.49",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.49",
     "@electron-forge/maker-zip": "^6.0.0-beta.49",
-    "browserify": "^16.5.0",
     "chai": "^4.2.0",
     "electron": "8.0.0",
     "electron-webpack-vue": "^2.4.0",
