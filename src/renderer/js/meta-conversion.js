@@ -133,7 +133,7 @@ var vm = new Vue({
     },
     
     getCurrentConversion: function(ConversionID) {
-      ConversionID = typeof ConversionID == 'undefined' ? conversions[0].ConversionID : ConversionID;
+      ConversionID = typeof ConversionID == 'undefined' ? this.conversions[0].ConversionID : ConversionID;
       this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/conversion?ConversionID=${ConversionID}`,

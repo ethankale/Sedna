@@ -114,21 +114,6 @@
                 v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <!-- <div class="form-row"> -->
-                <!-- <div class="col-md-2"> -->
-                  <!-- <button id="site-edit" type="button" class="btn btn-primary" -->
-                    <!-- @click="clickEditSite()" :disabled="creatingNew"> {{ editButtonText }}</button> -->
-                <!-- </div> -->
-                <!-- <div class="col-md-8"> -->
-                  <!-- <button id="site-new" type="button" class="btn btn-secondary" -->
-                    <!-- @click="newSiteClick()" :disabled="dirty"> {{ newButtonText }}</button> -->
-                <!-- </div> -->
-                <!-- <div class="col-md-2"> -->
-                  <!-- <button id="site-cancel" type="button" class="btn btn-secondary float-right" -->
-                    <!-- @click="cancelSite()" :disabled="locked">Cancel</button> -->
-                <!-- </div> -->
-              <!-- </div> -->
-              
               <new-edit-cancel
                 v-bind:editstate="editstate"
                 v-on:click-edit-site  ="clickEditSite()"

@@ -1,6 +1,8 @@
 
 let alqwuutils = require('./utils.js');
-let Vue        = require('vue')
+let Vue        = require('vue');
+
+import NewEditCancel from './new-edit-cancel.vue';
 
 let utcoffset  = alqwuutils.utcoffset;
 
@@ -17,7 +19,7 @@ $(document).ready(function() {
   $("#siteSelect").select2({ width: '100%' });
 });
 
-Vue.component('new-edit-cancel', {
+/* var NewEditCancel = {
   props: {'editstate': String},
   computed: {
     editButtonText: function() {
@@ -56,10 +58,13 @@ Vue.component('new-edit-cancel', {
       
     </div>
   `
-})
+}; */
 
 var vm = new Vue({
   el: '#v-pills-site',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     sites: [],
     siteID: 0,
