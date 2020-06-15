@@ -3,7 +3,7 @@
   <head>
   
     <!-- REMOVE THIS! -->
-    <script src="http://localhost:8098"></script>
+    <!-- <script src="http://localhost:8098"></script> -->
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -116,9 +116,9 @@
               
               <new-edit-cancel
                 v-bind:editstate="editstate"
-                v-on:click-edit-site  ="clickEditSite()"
-                v-on:click-new-site   ="clickNewSite()"
-                v-on:click-cancel-site="clickCancelSite()"
+                v-on:click-edit  ="clickEditSite()"
+                v-on:click-new   ="clickNewSite()"
+                v-on:click-cancel="clickCancelSite()"
               ></new-edit-cancel>
               
               <hr>
@@ -188,7 +188,7 @@
             <div class="tab-pane fade" id="v-pills-sample-point" role="tabpanel" 
               aria-labelledby="v-pills-sample-point-tab">
               
-              <form id="sp-selectHeader" v-show="!creatingNew">
+              <form id="sp-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="spSelect" 
                     v-model="spID" 
@@ -213,31 +213,21 @@
               </form>
               
               <div id="sample-point-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}
               </div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="sample-point-edit" type="button" class="btn btn-primary"
-                    @click="clickEditSP()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-8">
-                  <button id="sample-point-new" type="button" class="btn btn-secondary"
-                    @click="newSPClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="sample-point-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelSP()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate="editstate"
+                v-on:click-edit  ="clickEditSP()"
+                v-on:click-new   ="clickNewSP()"
+                v-on:click-cancel="clickCancelSP()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="sample-pointForm">
-                <fieldset id="sample-pointFieldset" :disabled="locked">
+                <fieldset id="sample-pointFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="sample-point-siteSelect" class="col-sm-2 col-form-label">Site</label>
@@ -245,7 +235,7 @@
                       <select class="form-control" id="sample-point-siteSelect" 
                         v-model="currentSP.SiteID" 
                         v-select="currentSP.SiteID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="site in sites" 
                           v-bind:value="site.SiteID" 

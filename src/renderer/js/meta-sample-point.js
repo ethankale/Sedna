@@ -1,6 +1,8 @@
 
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -15,18 +17,19 @@ $(document).ready(function() {
   $("#sample-point-siteSelect").select2({ width: '100%' });
 });
 
-//Vue.component('v-select', vSelect)
-
 var vm = new Vue({
   el: '#v-pills-sample-point',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     spID: 2,
     sps: [],
     sites: [],
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
     error: false,
+    editstate: 'view',
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.",
     currentSP: {
       SamplePointID:            null,
@@ -67,15 +70,6 @@ var vm = new Vue({
       });
     },
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
   mounted: function () {
     let self = this;
     
@@ -114,15 +108,15 @@ var vm = new Vue({
     
     getCurrentSP: function(SamplePointID) {
       SamplePointID = typeof SamplePointID == 'undefined' ? this.sites[0].SamplePointID : SamplePointID;
-      this.locked = true;
+      this.editState = 'view';
       $.ajax({
         url: `http://localhost:3000/api/v1/samplePoint?samplepointid=${SamplePointID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.currentSP = data;
-        this.dirty = false;
         this.error = false;
+        this.editstate = 'view';
+        this.currentSP = data;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Sample Point.";
       }).fail((err) => {
         console.log(err);
@@ -141,9 +135,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = true;
+        this.error     = false;
+        this.editstate = 'view';
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -152,11 +145,12 @@ var vm = new Vue({
       });
     },
     
-    newSPClick: function() {
-      if (this.creatingNew) {
-        this.saveNewSP();
-      } else {
+    clickNewSP: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewSP();
+      } else {
+        this.saveNewSP();
       };
     },
     
@@ -166,8 +160,7 @@ var vm = new Vue({
       };
       this.currentSP.Name   = 'Default';
       this.currentSP.Active = true;
-      this.creatingNew      = true;
-      this.locked           = false;
+      
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Sample Point."
     },
     
@@ -184,10 +177,9 @@ var vm = new Vue({
         this.spID = data;
         this.updateSamplePointList(this.spID);
         this.currentSP.SamplePointID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
+        
         this.error       = false;
-        this.locked      = true;
+        this.editstate = 'view';
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -195,23 +187,19 @@ var vm = new Vue({
       });
     },
     
-    cancelSP: function() {
+    clickCancelSP: function() {
       this.getCurrentSP(this.spID);
-      
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditSP: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate === 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateSP();
-      }
+      };
     },
   }
 })

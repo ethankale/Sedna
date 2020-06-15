@@ -19,47 +19,6 @@ $(document).ready(function() {
   $("#siteSelect").select2({ width: '100%' });
 });
 
-/* var NewEditCancel = {
-  props: {'editstate': String},
-  computed: {
-    editButtonText: function() {
-      return this.editstate === 'edit' ? 'Save' : 'Edit';
-    },
-    newButtonText: function() {
-      return this.editstate === 'new' ? 'Save' : 'New';
-    },
-    editDisabled: function() {
-      return this.editstate === 'new' ? true : false;
-    },
-    newDisabled: function() {
-      return this.editstate === 'edit' ? true : false;
-    },
-    cancelDisabled: function() {
-      return this.editstate === 'view' ? true : false;
-    }
-  },
-  template: `
-    <div class="form-row">
-    
-      <div class="col-md-2">
-        <button id="site-edit" type="button" class="btn btn-primary"
-          @click="$emit('click-edit-site')" :disabled="editDisabled"> {{ editButtonText }}</button>
-      </div>
-      
-      <div class="col-md-8">
-        <button id="site-new" type="button" class="btn btn-secondary"
-          @click="$emit('click-new-site')" :disabled="newDisabled"> {{ newButtonText }}</button>
-      </div>
-      
-      <div class="col-md-2">
-        <button id="site-cancel" type="button" class="btn btn-secondary float-right"
-          @click="$emit('click-cancel-site')" :disabled="cancelDisabled">Cancel</button>
-      </div>
-      
-    </div>
-  `
-}; */
-
 var vm = new Vue({
   el: '#v-pills-site',
   components: {
@@ -116,9 +75,9 @@ var vm = new Vue({
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.currentSite = data[0];
         this.error = false;
         this.editstate = 'view';
+        this.currentSite = data[0];
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Site.";
       }).fail((err) => {
         console.log(err);
