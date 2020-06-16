@@ -1,6 +1,8 @@
 
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -14,17 +16,18 @@ $(document).ready(function() {
   $("#emSelect").select2({ width: '100%' });
 });
 
-//Vue.component('v-select', vSelect)
-
 var vm = new Vue({
   el: '#v-pills-equipmentModel',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     emID: null,
     ems: [],
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Equipment Model.`,
     currentEM: {
       EquipmentModelID: null,
@@ -34,16 +37,6 @@ var vm = new Vue({
       Active:           null,
       equipmentCount:   0
     },
-  },
-  
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
   },
   
   mounted: function () {
@@ -73,14 +66,13 @@ var vm = new Vue({
     },
     
     getCurrentEM: function(EquipmentModelID) {
-      this.locked = true;
+      this.editstate = 'view';
       $.ajax({
         url: `http://localhost:3000/api/v1/equipmentModel?equipmentmodelid=${EquipmentModelID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentEM = data;
-        this.dirty = false;
         this.error = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Equipment Model.`;
       }).fail((err) => {
@@ -101,9 +93,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = false;
+        this.error     = false;
+        this.editstate = 'view';
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -112,11 +103,12 @@ var vm = new Vue({
       });
     },
     
-    newEMClick: function() {
-      if (this.creatingNew) {
-        this.saveNewEM();
-      } else {
+    clickNewEM: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewEM();
+      } else {
+        this.saveNewEM();
       };
     },
     
@@ -125,8 +117,6 @@ var vm = new Vue({
         this.currentEM[prop] = null;
       };
       this.currentEM.Active = true;
-      this.creatingNew = true;
-      this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Equipment Model."
     },
     
@@ -143,10 +133,9 @@ var vm = new Vue({
         this.emID = data;
         this.updateEquipmentModelList(this.emID);
         this.currentEM.EquipmentModelID = data;
-        this.creatingNew = false;
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = false;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -154,23 +143,20 @@ var vm = new Vue({
       });
     },
     
-    cancelEM: function() {
+    clickCancelEM: function() {
       this.getCurrentEM(this.emID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditEM: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateEM();
-      }
+      };
     }
   }
 })

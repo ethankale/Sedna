@@ -1,6 +1,8 @@
 
 let alqwuutils     = require('./utils.js');
-let Vue = require('vue')
+let Vue = require('vue');
+
+import NewEditCancel from './new-edit-cancel.vue';
 
 let utcoffset  = alqwuutils.utcoffset;
 
@@ -19,13 +21,16 @@ $(document).ready(function() {
 
 var vm = new Vue({
   el: '#v-pills-unit',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     units: [],
     UnitID: 0,
-    locked: true,
-    creatingNew: false,
-    dirty: false,
-    error: false,
+    
+    editstate: 'view',
+    error:     false,
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Unit.",
     currentUnit: {
       UnitID:      null,
@@ -33,18 +38,11 @@ var vm = new Vue({
       Description: null
     }
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
+  
   mounted: function () {
     this.updateUnitList();
   },
+  
   methods: {
     updateUnitList: function(UnitID) {
       $.ajax({
@@ -66,14 +64,13 @@ var vm = new Vue({
     
     getCurrentUnit: function(UnitID) {
       UnitID = typeof UnitID == 'undefined' ? units[0].UnitID : UnitID;
-      this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/unit?UnitID=${UnitID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentUnit = data;
-        this.dirty = false;
+        this.editstate = 'view';
         this.error = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Unit.";
       }).fail((err) => {
@@ -85,7 +82,6 @@ var vm = new Vue({
     },
     
     updateUnit: function() {
-      console.log(JSON.stringify(this.currentUnit));
       $.ajax({
         url: `http://localhost:3000/api/v1/unit`,
         method:'PUT',
@@ -94,9 +90,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = true;
+        this.editstate = 'view';
+        this.error     = false;
         this.notificationText = "Successfully updated!";
         this.updateUnitList(this.UnitID);
       }).fail((err) => {
@@ -106,11 +101,12 @@ var vm = new Vue({
       });
     },
     
-    newUnitClick: function() {
-      if (this.creatingNew) {
-        this.saveNewUnit();
-      } else {
+    clickNewUnit: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewUnit();
+      } else {
+        this.saveNewUnit();
       };
     },
     
@@ -118,8 +114,6 @@ var vm = new Vue({
       for (const prop in this.currentUnit) {
         this.currentUnit[prop] = null;
       };
-      this.creatingNew        = true;
-      this.locked             = false;
       this.notificationText   = "Fill in fields below.  'Save' to create new Unit."
     },
     
@@ -136,10 +130,9 @@ var vm = new Vue({
         this.UnitID = data;
         this.updateUnitList(this.UnitID);
         this.currentUnit.UnitID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = true;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -147,24 +140,21 @@ var vm = new Vue({
       });
     },
     
-    cancelUnit: function() {
+    clickCancelUnit: function() {
       this.getCurrentUnit(this.UnitID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditUnit: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateUnit();
-      }
-    },
+      };
+    }
   }
 })
 

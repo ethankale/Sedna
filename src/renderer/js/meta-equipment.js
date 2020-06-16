@@ -1,6 +1,8 @@
 
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -15,18 +17,19 @@ $(document).ready(function() {
   $("#equipment-modelSelect").select2({ width: '100%' });
 });
 
-//Vue.component('v-select', vSelect)
-
 var vm = new Vue({
   el: '#v-pills-equipment',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
-    eqID: null,
-    eqs: [],
+    eqID:   null,
+    eqs:    [],
     models: [],
-    locked: true,
-    creatingNew: false,
-    dirty: false,
-    error: false,
+    
+    editstate: 'view',
+    error:     false,
+    
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Equipment.`,
     currentEQ: {
       EquipmentID:         null,
@@ -44,16 +47,6 @@ var vm = new Vue({
         $('#equipment-modelSelect').change();
       });
     },
-  },
-  
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
   },
   
   mounted: function () {
@@ -94,14 +87,14 @@ var vm = new Vue({
     },
     
     getCurrentEQ: function(EquipmentID) {
-      this.locked = true;
+      this.editstate = 'view';
       $.ajax({
         url: `http://localhost:3000/api/v1/equipment?equipmentid=${EquipmentID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentEQ = data;
-        this.dirty     = false;
+        this.editstate = 'view';
         this.error     = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Equipment .`;
       }).fail((err) => {
@@ -122,9 +115,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
+        this.editstate = 'view';
         this.error  = false;
-        this.locked = true;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -133,11 +125,12 @@ var vm = new Vue({
       });
     },
     
-    newEQClick: function() {
-      if (this.creatingNew) {
-        this.saveNewEQ();
-      } else {
+    clickNewEQ: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewEQ();
+      } else {
+        this.saveNewEQ();
       };
     },
     
@@ -146,8 +139,6 @@ var vm = new Vue({
         this.currentEQ[prop] = null;
       };
       this.currentEQ.Active = true;
-      this.creatingNew = true;
-      this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Equipment ."
     },
     
@@ -164,10 +155,9 @@ var vm = new Vue({
         this.eqID = data;
         this.updateEquipmentList(this.eqID);
         this.currentEQ.EquipmentID = data;
-        this.creatingNew = false;
-        this.dirty = false;
+        
+        this.editstate = 'view';
         this.error = false;
-        this.locked = true;
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -175,23 +165,20 @@ var vm = new Vue({
       });
     },
     
-    cancelEQ: function() {
+    clickCancelEQ: function() {
       this.getCurrentEQ(this.eqID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditEQ: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateEQ();
-      }
+      };
     }
   }
 })

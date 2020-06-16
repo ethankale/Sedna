@@ -1,5 +1,7 @@
 
-let Vue = require('vue')
+let Vue = require('vue');
+
+import NewEditCancel from './new-edit-cancel.vue';
 
 Vue.directive('select', {
   twoWay: true,
@@ -14,17 +16,18 @@ $(document).ready(function() {
   $("#userSelect").select2({ width: '100%' });
 });
 
-//Vue.component('v-select', vSelect)
-
 var vm = new Vue({
   el: '#v-pills-user',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     UserID: null,
     users: [],
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new User.`,
     currentUser: {
       UserID: null,
@@ -33,16 +36,6 @@ var vm = new Vue({
       Phone:  null,
       Active: null
     },
-  },
-  
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
   },
   
   mounted: function () {
@@ -72,15 +65,14 @@ var vm = new Vue({
     },
     
     getCurrentUser: function(UserID) {
-      this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/user?UserID=${UserID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.currentUser = data;
-        this.dirty = false;
-        this.error = false;
+        this.currentUser      = data;
+        this.editstate        = 'view';
+        this.error            = false;
         this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new User.`;
       }).fail((err) => {
         console.log(err);
@@ -100,9 +92,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = false;
+        this.editstate        = 'view';
+        this.error            = false;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -111,11 +102,12 @@ var vm = new Vue({
       });
     },
     
-    newUserClick: function() {
-      if (this.creatingNew) {
-        this.saveNewUser();
-      } else {
+    clickNewUser: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewUser();
+      } else {
+        this.saveNewUser();
       };
     },
     
@@ -124,8 +116,6 @@ var vm = new Vue({
         this.currentUser[prop] = null;
       };
       this.currentUser.Active = true;
-      this.creatingNew = true;
-      this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new User."
     },
     
@@ -142,10 +132,9 @@ var vm = new Vue({
         this.UserID = data;
         this.updateUserList(this.UserID);
         this.currentUser.UserID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = false;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -153,23 +142,20 @@ var vm = new Vue({
       });
     },
     
-    cancelUser: function() {
+    clickCancelUser: function() {
       this.getCurrentUser(this.UserID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditUser: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateUser();
-      }
+      };
     }
   }
 })

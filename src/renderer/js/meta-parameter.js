@@ -2,6 +2,8 @@
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 let utcoffset  = alqwuutils.utcoffset;
 
 Vue.directive('select', {
@@ -19,13 +21,16 @@ $(document).ready(function() {
 
 var vm = new Vue({
   el: '#v-pills-parameter',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     params: [],
     ParameterID: 0,
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Parameter.",
     currentParameter: {
       ParameterID: null,
@@ -34,20 +39,13 @@ var vm = new Vue({
       Description: null
     }
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
+  
   mounted: function () {
     let self = this;
     
     self.updateParameterList();
   },
+  
   methods: {
     updateParameterList: function(ParameterID) {
       let active = $("#parameter-activeFilterCheck").prop('checked') ? '?active=1': '';
@@ -69,7 +67,7 @@ var vm = new Vue({
     },
     
     getCurrentParameter: function(ParameterID) {
-      this.locked = true;
+      this.editstate = 'view';
       if (typeof ParameterID === 'undefined') {
         ParameterID = typeof this.params[0].ParameterID === 'undefined'? 0 : this.params[0].ParameterID;
       };
@@ -80,7 +78,6 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.currentParameter = data;
-        this.dirty = false;
         this.error = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Parameter.";
       }).fail((err) => {
@@ -100,9 +97,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = true;
+        this.editstate = 'view';
+        this.error     = false;
         this.notificationText = "Successfully updated!";
         this.updateParameterList(this.ParameterID);
       }).fail((err) => {
@@ -112,11 +108,12 @@ var vm = new Vue({
       });
     },
     
-    newParameterClick: function() {
-      if (this.creatingNew) {
-        this.saveNewParameter();
-      } else {
+    clickNewParameter: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewParameter();
+      } else {
+        this.saveNewParameter();
       };
     },
     
@@ -124,8 +121,6 @@ var vm = new Vue({
       for (const prop in this.currentParameter) {
         this.currentParameter[prop] = null;
       };
-      this.creatingNew        = true;
-      this.locked             = false;
       this.notificationText   = "Fill in fields below.  'Save' to create new Parameter."
     },
     
@@ -142,10 +137,9 @@ var vm = new Vue({
         this.ParameterID = data;
         this.updateParameterList(this.ParameterID);
         this.currentParameter.ParameterID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = true;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -153,23 +147,20 @@ var vm = new Vue({
       });
     },
     
-    cancelParameter: function() {
+    clickCancelParameter: function() {
       this.getCurrentParameter(this.ParameterID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditParameter: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateParameter();
-      }
+      };
     },
   }
 })

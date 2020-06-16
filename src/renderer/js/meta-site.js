@@ -29,7 +29,7 @@ var vm = new Vue({
     siteID: 0,
     
     editstate: 'view',
-    error: false,
+    error:     false,
     
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Site.",
     currentSite: {

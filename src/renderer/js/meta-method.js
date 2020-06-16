@@ -2,6 +2,8 @@
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 let utcoffset  = alqwuutils.utcoffset;
 
 Vue.directive('select', {
@@ -19,13 +21,16 @@ $(document).ready(function() {
 
 var vm = new Vue({
   el: '#v-pills-method',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     methods: [],
     MethodID: 0,
-    locked: true,
-    creatingNew: false,
-    dirty: false,
-    error: false,
+    
+    editstate: 'view',
+    error:     false,
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Method.",
     currentMethod: {
       MethodID:    null,
@@ -34,20 +39,13 @@ var vm = new Vue({
       Reference:   null
     }
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
+  
   mounted: function () {
     let self = this;
     
     self.updateMethodList();
   },
+  
   methods: {
     updateMethodList: function(MethodID) {
       $.ajax({
@@ -68,7 +66,7 @@ var vm = new Vue({
     },
     
     getCurrentMethod: function(MethodID) {
-      this.locked = true;
+      this.editstate = 'view';
       $.ajax({
         url: `http://localhost:3000/api/v1/method?MethodID=${MethodID}`,
         method:'GET',
@@ -95,9 +93,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
         this.error  = false;
-        this.locked = true;
+        this.editstate = 'view';
         this.notificationText = "Successfully updated!";
         this.updateMethodList(this.MethodID);
       }).fail((err) => {
@@ -107,11 +104,12 @@ var vm = new Vue({
       });
     },
     
-    newMethodClick: function() {
-      if (this.creatingNew) {
-        this.saveNewMethod();
-      } else {
+    clickNewMethod: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewMethod();
+      } else {
+        this.saveNewMethod();
       };
     },
     
@@ -119,8 +117,6 @@ var vm = new Vue({
       for (const prop in this.currentMethod) {
         this.currentMethod[prop] = null;
       };
-      this.creatingNew        = true;
-      this.locked             = false;
       this.notificationText   = "Fill in fields below.  'Save' to create new Method."
     },
     
@@ -137,10 +133,9 @@ var vm = new Vue({
         this.MethodID = data;
         this.updateMethodList(this.MethodID);
         this.currentMethod.MethodID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = true;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -148,23 +143,20 @@ var vm = new Vue({
       });
     },
     
-    cancelMethod: function() {
+    clickCancelMethod: function() {
       this.getCurrentMethod(this.MethodID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditMethod: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateMethod();
-      }
+      };
     },
   }
 })

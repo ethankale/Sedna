@@ -461,7 +461,7 @@
             <div class="tab-pane fade" id="v-pills-datarecord" role="tabpanel" 
               aria-labelledby="v-pills-datarecord-tab">
               
-              <form id = "dr-selectHeader" v-show="!creatingNew">
+              <form id = "dr-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="metadataSelect" 
                     v-model="drID" 
@@ -484,32 +484,21 @@
                 <hr />
               </form>
               
-              
               <div id="dr-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="dr-edit" type="button" class="btn btn-primary"
-                    @click="clickEditDR()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-8">
-                  <button id="dr-new" type="button" class="btn btn-secondary"
-                    @click="newDRClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="dr-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelDR()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate="editstate"
+                v-on:click-edit  ="clickEditDR()"
+                v-on:click-new   ="clickNewDR()"
+                v-on:click-cancel="clickCancelDR()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="dataRecordForm">
-                <fieldset id="dataRecordFieldset" :disabled="locked">
+                <fieldset id="dataRecordFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-row">
                     <label for="dr-samplePoint" class="col-sm-2 col-form-label">Sample Point</label>
@@ -517,7 +506,7 @@
                       <select class="form-control" id="dr-samplePoint" 
                         v-model="currentDR.SamplePointID" 
                         v-select="currentDR.SamplePointID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="sp in sps" 
                           v-bind:value="sp.SamplePointID" 
@@ -533,7 +522,7 @@
                       <select class="form-control" id="dr-parameter" 
                         v-model="currentDR.ParameterID" 
                         v-select="currentDR.ParameterID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="param in params" 
                           v-bind:value="param.ParameterID" 
@@ -549,7 +538,7 @@
                       <select class="form-control" id="dr-method" 
                         v-model="currentDR.MethodID" 
                         v-select="currentDR.MethodID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="method in methods" 
                           v-bind:value="method.MethodID" 
@@ -565,7 +554,7 @@
                       <select class="form-control" id="dr-unit" 
                         v-model="currentDR.UnitID" 
                         v-select="currentDR.UnitID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="unit in units" 
                           v-bind:value="unit.UnitID" 
@@ -612,7 +601,7 @@
                   <div class="form-group form-row">
                     <div class="col-sm-10">
                       <select class="form-control" id="dr-equipmentSelect"
-                          :disabled="locked">
+                          :disabled="editstate === 'view'">
                         <option 
                           v-for="equip in equipment" 
                           v-bind:value="equip.EquipmentID" 
@@ -652,7 +641,7 @@
             <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 
               aria-labelledby="v-pills-equipment-tab">
               
-              <form id="eq-selectHeader" v-show="!creatingNew">
+              <form id="eq-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="eqSelect" 
                     v-model="eqID" 
@@ -677,31 +666,21 @@
               </form>
               
               <div id="equipment-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}
               </div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="equipment-edit" type="button" class="btn btn-primary"
-                    @click="clickEditEQ()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-8">
-                  <button id="equipment-new" type="button" class="btn btn-secondary"
-                    @click="newEQClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipment-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelEQ()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate="editstate"
+                v-on:click-edit  ="clickEditEQ()"
+                v-on:click-new   ="clickNewEQ()"
+                v-on:click-cancel="clickCancelEQ()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="equipmentForm">
-                <fieldset id="equipmentFieldset" :disabled="locked">
+                <fieldset id="equipmentFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="equipment-modelSelect" class="col-sm-2 col-form-label">Model</label>
@@ -709,7 +688,7 @@
                       <select class="form-control" id="equipment-modelSelect" 
                         v-model="currentEQ.EquipmentModelID" 
                         v-select="currentEQ.EquipmentModelID"
-                        :disabled="locked">
+                        :disabled="editstate === 'view'">
                         <option 
                           v-for="model in models" 
                           v-bind:value="model.EquipmentModelID" 
@@ -751,7 +730,7 @@
             <div class="tab-pane fade" id="v-pills-equipmentModel" role="tabpanel" 
               aria-labelledby="v-pills-equipmentModel-tab">
               
-              <form id="em-selectHeader" v-show="!creatingNew">
+              <form id="em-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="emSelect" 
                     v-model="emID" 
@@ -776,35 +755,25 @@
               </form>
               
               <div id="equipmentModel-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}
               </div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="equipmentModel-edit" type="button" class="btn btn-primary"
-                    @click="clickEditEM()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                
-                <div class="col-md-8">
-                  <button id="equipmentModel-new" type="button" class="btn btn-secondary"
-                    @click="newEMClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                
-                <div class="col-md-2">
-                  <button id="equipmentModel-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelEM()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditEM()"
+                v-on:click-new    ="clickNewEM()"
+                v-on:click-cancel ="clickCancelEM()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="equipmentModelForm">
-                <fieldset id="equipmentModelFieldset" :disabled="locked">
+                <fieldset id="equipmentModelFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row"
-                    v-show="!creatingNew">
-                    <p>There {{ currentEM.EquipmentCount == 1 ? 'is 1' : 'are ' + currentEM.EquipmentCount }} 
+                    v-show="editstate !== 'new'">
+                    <p>There {{ currentEM.EquipmentCount === 1 ? 'is 1' : 'are ' + currentEM.EquipmentCount }} 
                       in inventory.</p>
                   </div>
                   
@@ -848,7 +817,7 @@
             <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
               aria-labelledby="v-pills-parameter-tab">
               
-              <form id="param-selectHeader" v-show="!creatingNew">
+              <form id="param-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="paramSelect" 
                     v-model="ParameterID" 
@@ -867,28 +836,20 @@
               </form>
               
               <div id="parameter-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="parameter-edit" type="button" class="btn btn-primary"
-                    @click="clickEditParameter()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="parameter-new" type="button" class="btn btn-secondary"
-                    @click="newParameterClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="parameter-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelParameter()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditParameter()"
+                v-on:click-new    ="clickNewParameter()"
+                v-on:click-cancel ="clickCancelParameter()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="parameterForm">
-                <fieldset id="parameterFieldset" :disabled="locked">
+                <fieldset id="parameterFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="parameter-name" class="col-sm-2 col-form-label">Name</label>
@@ -921,7 +882,7 @@
             <!-- Method -->
             <div class="tab-pane fade" id="v-pills-method" role="tabpanel" 
               aria-labelledby="v-pills-method-tab">
-              <form id="method-selectHeader" v-show="!creatingNew">
+              <form id="method-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="methodSelect" 
                     v-model="MethodID" 
@@ -940,28 +901,20 @@
               </form>
               
               <div id="method-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="method-edit" type="button" class="btn btn-primary"
-                    @click="clickEditMethod()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="method-new" type="button" class="btn btn-secondary"
-                    @click="newMethodClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="method-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelMethod()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditMethod()"
+                v-on:click-new    ="clickNewMethod()"
+                v-on:click-cancel ="clickCancelMethod()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="methodForm">
-                <fieldset id="methodFieldset" :disabled="locked">
+                <fieldset id="methodFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="method-code" class="col-sm-2 col-form-label">Code</label>
@@ -995,7 +948,7 @@
             <div class="tab-pane fade" id="v-pills-unit" role="tabpanel" 
               aria-labelledby="v-pills-unit-tab">
               
-              <form id="unit-selectHeader" v-show="!creatingNew">
+              <form id="unit-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="unitSelect" 
                     v-model="UnitID" 
@@ -1014,28 +967,20 @@
               </form>
               
               <div id="unit-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="unit-edit" type="button" class="btn btn-primary"
-                    @click="clickEditUnit()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="unit-new" type="button" class="btn btn-secondary"
-                    @click="newUnitClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="unit-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelUnit()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditUnit()"
+                v-on:click-new    ="clickNewUnit()"
+                v-on:click-cancel ="clickCancelUnit()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="unitForm">
-                <fieldset id="unitFieldset" :disabled="locked">
+                <fieldset id="unitFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="unit-symbol" class="col-sm-2 col-form-label">Symbol</label>
@@ -1061,7 +1006,7 @@
             <div class="tab-pane fade" id="v-pills-qualifier" role="tabpanel" 
               aria-labelledby="v-pills-qualifier-tab">
               
-              <form id="qualifier-selectHeader" v-show="!creatingNew">
+              <form id="qualifier-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="qualifierSelect" 
                     v-model="QualifierID" 
@@ -1080,28 +1025,20 @@
               </form>
               
               <div id="qualifier-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="qualifier-edit" type="button" class="btn btn-primary"
-                    @click="clickEditQualifier()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="qualifier-new" type="button" class="btn btn-secondary"
-                    @click="newQualifierClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="qualifier-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelQualifier()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditQualifier()"
+                v-on:click-new    ="clickNewQualifier()"
+                v-on:click-cancel ="clickCancelQualifier()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="qualifierForm">
-                <fieldset id="qualifierFieldset" :disabled="locked">
+                <fieldset id="qualifierFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="qualifier-code" class="col-sm-2 col-form-label">Code</label>
@@ -1127,7 +1064,7 @@
             <div class="tab-pane fade" id="v-pills-conversion" role="tabpanel" 
               aria-labelledby="v-pills-conversion-tab">
               
-              <form id="conversion-selectHeader" v-show="!creatingNew">
+              <form id="conversion-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="conversionSelect" 
                     v-model="ConversionID" 
@@ -1152,28 +1089,20 @@
               </form>
               
               <div id="conversion-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="conversion-edit" type="button" class="btn btn-primary"
-                    @click="clickEditConversion()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="conversion-new" type="button" class="btn btn-secondary"
-                    @click="newConversionClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="conversion-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelConversion()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditConversion()"
+                v-on:click-new    ="clickNewConversion()"
+                v-on:click-cancel ="clickCancelConversion()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="conversionForm">
-                <fieldset id="conversionFieldset" :disabled="locked">
+                <fieldset id="conversionFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="conversion-name" class="col-sm-2 col-form-label">Name</label>
@@ -1246,7 +1175,7 @@
             <div class="tab-pane fade" id="v-pills-user" role="tabpanel" 
               aria-labelledby="v-pills-user-tab">
               
-              <form id = "user-selectHeader" v-show="!creatingNew">
+              <form id = "user-selectHeader" v-show="editstate === 'view'">
                 <div class="form-group">
                   <select class="form-control" id="userSelect" 
                     v-model="UserID" 
@@ -1271,28 +1200,20 @@
               </form>
               
               <div id="user-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error, 'alert-warning': dirty } "> 
+                v-bind:class=" { 'alert-danger': error } "> 
                 {{ notificationText }}</div>
               
-              <div class="form-row">
-                <div class="col-md-2">
-                  <button id="user-edit" type="button" class="btn btn-primary"
-                    @click="clickEditUser()" :disabled="creatingNew"> {{ editButtonText }}</button>
-                </div>
-                <div class="col-md-8">
-                  <button id="user-new" type="button" class="btn btn-secondary"
-                    @click="newUserClick()" :disabled="dirty"> {{ newButtonText }}</button>
-                </div>
-                <div class="col-md-2">
-                  <button id="user-cancel" type="button" class="btn btn-secondary float-right"
-                    @click="cancelUser()" :disabled="locked">Cancel</button>
-                </div>
-              </div>
+              <new-edit-cancel
+                v-bind:editstate  ="editstate"
+                v-on:click-edit   ="clickEditUser()"
+                v-on:click-new    ="clickNewUser()"
+                v-on:click-cancel ="clickCancelUser()"
+              ></new-edit-cancel>
               
               <hr>
               
               <form id="userForm">
-                <fieldset id="userFieldset" :disabled="locked">
+                <fieldset id="userFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
                     <label for="user-name" class="col-sm-2 col-form-label">Name</label>

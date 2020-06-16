@@ -2,6 +2,8 @@
 let alqwuutils     = require('./utils.js');
 let Vue = require('vue')
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 let utcoffset  = alqwuutils.utcoffset;
 
 Vue.directive('select', {
@@ -24,6 +26,9 @@ $(document).ready(function() {
 
 var vmDR = new Vue({
   el: '#v-pills-datarecord',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     drID: 2,
     drs: [],
@@ -32,11 +37,11 @@ var vmDR = new Vue({
     methods: [],
     units: [],
     equipment: [],
-    locked: true,
-    creatingNew: false,
-    changingMetas: 0,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
+    changingMetas: 0,
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Data Record.",
     currentDR: {
       MetadataID:       null,
@@ -72,15 +77,6 @@ var vmDR = new Vue({
         $('#dr-unit').change();
       });
     },
-  },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
   },
   mounted: function () {
     let self = this;
@@ -127,7 +123,7 @@ var vmDR = new Vue({
     },
     
     getCurrentDR: function(MetadataID) {
-      this.locked = true;
+      this.editstatus = 'view';
       $.ajax({
         url: `http://localhost:3000/api/v1/metadataDetails?metadataid=${MetadataID}&utcoffset=${utcoffset}`,
         method:'GET',
@@ -136,7 +132,7 @@ var vmDR = new Vue({
         this.currentDR = data[0];
         console.log("getCurrentDR");
         this.getEquipmentDeployments(this.currentDR.MetadataID);
-        this.dirty = false;
+        this.editstate = 'view';
         this.error = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Data Record.";
       }).fail((err) => {
@@ -156,9 +152,8 @@ var vmDR = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty = false;
+        this.editstate = 'view';
         this.error = false;
-        this.locked = true;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -167,11 +162,12 @@ var vmDR = new Vue({
       });
     },
     
-    newDRClick: function() {
-      if (this.creatingNew) {
-        this.saveNewDR();
-      } else {
+    clickNewDR: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewDR();
+      } else {
+        this.saveNewDR();
       };
     },
     
@@ -180,8 +176,6 @@ var vmDR = new Vue({
         this.currentDR[prop] = null;
       };
       this.currentDR.Active = true;
-      this.creatingNew = true;
-      this.locked = false;
       this.notificationText = "Fill in fields below.  'Save' to create new Data Record."
     },
     
@@ -198,10 +192,8 @@ var vmDR = new Vue({
         this.drID = data;
         this.updateMetadataList(this.drID);
         this.currentDR.MetadataID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
+        this.editstatus = 'view';
         this.error       = false;
-        this.locked      = true;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -267,24 +259,21 @@ var vmDR = new Vue({
       });
     },
     
-    cancelDR: function() {
+    clickCancelDR: function() {
       this.getCurrentDR(this.drID);
       
-      this.creatingNew = false;
-      this.locked      = true;
+      this.editstatus  = 'view';
       this.error       = false;
-      this.dirty       = false;
     },
     
     clickEditDR: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateDR();
-      }
-    },
+      };
+    }
   }
 })
 

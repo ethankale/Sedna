@@ -1,6 +1,8 @@
 
 let alqwuutils     = require('./utils.js');
-let Vue = require('vue')
+let Vue = require('vue');
+
+import NewEditCancel from './new-edit-cancel.vue';
 
 let utcoffset  = alqwuutils.utcoffset;
 
@@ -19,13 +21,16 @@ $(document).ready(function() {
 
 var vm = new Vue({
   el: '#v-pills-qualifier',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     qualifiers: [],
     QualifierID: 0,
-    locked: true,
-    creatingNew: false,
-    dirty: false,
+    
+    editstate: 'view',
     error: false,
+    
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Qualifier.",
     currentQualifier: {
       QualifierID:      null,
@@ -33,18 +38,11 @@ var vm = new Vue({
       Description: null
     }
   },
-  computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    }
-  },
+  
   mounted: function () {
     this.updateQualifierList();
   },
+  
   methods: {
     updateQualifierList: function(QualifierID) {
       $.ajax({
@@ -65,15 +63,14 @@ var vm = new Vue({
     },
     
     getCurrentQualifier: function(QualifierID) {
-      this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/qualifier?QualifierID=${QualifierID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentQualifier = data;
-        this.dirty = false;
-        this.error = false;
+        this.editstate        = 'view';
+        this.error            = false;
         this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Qualifier.";
       }).fail((err) => {
         console.log(err);
@@ -93,9 +90,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = true;
+        this.editstate = 'view';
+        this.error     = false;
         this.notificationText = "Successfully updated!";
         this.updateQualifierList(this.QualifierID);
       }).fail((err) => {
@@ -105,11 +101,12 @@ var vm = new Vue({
       });
     },
     
-    newQualifierClick: function() {
-      if (this.creatingNew) {
-        this.saveNewQualifier();
-      } else {
+    clickNewQualifier: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewQualifier();
+      } else {
+        this.saveNewQualifier();
       };
     },
     
@@ -117,8 +114,6 @@ var vm = new Vue({
       for (const prop in this.currentQualifier) {
         this.currentQualifier[prop] = null;
       };
-      this.creatingNew        = true;
-      this.locked             = false;
       this.notificationText   = "Fill in fields below.  'Save' to create new Qualifier."
     },
     
@@ -135,10 +130,9 @@ var vm = new Vue({
         this.QualifierID = data;
         this.updateQualifierList(this.QualifierID);
         this.currentQualifier.QualifierID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = true;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -146,24 +140,21 @@ var vm = new Vue({
       });
     },
     
-    cancelQualifier: function() {
+    clickCancelQualifier: function() {
       this.getCurrentQualifier(this.QualifierID);
       
-      this.creatingNew = false;
-      this.locked      = true;
-      this.error       = false;
-      this.dirty       = false;
+      this.editstate = 'view';
+      this.error     = false;
     },
     
     clickEditQualifier: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateQualifier();
-      }
-    },
+      };
+    }
   }
 })
 

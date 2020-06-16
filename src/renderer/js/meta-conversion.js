@@ -3,6 +3,8 @@ let Vue  = require('vue');
 let d3   = require('d3');
 var Papa = require('papaparse');
 
+import NewEditCancel from './new-edit-cancel.vue';
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -18,13 +20,16 @@ $(document).ready(function() {
 
 var vm = new Vue({
   el: '#v-pills-conversion',
+  components: {
+    'new-edit-cancel': NewEditCancel
+  },
   data: {
     ConversionID: null,
     conversions: [],
-    locked: true,
-    creatingNew: false,
-    dirty: false,
-    error: false,
+    
+    editstate: 'view',
+    error:     false,
+    
     notificationText: `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`,
     line: '',
     svgWidth: 0,
@@ -58,14 +63,6 @@ var vm = new Vue({
   },
   
   computed: {
-    editButtonText: function() {
-      return this.locked ? 'Edit' : 'Save';
-    },
-    
-    newButtonText: function() {
-      return this.creatingNew ? 'Save' : 'New';
-    },
-    
     svgHeight: function() {
       return Math.floor(this.svgWidth / 1.6);
     },
@@ -134,16 +131,15 @@ var vm = new Vue({
     
     getCurrentConversion: function(ConversionID) {
       ConversionID = typeof ConversionID == 'undefined' ? this.conversions[0].ConversionID : ConversionID;
-      this.locked = true;
       $.ajax({
         url: `http://localhost:3000/api/v1/conversion?ConversionID=${ConversionID}`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
         this.currentConversion = data;
-        this.dirty = false;
-        this.error = false;
-        this.notificationText = `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`;
+        this.editstate         = 'view';
+        this.error             = false;
+        this.notificationText  = `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`;
         
         // The first time this loads svgWidth is 0, for reasons I can't figure out.
         //   But the resize handler works.  So trigger that (and the subsequent
@@ -169,9 +165,8 @@ var vm = new Vue({
         dataType: 'json',
         contentType: 'application/json'
       }).done((data) => {
-        this.dirty  = false;
-        this.error  = false;
-        this.locked = false;
+        this.editstate = 'view';
+        this.error     = false;
         this.notificationText = "Successfully updated!";
       }).fail((err) => {
         console.log(err);
@@ -180,11 +175,12 @@ var vm = new Vue({
       });
     },
     
-    newConversionClick: function() {
-      if (this.creatingNew) {
-        this.saveNewConversion();
-      } else {
+    clickNewConversion: function() {
+      if (this.editstate == 'view') {
+        this.editstate = 'new';
         this.editNewConversion();
+      } else {
+        this.saveNewConversion();
       };
     },
     
@@ -194,8 +190,6 @@ var vm = new Vue({
       };
       this.currentConversion.Active = true;
       this.currentConversion.ConversionValues = [];
-      this.creatingNew = true;
-      this.locked = false;
       this.notificationText = "Fill in at least the site and name fields below.  'Save' to create new Conversion."
     },
     
@@ -212,10 +206,9 @@ var vm = new Vue({
         this.ConversionID = data;
         this.updateConversionList(this.ConversionID);
         this.currentConversion.ConversionID = data;
-        this.creatingNew = false;
-        this.dirty       = false;
-        this.error       = false;
-        this.locked      = false;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err.status + ": " + err.responseJSON);
         this.error = true;
@@ -223,23 +216,20 @@ var vm = new Vue({
       });
     },
     
-    cancelConversion: function() {
+    clickCancelConversion: function() {
       this.getCurrentConversion(this.ConversionID);
       
-      this.creatingNew = false;
-      this.locked      = true;
+      this.editstatus = 'view';
       this.error       = false;
-      this.dirty       = false;
     },
     
     clickEditConversion: function() {
-      if (this.locked) {
-        this.locked = false;
-        this.dirty  = true;
-        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard."
+      if (this.editstate == 'view') {
+        this.editstate = 'edit';
+        this.notificationText = "Change values below to edit; click Save when done, Cancel to discard.";
       } else {
         this.updateConversion();
-      }
+      };
     },
     
     calculatePath() {
@@ -290,10 +280,7 @@ var vm = new Vue({
           this.currentConversion.ConversionValues.push({'FromValue': fromval, 'ToValue': toval});
         }
       });
-      
-      
     }
-    
   }
 })
 
