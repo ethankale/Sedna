@@ -2,6 +2,7 @@ const path = require('path');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
 module.exports = {
+  mode: 'development',
   entry: {
     analysis_webpack: './src/renderer/js/analysis.js',
     data_webpack:     './src/renderer/js/data.js',

@@ -94,6 +94,15 @@ var vmDR = new Vue({
         method:'GET',
         timeout: 3000
       }).done(function(data) {
+        if (lists[i] === 'equipment') {
+          let equipFirst = {
+            'EquipmentID': -1,
+            'Name':        'None',
+            'SiteCode':    null,
+            'SiteName':    null
+          };
+          data.unshift(equipFirst);
+        };
         self[lists[i]] = data;
       }).fail(function(err) {
         console.log(err);
@@ -192,8 +201,9 @@ var vmDR = new Vue({
         this.drID = data;
         this.updateMetadataList(this.drID);
         this.currentDR.MetadataID = data;
-        this.editstatus = 'view';
-        this.error       = false;
+        
+        this.editstate = 'view';
+        this.error     = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -232,7 +242,8 @@ var vmDR = new Vue({
         contentType: 'application/json'
       }).done((data) => {
         this.error = false;
-        this.notificationText = "Added a new piece of equipment to this data record."
+        this.notificationText = "Added a new piece of equipment to this data record.";
+        $("#dr-equipmentSelect").val(-1).change();
         this.getEquipmentDeployments(MetadataID);
       }).fail((err) => {
         console.log(err);
