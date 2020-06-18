@@ -1,7 +1,6 @@
 var alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 
-
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -30,7 +29,7 @@ var vm = new Vue({
           }
         },
       },
-      utcoffset: 8,
+      utcoffset: -8,
       userid: null,
       userDefaultPath: 'c:/data/'
     },
@@ -111,7 +110,10 @@ var vm = new Vue({
     
     getConfig() {
       let config = window.getConfig();
-      this.config = config;
+      console.log(config);
+      if (typeof(config) !== 'undefined') {
+        this.config = {...this.config, ...config};
+      };
     },
     
     setConfig() {
