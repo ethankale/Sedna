@@ -117,7 +117,8 @@
               <hr>
               
               <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-8" class='alert-info'
+                  v-bind:class="{ 'alert-danger': testError }">
                   <p>{{ testMessage }}</p>
                 </div>
                 

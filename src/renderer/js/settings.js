@@ -63,6 +63,10 @@ var vm = new Vue({
         msg = "Attempting to connect..."
       };
       return msg;
+    },
+    
+    testError() {
+      return this.testStatus === 'fail' ? true : false;
     }
     
   },
