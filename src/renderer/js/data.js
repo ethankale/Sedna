@@ -35,6 +35,8 @@ var vm = new Vue({
     workups:      [],
     dailySummary: [],
     
+    hideInactive: true,
+    
     measurements: [],
     params:       [],
     
@@ -75,8 +77,6 @@ var vm = new Vue({
       this.dailySummary.forEach((d,i,arr) => {
         let dt          = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
         let diff        = dt.diff(dtOld, 'days').days;
-        
-        // console.log("diff = " + diff);
         
         if (diff === 1) {
           let d_new       = {...d};
@@ -204,11 +204,13 @@ var vm = new Vue({
     },
     
     getSamplePoints() {
+      let query = this.hideInactive ? { active: 1 } : null;
       let request = $.ajax({
-        url: `http://localhost:3000/api/v1/samplePointList`,
-        method:'GET',
-        timeout: 3000,
-        dataType: 'json',
+        url:         `http://localhost:3000/api/v1/samplePointList`,
+        method:      'GET',
+        timeout:     3000,
+        dataType:    'json',
+        data:        query,
         contentType: 'application/json'
       }).done((data) => {
         this.samplePoints = data;
