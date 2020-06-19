@@ -1,3 +1,9 @@
+/* Try to keep the transaction log down during bulk insert */
+USE master;
+ALTER DATABASE Alqwu SET RECOVERY SIMPLE;
+USE Alqwu;
+GO
+
 /* Insert users */
 SET IDENTITY_INSERT Alqwu.dbo.[User] ON;
 GO
@@ -11,6 +17,15 @@ GO
 INSERT INTO [Alqwu].[dbo].[Unit] (Symbol, Description)
 SELECT symbol, description
 FROM [GDATA].[dbo].tblWQUnit;
+GO
+
+/* Add a millibar unit, because GData doesn't currently have one */
+SET IDENTITY_INSERT Alqwu.dbo.[Unit] ON;
+GO
+INSERT INTO [Alqwu].[dbo].[Unit] (UnitID, Symbol, Description)
+SELECT 100, 'mbar', 'Millibars (atmospheric pressure)'
+GO
+SET IDENTITY_INSERT Alqwu.dbo.[Unit] OFF;
 GO
 
 /* Insert parameters */
@@ -71,6 +86,7 @@ LEFT JOIN GDATA.dbo.LoggerType as glt
 ON gl.LoggerTypeID = glt.LoggerTypeID
 LEFT JOIN Alqwu.dbo.EquipmentModel as aem
 on glt.Make = aem.Manufacturer AND glt.Model = aem.Name
+GO
 
 INSERT INTO Alqwu.dbo.Equipment (EquipmentModelID, SerialNumber)
 SELECT aem.EquipmentModelID, gi.SerialNumber
@@ -79,11 +95,13 @@ LEFT JOIN GDATA.dbo.InstrumentType as git
 ON gi.InstrumentTypeID = git.InstrumentTypeID
 LEFT JOIN Alqwu.dbo.EquipmentModel as aem
 on git.Make = aem.Manufacturer AND git.Model = aem.Name
+GO
 
 /* Insert qualifiers */
 INSERT INTO Alqwu.dbo.Qualifier (Code, Description)
 SELECT code, description
 FROM GDATA.dbo.tblWQQualifier
+GO
 
 /* Insert stage metadata 
 3261 is the id for the 'stage' parameter
@@ -94,6 +112,7 @@ INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Ac
 SELECT G_ID, 3261, 1522, 12, 1
 FROM GDATA.dbo.tblDischargeGauging
 GROUP BY G_ID
+GO
 
 /* Insert stage workups */
 INSERT INTO Alqwu.dbo.Workup (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
@@ -103,22 +122,43 @@ LEFT JOIN Alqwu.dbo.Metadata as amd
 ON gwu.G_ID = amd.SamplePointID
 WHERE amd.ParameterID = 3261
 AND amd.MethodID = 1522
+GO
 
-/* Insert stage measurements */
+/* Insert stage measurements 
+   We load the data in batches to keep from overloading the log file with 
+   a single enormous transaction.
+*/
 
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, D_TimeDate, D_Stage, 
-  CASE 
-    WHEN abs([D_Warning]) > 0 THEN 10 
-	WHEN abs([D_Est]) > 0 THEN 17 
-    WHEN abs([D_Provisional]) > 0 THEN 27 
-	ELSE NULL END 
-	as QualifierID
-FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
-LEFT JOIN Alqwu.dbo.Metadata as amd
-ON amd.SamplePointID = gdg.G_ID
-AND amd.ParameterID = 3261
-AND amd.MethodID = 1522
+DECLARE @row_offset INT
+DECLARE @batchSize INT
+DECLARE @results INT
+
+SET @row_offset = 0
+SET @batchSize = 50000
+SET @results = 1
+
+WHILE (@results > 0)
+BEGIN
+  INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+  SELECT amd.MetadataID, D_TimeDate, -480, D_Stage, 
+    CASE 
+  	WHEN abs([D_Warning]) > 0 THEN 10 
+  	WHEN abs([D_Est]) > 0 THEN 17 
+  	WHEN abs([D_Provisional]) > 0 THEN 27 
+  	ELSE NULL END 
+  	as QualifierID
+  FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON amd.SamplePointID = gdg.G_ID
+    AND amd.ParameterID = 3261
+    AND amd.MethodID = 1522
+  ORDER BY D_TimeDate
+  OFFSET @row_offset ROWS FETCH NEXT @batchSize ROWS ONLY;
+  
+  SET @results = @@ROWCOUNT
+  SET @row_offset = @row_offset + @batchSize
+END
+GO
 
 
 /* Insert discharge metadata 
@@ -131,10 +171,11 @@ SELECT G_ID, 1548, 1499, 7, 1
 FROM GDATA.dbo.tblDischargeGauging
 WHERE D_Discharge IS NOT NULL
 GROUP BY G_ID
+GO
 
 /* Insert stage measurements */
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, D_TimeDate, D_Discharge,   
+INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+SELECT amd.MetadataID, D_TimeDate, -480, D_Discharge,   
   CASE 
     WHEN abs([D_Warning]) > 0 THEN 10 
 	WHEN abs([D_Est]) > 0 THEN 17 
@@ -146,6 +187,7 @@ LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 1548
 AND amd.MethodID = 1499
+GO
 
 /* Insert water temp metadata 
 3307 is the id for the 'water temperature' parameter
@@ -157,10 +199,11 @@ SELECT G_ID, 3307, 1476, 6, 1
 FROM GDATA.dbo.tblWaterTempGauging
 WHERE W_Value IS NOT NULL
 GROUP BY G_ID
+GO
 
 /* Insert temperature measurements */
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, W_TimeDate, W_Value, 
+INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+SELECT amd.MetadataID, W_TimeDate, -480, W_Value, 
   CASE 
     WHEN abs([W_Warning]) > 0 THEN 10 
 	WHEN abs([W_Est]) > 0 THEN 17 
@@ -172,3 +215,37 @@ LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 3307
 AND amd.MethodID = 1476
+GO
+
+/* Insert barometric pressure metadata 
+740 is the id for the 'barometric pressure' parameter
+1458 is the id for the 'barometric pressure using barometer' method
+6 is the id for the 'degrees C' unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT G_ID, 740, 1458, 100, 1
+FROM GDATA.dbo.tblBarometerGauging
+WHERE B_Value IS NOT NULL
+GROUP BY G_ID
+GO
+
+/* Insert barometer measurements */
+INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+SELECT amd.MetadataID, B_TimeDate, -480, B_Value, 
+  CASE 
+    WHEN abs([B_Warning]) > 0 THEN 10 
+	WHEN abs([B_Est]) > 0 THEN 17 
+    WHEN abs([B_Provisional]) > 0 THEN 27 
+	ELSE NULL END 
+	as QualifierID
+FROM [GDATA].[dbo].[tblBarometerGauging] as gdg
+LEFT JOIN Alqwu.dbo.Metadata as amd
+ON amd.SamplePointID = gdg.G_ID
+AND amd.ParameterID = 3307
+AND amd.MethodID = 1476
+GO
+
+USE master;
+ALTER DATABASE Alqwu SET RECOVERY SIMPLE;
+USE Alqwu;
+GO
