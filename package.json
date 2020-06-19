@@ -1,6 +1,6 @@
 {
-  "name": "alqwu",
-  "productName": "alqwu",
+  "name": "sedna",
+  "productName": "sedna",
   "version": "0.0.1",
   "description": "A desktop application for managing hydrologic data",
   "main": "src/main/index.js",
@@ -27,7 +27,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "alqwu"
+            "name": "sedna"
           }
         }
       ]

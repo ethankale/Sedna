@@ -1,4 +1,4 @@
-Alqwu
+Sedna
 =====
 A water database for high-rate data, individual data points, and everything in between.
 
@@ -6,21 +6,27 @@ Getting Started
 ---------------
 To install the application:
 
-1: Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from https://www.microsoft.com/en-us/sql-server/sql-server-downloads.
+1: Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>.
 2: Run the database install/setup script, included in this repo at ./src/sql/schema.sql.
 3: Set up a user with read/write access on the newly created database.  This users can't use the windows login; it has to use a password login.
-4: Download the program (currently, grab it from Github, I guess).
+4: Download the program (currently, grab it from Github.  No formal distributions yet).
 5: Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
 
 That should do it.  Most likely issue is with the user; make sure the user you create & use has permission to read, write, and delete for every table in the database.
 
 Development
 -----------
-You'll need Node 12 and NPM 6.  Pull the project into a new directory with git.  `npm install` to install all the dependencies. `npm run build` to execute webpack and bundle the javascript code.  `npm start` to run the Electron app. `npm make` to create an Electron project.
+You'll need Node 12 and NPM 6.  On Windows, highly recommended you start by installing [git bash](https://git-scm.com), if you haven't already.  
+
+1: Pull the project into a new directory with git.  
+2: `npm install` to install all the dependencies. 
+3: `npm run build` to execute webpack and bundle the javascript code.  
+4: `npm start` to run the Electron app. 
+5: `npm make` to create an Electron project.
 
 Some SQL Server caveats:
 
-1: Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip.
+1: Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
 2: You have to enable SQL Server logins; by default it only allows Windows connections.
 
 ### Naming Conventions
@@ -33,7 +39,7 @@ Tables are singular.  So are columns.  Pascal casing (all first words upper, no 
 * _tr Transaction (stored proc or function)
 * _fn Function (non-transactional), etc.
 
-Mostly this is cribbed from https://stackoverflow.com/questions/4702728/relational-table-naming-convention/4703155#4703155.
+Mostly this is cribbed from <https://stackoverflow.com/questions/4702728/relational-table-naming-convention/4703155#4703155>.
 By convention, names are varchar(100), and descriptions are varchar(255).
 
 #### Vue
