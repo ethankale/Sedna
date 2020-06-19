@@ -1,3 +1,11 @@
+/* Insert users */
+SET IDENTITY_INSERT Alqwu.dbo.[User] ON;
+GO
+INSERT INTO [Alqwu].[dbo].[User] (UserID, Name)
+SELECT Data_Processor_ID, Processor_Name
+FROM [GDATA].[dbo].[tblDataProcessor]
+SET IDENTITY_INSERT Alqwu.dbo.[User] OFF;
+GO
 
 /* Insert units */ 
 INSERT INTO [Alqwu].[dbo].[Unit] (Symbol, Description)
@@ -88,8 +96,8 @@ FROM GDATA.dbo.tblDischargeGauging
 GROUP BY G_ID
 
 /* Insert stage workups */
-INSERT INTO Alqwu.dbo.Workup (MetadataID, FileName, DataStarts, DataEnds, LoadedOn)
-SELECT DISTINCT amd.MetadataID, FileName, Start_Time, End_Time, AutoDTStamp
+INSERT INTO Alqwu.dbo.Workup (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, FileName, Start_Time, End_Time, AutoDTStamp, WorkedUp_By
 FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON gwu.G_ID = amd.SamplePointID
