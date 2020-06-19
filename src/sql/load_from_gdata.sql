@@ -104,18 +104,22 @@ ON gwu.G_ID = amd.SamplePointID
 WHERE amd.ParameterID = 3261
 AND amd.MethodID = 1522
 
-/* Insert stage measurements 
-CAUTION there is more work to do here.
-This doesn't handle warning, lock, or provisional values.
-*/
+/* Insert stage measurements */
 
 INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, D_TimeDate, D_Stage, CASE WHEN abs([D_Est]) > 0 THEN 7 ELSE NULL END as QualifierID
+SELECT amd.MetadataID, D_TimeDate, D_Stage, 
+  CASE 
+    WHEN abs([D_Warning]) > 0 THEN 10 
+	WHEN abs([D_Est]) > 0 THEN 17 
+    WHEN abs([D_Provisional]) > 0 THEN 27 
+	ELSE NULL END 
+	as QualifierID
 FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 3261
 AND amd.MethodID = 1522
+
 
 /* Insert discharge metadata 
 1548 is the id for the 'Flow' parameter
@@ -128,12 +132,15 @@ FROM GDATA.dbo.tblDischargeGauging
 WHERE D_Discharge IS NOT NULL
 GROUP BY G_ID
 
-/* Insert stage measurements 
-CAUTION there is more work to do here.
-This doesn't handle warning, lock, or provisional values.
-*/
+/* Insert stage measurements */
 INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, D_TimeDate, D_Discharge, CASE WHEN abs([D_Est]) > 0 THEN 7 ELSE NULL END as QualifierID
+SELECT amd.MetadataID, D_TimeDate, D_Discharge,   
+  CASE 
+    WHEN abs([D_Warning]) > 0 THEN 10 
+	WHEN abs([D_Est]) > 0 THEN 17 
+    WHEN abs([D_Provisional]) > 0 THEN 27 
+	ELSE NULL END 
+	as QualifierID
 FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
@@ -151,12 +158,15 @@ FROM GDATA.dbo.tblWaterTempGauging
 WHERE W_Value IS NOT NULL
 GROUP BY G_ID
 
-/* Insert temperature measurements 
-CAUTION there is more work to do here.
-This doesn't handle warning, lock, or provisional values.
-*/
+/* Insert temperature measurements */
 INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, Value, QualifierID)
-SELECT amd.MetadataID, W_TimeDate, W_Value, CASE WHEN abs([W_Est]) > 0 THEN 7 ELSE NULL END as QualifierID
+SELECT amd.MetadataID, W_TimeDate, W_Value, 
+  CASE 
+    WHEN abs([W_Warning]) > 0 THEN 10 
+	WHEN abs([W_Est]) > 0 THEN 17 
+    WHEN abs([W_Provisional]) > 0 THEN 27 
+	ELSE NULL END 
+	as QualifierID
 FROM [GDATA].[dbo].[tblWaterTempGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
