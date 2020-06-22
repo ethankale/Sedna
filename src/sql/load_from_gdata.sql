@@ -134,7 +134,7 @@ DECLARE @batchSize INT
 DECLARE @results INT
 
 SET @row_offset = 0
-SET @batchSize = 50000
+SET @batchSize = 500000
 SET @results = 1
 
 WHILE (@results > 0)
@@ -173,7 +173,7 @@ WHERE D_Discharge IS NOT NULL
 GROUP BY G_ID
 GO
 
-/* Insert stage measurements */
+/* Insert discharge measurements */
 INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
 SELECT amd.MetadataID, D_TimeDate, -480, D_Discharge,   
   CASE 
@@ -187,6 +187,7 @@ LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 1548
 AND amd.MethodID = 1499
+WHERE D_Discharge IS NOT NULL
 GO
 
 /* Insert water temp metadata 
@@ -215,6 +216,7 @@ LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 3307
 AND amd.MethodID = 1476
+WHERE W_Value IS NOT NULL
 GO
 
 /* Insert barometric pressure metadata 
@@ -241,11 +243,7 @@ SELECT amd.MetadataID, B_TimeDate, -480, B_Value,
 FROM [GDATA].[dbo].[tblBarometerGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
-AND amd.ParameterID = 3307
-AND amd.MethodID = 1476
-GO
-
-USE master;
-ALTER DATABASE Alqwu SET RECOVERY SIMPLE;
-USE Alqwu;
+AND amd.ParameterID = 740
+AND amd.MethodID = 1458
+WHERE B_Value IS NOT NULL
 GO
