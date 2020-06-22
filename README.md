@@ -7,7 +7,10 @@ Getting Started
 To install the application:
 
 1: Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>.
-2: Run the database install/setup script, included in this repo at ./src/sql/schema.sql.
+2: Run the database install/setup scripts in the following order:
+    1: ./src/sql/schema.sql
+    2: ./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  Only works if the GData database is on the same server as the Sedna database)
+    3: ./src/sql/indexes.sql
 3: Set up a user with read/write access on the newly created database.  This users can't use the windows login; it has to use a password login.
 4: Download the program (currently, grab it from Github.  No formal distributions yet).
 5: Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
