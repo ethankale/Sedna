@@ -20,11 +20,20 @@ SELECT symbol, description
 FROM [GDATA].[dbo].tblWQUnit;
 GO
 
-/* Add a millibar unit, because GData doesn't currently have one */
+/* Add missing units */
 SET IDENTITY_INSERT Alqwu.dbo.[Unit] ON;
 GO
 INSERT INTO [Alqwu].[dbo].[Unit] (UnitID, Symbol, Description)
 SELECT 100, 'mbar', 'Millibars (atmospheric pressure)'
+GO
+INSERT INTO [Alqwu].[dbo].[Unit] (UnitID, Symbol, Description)
+SELECT 101, 'W/m2', 'Watts per square meter (solar radiation)'
+GO
+INSERT INTO [Alqwu].[dbo].[Unit] (UnitID, Symbol, Description)
+SELECT 102, 'mph', 'Miles per hour'
+GO
+INSERT INTO [Alqwu].[dbo].[Unit] (UnitID, Symbol, Description)
+SELECT 103, '°', 'Angle in degrees'
 GO
 SET IDENTITY_INSERT Alqwu.dbo.[Unit] OFF;
 GO
@@ -39,6 +48,18 @@ GO
 SET IDENTITY_INSERT Alqwu.dbo.Parameter OFF;
 GO
 
+/* Add missing parameter(s) */
+SET IDENTITY_INSERT Alqwu.dbo.Parameter ON;
+GO
+INSERT INTO [Alqwu].[dbo].Parameter (ParameterID, Name, Description)
+SELECT 10000, 'WINDMAX', 'Wind gust speed (anemometer)'
+GO
+INSERT INTO [Alqwu].[dbo].Parameter (ParameterID, Name, Description)
+SELECT 10001, 'Water level in well (elevation of water depth)', 'Elevation of groundwater'
+GO
+SET IDENTITY_INSERT Alqwu.dbo.Parameter OFF;
+GO
+
 /* Insert methods */
 SET IDENTITY_INSERT Alqwu.dbo.Method ON;
 GO
@@ -47,6 +68,15 @@ SELECT id, code, left(description, 255) as description, left(reference, 255) as 
 FROM GDATA.dbo.tblWQMethod;
 GO
 SET IDENTITY_INSERT Alqwu.dbo.Method OFF;
+GO
+
+/* Add missing method(s) */
+SET IDENTITY_INSERT Alqwu.dbo.[Method] ON;
+GO
+INSERT INTO [Alqwu].[dbo].[Method] (MethodID, Code, Description)
+SELECT 10000, 'WINDDIR', 'Wind direction (anemometer)'
+GO
+SET IDENTITY_INSERT Alqwu.dbo.[Method] OFF;
 GO
 
 /* Insert sites */
@@ -284,4 +314,290 @@ GO
  WHERE R_Value IS NOT NULL
  AND amd.SamplePointID IS NOT NULL
  ORDER BY R_TimeDate
+GO
+
+/* Insert relative humidity metadata 
+3172 is the id for the 'Relative Humidity' parameter
+1574 is the id for the 'RHumidityLoggerCalc' method
+3 is the id for the '%' unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT rh.G_ID, 3172, 1574, 3, 1
+FROM GDATA.dbo.tblRelativeHumidityGauging as rh
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON rh.G_ID = gl.G_ID
+WHERE H_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY rh.G_ID
+GO
+
+/* Insert relative humidity measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, H_TimeDate, -480, H_Value, 
+   CASE 
+   WHEN abs([H_Warning]) > 0 THEN 10 
+   WHEN abs([H_Est]) > 0 THEN 17 
+   WHEN abs([H_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblRelativeHumidityGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3172
+ AND amd.MethodID = 1574
+ WHERE H_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY H_TimeDate
+GO
+
+/* Insert lake level metadata 
+1840 is the id for the 'Lake Stage' parameter
+1497 is the id for the 'STAGE-ELEV' method
+12 is the id for the 'ft' unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT ll.G_ID, 1840, 1497, 12, 1
+FROM GDATA.dbo.tblLakeLevelGauging as ll
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON ll.G_ID = gl.G_ID
+WHERE L_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY ll.G_ID
+GO
+
+/* Insert lake level measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, L_TimeDate, -480, L_Value, 
+   CASE 
+   WHEN abs([L_Warning]) > 0 THEN 10 
+   WHEN abs([L_Est]) > 0 THEN 17 
+   WHEN abs([L_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblLakeLevelGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 1840
+ AND amd.MethodID = 1497
+ WHERE L_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY L_TimeDate
+GO
+
+/* Insert well level metadata 
+10001 is the id for the 'water level in well (elevation)' parameter (see above)
+1509 is the id for the 'water level by pressure transducer' method
+12 is the id for the 'ft' unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 10001, 1509, 12, 1
+FROM GDATA.dbo.tblPiezometerGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE P_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert well level measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, P_TimeDate, -480, P_Value, 
+   CASE 
+   WHEN abs([P_Warning]) > 0 THEN 10 
+   WHEN abs([P_Est]) > 0 THEN 17 
+   WHEN abs([P_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblPiezometerGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 10001
+ AND amd.MethodID = 1509
+ WHERE P_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY P_TimeDate
+GO
+
+
+/* Insert solar radiation metadata 
+3242 is the id for the 'local solar radiation' parameter
+1610 is the id for the 'solar radiation by pyranometer' method
+101 is the id for the 'W/m2' unit (see where this is created in this script above)
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 3242, 1610, 101, 1
+FROM GDATA.dbo.tblSolarRadiationGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE S_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert solar radiation measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, S_TimeDate, -480, S_Value, 
+   CASE 
+   WHEN abs([S_Warning]) > 0 THEN 10 
+   WHEN abs([S_Est]) > 0 THEN 17 
+   WHEN abs([Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblSolarRadiationGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3242
+ AND amd.MethodID = 1610
+ WHERE S_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY S_TimeDate
+GO
+
+/* Insert air temperature metadata 
+3301 is the id for the 'air temperature' parameter
+1476 is the id for the 'thermistor' method
+6 is the id for the 'W/m2' unit (see where this is created in this script above)
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 3301, 1476, 6, 1
+FROM GDATA.dbo.tblAirTempGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE A_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert air temperature measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, A_TimeDate, -480, A_Value, 
+   CASE 
+   WHEN abs([A_Warning]) > 0 THEN 10 
+   WHEN abs([A_Est]) > 0 THEN 17 
+   WHEN abs([A_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblAirTempGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3301
+ AND amd.MethodID = 1476
+ WHERE A_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY A_TimeDate
+GO
+
+/* Insert wind speed metadata 
+3541 is the id for the 'wind speed' parameter
+1629 is the id for the 'wind speed by field meter' method
+102 is the id for the 'mph' unit (see where this is created in this script above)
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 3541, 1629, 102, 1
+FROM GDATA.dbo.tblWindSpeedGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE Wi_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert wind speed measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Value, 
+   CASE 
+   WHEN abs([Wi_Warning]) > 0 THEN 10 
+   WHEN abs([Wi_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3541
+ AND amd.MethodID = 1629
+ WHERE Wi_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY Wi_TimeDate
+GO
+
+/* Insert wind direction metadata 
+3540 is the id for the 'wind direction' parameter
+10000 is the id for the 'wind direction' method (created earlier in script)
+103 is the id for the '°' unit (see where this is created in this script above)
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 3540, 10000, 103, 1
+FROM GDATA.dbo.tblWindSpeedGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE Wi_Direction IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert wind direction measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Direction, 
+   CASE 
+   WHEN abs([Wi_Warning]) > 0 THEN 10 
+   WHEN abs([Wi_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3540
+ AND amd.MethodID = 10000
+ WHERE Wi_Direction IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY Wi_TimeDate
+GO
+
+/* Insert wind gust metadata 
+10000 is the id for the 'wind gust' parameter (see above in script where created)
+1629 is the id for the 'wind speed by field meter' method
+102 is the id for the 'mph' unit (see where this is created in this script above)
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 10000, 1629, 102, 1
+FROM GDATA.dbo.tblWindSpeedGauging as gd
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON gd.G_ID = gl.G_ID
+WHERE Wi_Gust_Speed IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY gd.G_ID
+GO
+
+/* Insert wind gust measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Gust_Speed, 
+   CASE 
+   WHEN abs([Wi_Warning]) > 0 THEN 10 
+   WHEN abs([Wi_Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 10000
+ AND amd.MethodID = 1629
+ WHERE Wi_Gust_Speed IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY Wi_TimeDate
 GO

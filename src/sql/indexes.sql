@@ -36,7 +36,7 @@ ALTER TABLE [dbo].[EquipmentDeployment] CHECK CONSTRAINT [EquipmentDeployment_Me
 GO
 
 /* Measurement constraints */
-ALTER TABLE [dbo].[Measurement] ADD CONSTRAINT [PK_Measurement] PRIMARY KEY
+ALTER TABLE [dbo].[Measurement] ADD CONSTRAINT [PK_Measurement] PRIMARY KEY CLUSTERED (MeasurementID)
 GO
 ALTER TABLE [dbo].[Measurement]  WITH NOCHECK ADD  CONSTRAINT [Measurement_Metadata_fk] FOREIGN KEY([MetadataID])
 REFERENCES [dbo].[Metadata] ([MetadataID])
@@ -104,7 +104,7 @@ CREATE NONCLUSTERED INDEX [measurement_addeddate_idx] ON [dbo].[Measurement]
 GO
 
 /****** Object:  Index [measurement_collecteddate_idx]    Script Date: 2020-06-10 2:18:40 PM ******/
-CREATE CLUSTERED INDEX [measurement_collecteddate_idx] ON [dbo].[Measurement]
+CREATE NONCLUSTERED INDEX [measurement_collecteddate_idx] ON [dbo].[Measurement]
 (
 	[MetadataID] ASC,
 	[CollectedDate] ASC
