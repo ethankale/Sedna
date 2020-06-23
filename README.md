@@ -6,14 +6,14 @@ Getting Started
 ---------------
 To install the application:
 
-1: Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>.
-2: Run the database install/setup scripts in the following order:
-    1: ./src/sql/schema.sql
-    2: ./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  Only works if the GData database is on the same server as the Sedna database)
-    3: ./src/sql/indexes.sql
-3: Set up a user with read/write access on the newly created database.  This users can't use the windows login; it has to use a password login.
-4: Download the program (currently, grab it from Github.  No formal distributions yet).
-5: Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
+1. Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>.
+2. Run the database install/setup scripts in the following order:
+    1. ./src/sql/schema.sql
+    2. ./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  Only works if the GData database is on the same server as the Sedna database)
+    3. ./src/sql/indexes.sql
+3. Set up a user with read/write access on the newly created database.  This users can't use the windows login; it has to use a password login.
+4. Download the program (currently, grab it from Github.  No formal distributions yet).
+5. Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
 
 That should do it.  Most likely issue is with the user; make sure the user you create & use has permission to read, write, and delete for every table in the database.
 
@@ -21,11 +21,11 @@ Development
 -----------
 You'll need Node 12 and NPM 6.  On Windows, highly recommended you start by installing [git bash](https://git-scm.com), if you haven't already.  
 
-1: Pull the project into a new directory with git.  
-2: `npm install` to install all the dependencies. 
-3: `npm run build` to execute webpack and bundle the javascript code.  
-4: `npm start` to run the Electron app. 
-5: `npm make` to create an Electron project.
+1. Pull the project into a new directory with git.  
+2. `npm install` to install all the dependencies. 
+3. `npm run build` to execute webpack and bundle the javascript code.  
+4. `npm start` to run the Electron app. 
+5. `npm make` to create an Electron project.
 
 Some SQL Server caveats:
 

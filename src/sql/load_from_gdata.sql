@@ -1,6 +1,7 @@
 /* Try to keep the transaction log down during bulk insert */
 USE master;
-ALTER DATABASE Alqwu SET RECOVERY SIMPLE;
+ALTER DATABASE Alqwu SET RECOVERY BULK_LOGGED;
+DBCC TRACEON(610);
 USE Alqwu;
 GO
 
@@ -115,51 +116,41 @@ GROUP BY G_ID
 GO
 
 /* Insert stage workups */
-INSERT INTO Alqwu.dbo.Workup (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
 SELECT DISTINCT amd.MetadataID, FileName, Start_Time, End_Time, AutoDTStamp, WorkedUp_By
 FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu
-LEFT JOIN Alqwu.dbo.Metadata as amd
-ON gwu.G_ID = amd.SamplePointID
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
 WHERE amd.ParameterID = 3261
-AND amd.MethodID = 1522
+  AND amd.MethodID = 1522
 GO
 
 /* Insert stage measurements 
-   We load the data in batches to keep from overloading the log file with 
-   a single enormous transaction.
+   It is vital that: 
+   1) there are no indexes on the Measurements table, and
+   2) the WITH (TABLOCK) statement is used.  Together, these minimize logging.
+   Otherwise, the transaction log can fill up while inserting millions of rows,
+   causing insert failure.  The alternative (batching) is abysmally slow.
 */
-
-DECLARE @row_offset INT
-DECLARE @batchSize INT
-DECLARE @results INT
-
-SET @row_offset = 0
-SET @batchSize = 500000
-SET @results = 1
-
-WHILE (@results > 0)
-BEGIN
-  INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
-  SELECT amd.MetadataID, D_TimeDate, -480, D_Stage, 
-    CASE 
-  	WHEN abs([D_Warning]) > 0 THEN 10 
-  	WHEN abs([D_Est]) > 0 THEN 17 
-  	WHEN abs([D_Provisional]) > 0 THEN 27 
-  	ELSE NULL END 
-  	as QualifierID
-  FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
-  LEFT JOIN Alqwu.dbo.Metadata as amd
-  ON amd.SamplePointID = gdg.G_ID
-    AND amd.ParameterID = 3261
-    AND amd.MethodID = 1522
-  ORDER BY D_TimeDate
-  OFFSET @row_offset ROWS FETCH NEXT @batchSize ROWS ONLY;
-  
-  SET @results = @@ROWCOUNT
-  SET @row_offset = @row_offset + @batchSize
-END
+INSERT INTO Alqwu.dbo.Measurement 
+  WITH (TABLOCK)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+SELECT amd.MetadataID, D_TimeDate, -480, D_Stage, 
+  CASE 
+	WHEN abs([D_Warning]) > 0 THEN 10 
+	WHEN abs([D_Est]) > 0 THEN 17 
+	WHEN abs([D_Provisional]) > 0 THEN 27 
+	ELSE NULL END 
+	as QualifierID
+FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
+LEFT JOIN Alqwu.dbo.Metadata as amd
+ON amd.SamplePointID = gdg.G_ID
+  AND amd.ParameterID = 3261
+  AND amd.MethodID = 1522
+ORDER BY D_TimeDate
 GO
-
 
 /* Insert discharge metadata 
 1548 is the id for the 'Flow' parameter
@@ -174,7 +165,9 @@ GROUP BY G_ID
 GO
 
 /* Insert discharge measurements */
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+INSERT INTO Alqwu.dbo.Measurement 
+  WITH (TABLOCK)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
 SELECT amd.MetadataID, D_TimeDate, -480, D_Discharge,   
   CASE 
     WHEN abs([D_Warning]) > 0 THEN 10 
@@ -203,7 +196,9 @@ GROUP BY G_ID
 GO
 
 /* Insert temperature measurements */
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+INSERT INTO Alqwu.dbo.Measurement
+  WITH (TABLOCK)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
 SELECT amd.MetadataID, W_TimeDate, -480, W_Value, 
   CASE 
     WHEN abs([W_Warning]) > 0 THEN 10 
@@ -222,17 +217,24 @@ GO
 /* Insert barometric pressure metadata 
 740 is the id for the 'barometric pressure' parameter
 1458 is the id for the 'barometric pressure using barometer' method
-6 is the id for the 'degrees C' unit
+100 is the id for the 'millibar' unit, created during database setup
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT G_ID, 740, 1458, 100, 1
-FROM GDATA.dbo.tblBarometerGauging
+INSERT INTO Alqwu.dbo.Metadata 
+  WITH (TABLOCK)
+  (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT bg.G_ID, 740, 1458, 100, 1
+FROM GDATA.dbo.tblBarometerGauging as bg
+LEFT JOIN GDATA.dbo.tblGaugeLLID as gl
+ON bg.G_ID = gl.G_ID
 WHERE B_Value IS NOT NULL
-GROUP BY G_ID
+AND gl.G_ID IS NOT NULL
+GROUP BY bg.G_ID
 GO
 
 /* Insert barometer measurements */
-INSERT INTO Alqwu.dbo.Measurement (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
 SELECT amd.MetadataID, B_TimeDate, -480, B_Value, 
   CASE 
     WHEN abs([B_Warning]) > 0 THEN 10 
@@ -246,4 +248,40 @@ ON amd.SamplePointID = gdg.G_ID
 AND amd.ParameterID = 740
 AND amd.MethodID = 1458
 WHERE B_Value IS NOT NULL
+GO
+
+/* Insert rainfall metadata 
+3090 is the id for the 'Precipitation' parameter
+1527 is the id for the 'Rain gage' method
+14 is the id for the 'in' (inches) unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT rg.G_ID, 3090, 1527, 14, 1
+FROM GDATA.dbo.tblRainGauging as rg
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+ON rg.G_ID = gl.G_ID
+WHERE R_Value IS NOT NULL
+AND gl.G_ID IS NOT NULL
+GROUP BY rg.G_ID
+GO
+
+/* Insert rainfall measurements */
+ INSERT INTO Alqwu.dbo.Measurement 
+ WITH (TABLOCK)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ SELECT amd.MetadataID, R_TimeDate, -480, R_Value, 
+   CASE 
+   WHEN abs([R_Warning]) > 0 THEN 10 
+   WHEN abs([R_Est]) > 0 THEN 17 
+   WHEN abs([Provisional]) > 0 THEN 27 
+   ELSE NULL END 
+   as QualifierID
+ FROM [GDATA].[dbo].tblRainGauging as gdg
+ LEFT JOIN Alqwu.dbo.Metadata as amd
+ ON amd.SamplePointID = gdg.G_ID
+ AND amd.ParameterID = 3090
+ AND amd.MethodID = 1527
+ WHERE R_Value IS NOT NULL
+ AND amd.SamplePointID IS NOT NULL
+ ORDER BY R_TimeDate
 GO
