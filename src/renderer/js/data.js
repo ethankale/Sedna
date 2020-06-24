@@ -400,6 +400,7 @@ function loadParamList() {
         });
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
         
+        $("#paramList").off('click', 'div a');
         $("#paramList").on('click', 'div a', function() {
             $("#paramList div a").removeClass('active');
             $(this).addClass('active');

@@ -1,6 +1,6 @@
 Sedna
 =====
-A water database for high-rate data, individual data points, and everything in between.
+An environmental database for high-rate data, individual data points, and everything in between.
 
 Getting Started
 ---------------
