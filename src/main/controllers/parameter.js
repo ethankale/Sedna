@@ -29,6 +29,7 @@ let controller = {
               ,[Name]
               ,[CAS]
               ,[Description]
+              ,[GraphTypeID]
             FROM [Parameter]
             WHERE ParameterID = @parameterid`;
           
@@ -140,12 +141,13 @@ let controller = {
           let statement = `UPDATE [Parameter] SET
             Name        = @name,
             CAS         = @cas,
-            Description = @description
+            Description = @description,
+            GraphTypeID = @graphTypeID
             WHERE ParameterID = @parameterid`;
             
           var request = new Request(statement, function(err, rowCount) {
             if (err) {
-              res.status(400).end();
+              res.status(400).json(err);
               console.log(err);
             } else {
               res.status(200).json("Success");
@@ -153,11 +155,12 @@ let controller = {
             connection.close();
           });
           
-          request.addParameter('parameterid', TYPES.Int, req.body.ParameterID);
+          request.addParameter('parameterid', TYPES.Int,     req.body.ParameterID);
           request.addParameter('name',        TYPES.VarChar, req.body.Name);
           request.addParameter('cas',         TYPES.VarChar, req.body.CAS);
           request.addParameter('description', TYPES.VarChar, req.body.Description);
-          
+          request.addParameter('graphTypeID', TYPES.Int,     req.body.GraphTypeID);
+
           connection.execSql(request);
         });
       };

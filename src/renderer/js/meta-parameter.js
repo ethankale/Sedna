@@ -17,6 +17,7 @@ Vue.directive('select', {
 
 $(document).ready(function() {
   $("#paramSelect").select2({ width: '100%' });
+  // $("#parameter-GraphDefaultSelect").select2({ width: '100%' });
 });
 
 var vm = new Vue({
@@ -25,25 +26,34 @@ var vm = new Vue({
     'new-edit-cancel': NewEditCancel
   },
   data: {
-    params: [],
+    params:      [],
     ParameterID: 0,
     
-    editstate: 'view',
-    error: false,
+    graphTypes:  [],
+    
+    editstate:   'view',
+    error:       false,
     
     notificationText: "Click 'Edit' below to make changes, or 'New' to create a new Parameter.",
     currentParameter: {
       ParameterID: null,
       Name:        null,
       CAS:         null,
-      Description: null
+      Description: null,
+      GraphTypeID: 1
     }
   },
   
   mounted: function () {
-    let self = this;
-    
-    self.updateParameterList();
+    this.updateParameterList();
+    this.getGraphTypes()
+      .done((data) => {
+        this.graphTypes = data;
+      })
+      .fail((err) => {
+        console.log("Couldn't load graph types.");
+        console.log(err);
+      });
   },
   
   methods: {
@@ -64,6 +74,17 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
       });
+    },
+    
+    getGraphTypes() {
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/graphTypeList`,
+        method: 'GET',
+        timeout: 3000,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
     },
     
     getCurrentParameter: function(ParameterID) {

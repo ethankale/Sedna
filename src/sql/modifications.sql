@@ -1,172 +1,43 @@
-ALTER TABLE Metadata 
-ADD DecimalPoints tinyint DEFAULT 2;
+/* Create a graph table */
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[GraphType](
+	[GraphTypeID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [varchar](100) NULL,
+	[Description] [varchar](255) NULL,
+ CONSTRAINT [PK_GraphType] PRIMARY KEY CLUSTERED 
+(
+	[GraphTypeID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 GO
 
-CREATE UNIQUE INDEX measurement_unique_idx
-ON Measurement (CollectedDtm, MetadataID);
+INSERT INTO Alqwu.dbo.GraphType (Name, Description)
+VALUES ('Line with Range', 'A single line representing values, with a polygon representing a range of values.')
 GO
 
-ALTER TABLE Site
-ADD Active bit DEFAULT 1;
-GO
-UPDATE Site
-SET Active = 1;
-GO
-ALTER TABLE Site
-ALTER COLUMN Active bit NOT NULL;
+INSERT INTO Alqwu.dbo.GraphType (Name, Description)
+VALUES ('Bar Sum', 'A bar graph that represents the sum of values for a time period; useful for e.g. rainfall.')
 GO
 
-ALTER TABLE SamplePoint
-ADD LatLongAccuracyFeet smallint NULL,
-LatLongDate datetime2(0) NULL,
-LatLongDetails varchar(255) NULL,
-ElevationAccuracyFeet smallint NULL,
-ElevationDate datetime2(0) NULL,
-ElevationDetails varchar(255) NULL,
-WellType varchar(100) NULL,
-WellCompletionType varchar(100) NULL,
-WellIntervalTopFeet numeric(6,2) NULL,
-WellIntervalBottomFeet numeric(6,2) NULL,
-WellInnerDiameterInches numeric(4,2) NULL,
-WellOuterDiameterInches numeric(4,2) NULL,
-WellStickupFeet numeric(4,2) NULL,
-WellStickupDate datetime2(0) NULL,
-WellDrilledBy varchar(100) NULL,
-WellEcologyTagID varchar(10) NULL,
-WellEcologyStartCardID varchar(15),
-AddedOn datetime2(0) NULL,
-RemovedOn datetime2(0) NULL,
-Active bit DEFAULT 1 NOT NULL
-GO
-
-ALTER TABLE SamplePoint
-DROP CONSTRAINT SamplePoint_Site_fk;
-GO
-
-ALTER TABLE SamplePoint
-ADD CONSTRAINT SamplePoint_Site_fk FOREIGN KEY (SiteID)
-REFERENCES Site (SiteID)
-ON DELETE CASCADE
-ON UPDATE CASCADE;
-GO
-
-ALTER TABLE EquipmentModel
-ADD Active bit DEFAULT 1;
-GO
-UPDATE EquipmentModel
-SET Active = 1;
-GO
-ALTER TABLE EquipmentModel
-ALTER COLUMN Active bit NOT NULL;
-GO
-
-ALTER TABLE Equipment
-ADD Active bit DEFAULT 1;
-GO
-UPDATE Equipment
-SET Active = 1;
-GO
-ALTER TABLE Equipment
-ALTER COLUMN Active bit NOT NULL;
-GO
-
-ALTER TABLE [User]
-ADD Active bit DEFAULT 1;
-GO
-UPDATE [User]
-SET Active = 1;
-GO
-ALTER TABLE [User]
-ALTER COLUMN Active bit NOT NULL;
-GO
-
-ALTER TABLE Measurement
-ADD CollectedDateTime datetimeoffset(0) NULL;
-GO
-UPDATE Measurement
-SET CollectedDateTime = todatetimeoffset(CollectedDtm,-8*60)
-GO
-ALTER TABLE Measurement
-ALTER COLUMN CollectedDateTime DateTimeOffset(0) NOT NULL;
-GO
-DROP INDEX Measurement.measurement_unique_idx;
-GO
-CREATE UNIQUE INDEX measurement_unique_idx
-ON Measurement (CollectedDateTime, MetadataID)
-GO
-DROP INDEX Measurement.measurement_metadataid_idx;
-GO
-CREATE INDEX measurement_metadataid_idx
-ON Measurement (MetadataID)
-GO
-ALTER VIEW Measurement_By_SamplePoint_v
-AS
-SELECT sp.SiteID, md.ParameterID, md.MethodID, pm.Name, 
-    mt.Description AS Method, MAX(ms.CollectedDateTime) AS maxdtm, 
-    MIN(ms.CollectedDateTime) AS mindtm, COUNT(ms.MeasurementID) AS nmeasure
-FROM dbo.Measurement AS ms 
-  INNER JOIN dbo.Metadata AS md ON ms.MetadataID = md.MetadataID 
-  INNER JOIN dbo.SamplePoint AS sp ON md.SamplePointID = sp.SamplePointID 
-  INNER JOIN dbo.Parameter AS pm ON pm.ParameterID = md.ParameterID 
-  INNER JOIN dbo.Method AS mt ON md.MethodID = mt.MethodID
-GROUP BY sp.SiteID, md.ParameterID, md.MethodID, pm.Name, mt.Description;
-GO
-ALTER TABLE Measurement
-DROP COLUMN CollectedDtm;
-GO
-ALTER TABLE Measurement
-ADD CollectedDate AS (CONVERT(date,CollectedDateTime)) PERSISTED;
-GO
-CREATE INDEX measurement_collecteddate_idx
-ON Measurement (CollectedDate)
-GO
-CREATE INDEX measurement_collecteddtm_idx
-ON Measurement (CollectedDTM)
-GO
-ALTER TABLE Measurement
-ADD AddedDate datetime2(0) DEFAULT(GETDATE())
-GO
-CREATE INDEX measurement_addeddate_idx
-ON Measurement (AddedDate)
-GO
-ALTER TABLE Measurement
-ADD Depth_M Numeric(6,2) NULL
-GO
-DROP INDEX Measurement.measurement_unique_idx;
-GO
-CREATE UNIQUE INDEX measurement_unique_idx
-ON Measurement (CollectedDateTime, MetadataID, Depth_M)
+INSERT INTO Alqwu.dbo.GraphType (Name, Description)
+VALUES ('Point', 'A simple scatterplot with one dot representing each data point.')
 GO
 
 
-CREATE TABLE Conversion (
-  ConversionID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED,
-  ConversionName VARCHAR(100) NOT NULL,
-  CreatedBy VARCHAR(100) NULL,
-  LastModified Date NULL,
-  Active BIT DEFAULT 1 NOT NULL,
-  Description VARCHAR(255)
-);
-GO
-CREATE TABLE ConversionValue (
-  ConversionValueID INT IDENTITY(1,1) PRIMARY KEY CLUSTERED,
-  ConversionID INT NOT NULL REFERENCES Conversion(ConversionID),
-  FromValue Numeric(18,6) NOT NULL,
-  ToValue Numeric(18,6) NOT NULL
-);
-GO
-CREATE INDEX ConversionValue_idx
-ON ConversionValue (ConversionID)
-GO
+/* Add new graph column to parameter table, and create the foreign key */
+ALTER TABLE Alqwu.dbo.[Parameter]
+ADD GraphTypeID INT NULL
+CONSTRAINT GraphTypeIDDefault
+DEFAULT 1 WITH VALUES;
 
-ALTER TABLE Workup
-ADD UserID INT NULL
-GO
-ALTER TABLE Workup
-ADD CONSTRAINT User_Creates_Workup_fk FOREIGN KEY (UserID)
-REFERENCES [User] (UserID)
+ALTER TABLE Alqwu.dbo.[Parameter]  
+WITH CHECK ADD CONSTRAINT Measurement_Default_GraphType_fk FOREIGN KEY(GraphTypeID)
+REFERENCES Alqwu.dbo.GraphType (GraphTypeID)
 ON UPDATE CASCADE
+ON DELETE CASCADE
 GO
-CREATE INDEX WorkupLoadedBy_idx
-ON [Workup] (UserID)
+ALTER TABLE Alqwu.dbo.[Parameter] CHECK CONSTRAINT [Measurement_Default_GraphType_fk]
 GO

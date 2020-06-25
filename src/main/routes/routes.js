@@ -4,6 +4,7 @@ const conversion          = require('../controllers/conversion.js');
 const equipment           = require('../controllers/equipment.js');
 const equipmentModel      = require('../controllers/equipmentModel.js');
 const equipmentDeployment = require('../controllers/equipmentDeployment.js');
+const graphType           = require('../controllers/graphType.js');
 const metadata            = require('../controllers/metadata.js');
 const measurements        = require('../controllers/measurements.js');
 const method              = require('../controllers/method.js');
@@ -50,6 +51,9 @@ module.exports = function (app) {
     app.get('/api/v1/equipmentModel',     equipmentModel.getEquipmentModelDetails);
     app.put('/api/v1/equipmentModel',     equipmentModel.updateEquipmentModel);
     app.post('/api/v1/equipmentModel',    equipmentModel.addEquipmentModel);
+    
+    // Graph Types
+    app.get('/api/v1/graphTypeList', graphType.getGraphTypeList);
     
     // Measurements
     app.get('/api/v1/getMeasurements',       measurements.getMeasurements);

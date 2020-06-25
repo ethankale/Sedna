@@ -34,6 +34,7 @@ var vm = new Vue({
     samplePoints: [],
     workups:      [],
     dailySummary: [],
+    graphTypes:   [],
     
     hideInactive: true,
     
@@ -41,6 +42,7 @@ var vm = new Vue({
     params:       [],
     
     waterYears:   [],
+    paramDetails: [],
     
     spID: null,
     
@@ -183,6 +185,17 @@ var vm = new Vue({
       loadParamList();
     },
     
+    getGraphTypes() {
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/graphTypeList`,
+        method: 'GET',
+        timeout: 3000,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
+    },
+    
     getDailyMeasurements() {
       let query = {
         spID:      this.spID,
@@ -203,6 +216,42 @@ var vm = new Vue({
       return request;
     },
     
+    getParameterDetails() {
+      let query = {
+        ParameterID:   paramcurrent
+      };
+      
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/parameter`,
+        method:'GET',
+        timeout: 3000,
+        data: query,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
+    },
+    
+    onPageLoad() {
+      this.getSamplePoints()
+        .done((data) => {
+          this.samplePoints = data;
+        })
+        .fail((err) => {
+          console.log("Couldn't load sample points.");
+          console.log(err);
+        });
+        
+      this.getGraphTypes()
+        .done((data) => {
+          this.graphTypes = data;
+        })
+        .fail((err) => {
+          console.log("Couldn't load graph types.");
+          console.log(err);
+        });
+    },
+    
     getSamplePoints() {
       let query = this.hideInactive ? { active: 1 } : null;
       let request = $.ajax({
@@ -212,9 +261,11 @@ var vm = new Vue({
         dataType:    'json',
         data:        query,
         contentType: 'application/json'
-      }).done((data) => {
-        this.samplePoints = data;
-      })
+      });
+      return request;
+      // .done((data) => {
+        // this.samplePoints = data;
+      // })
     },
     
     getWorkups() {
@@ -308,12 +359,16 @@ var vm = new Vue({
     },
     
     updateDates() {
-      this.getDailyMeasurements().done((data) => {
-        this.dailySummary = data;
+      
+      Promise.allSettled([this.getDailyMeasurements(), this.getParameterDetails()])
+      .then((data) => {
+        this.dailySummary = data[0].value;
+        this.paramDetails = data[1].value;
         this.graphMeasurements();
-      }).fail((err) => {
-        console.log("Ran into an error with getDailyMeasurements");
-        console.log(err);
+      })
+      .catch(error => {
+        console.log("Ran into an error getting daily measurements/parameter details");
+        console.log(error);
       });
     }
   }
@@ -326,7 +381,7 @@ $(document).ready(function() {
       placeholder: 'Select a Sample Point'
     });
     
-    vm.getSamplePoints();
+    vm.onPageLoad();
     
     $("#downloadDataButton").click(function() {
       var paramList = $("#downloadParameterSelect").val();

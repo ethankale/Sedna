@@ -868,6 +868,22 @@
                   </div>
                   
                   <div class="form-group row">
+                    <label for="parameter-GraphDefaultSelect" class="col-sm-2 col-form-label">Graph Type</label>
+                    <div class="col-sm-10">
+                      <select class="form-control" id="parameter-GraphDefaultSelect" 
+                        v-model="currentParameter.GraphTypeID" 
+                        :disabled="editstate === 'view'">
+                        <option 
+                          v-for="gtype in graphTypes" 
+                          v-bind:value="gtype.GraphTypeID" 
+                          v-bind:key="gtype.GraphTypeID">
+                          {{ gtype.Name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
                     <label for="parameter-description" class="col-sm-2 col-form-label">Description</label>
                     <div class="col-sm-10">
                       <textarea class="form-control" id="parameter-description" rows="5"
