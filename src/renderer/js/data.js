@@ -108,6 +108,7 @@ var vm = new Vue({
             d_new.Value    = diff == 1 ? d_new.Value : null;
             d_new.ValueMax = diff == 1 ? d_new.ValueMax : null;
             d_new.ValueMin = diff == 1 ? d_new.ValueMin : null;
+            d_new.ValueSum = diff == 1 ? d_new.ValueSum : null;
             
             if (this.waterYears.findIndex(wy => wy === d_new.wy) === -1) {
               this.waterYears.push(d_new.wy);
@@ -292,14 +293,25 @@ var vm = new Vue({
     
     graphMeasurements(width) {
       
+      let chartType = 1;
+      if (this.paramDetails.GraphTypeID === 1) {
+        chartType = 'lineRange';
+      } else if (this.paramDetails.GraphTypeID === 2) {
+        chartType = 'bar';
+      } else if (this.paramDetails.GraphTypeID === 3) {
+        chartType = 'point';
+      } else if (this.paramDetails.GraphTypeID === 4) {
+        chartType = 'polar';
+      };
+      
       $("#chartContainer").empty();
       if(vm.dailyFormatted.length > 0) {
-        var margin = {top: 10, right: 30, bottom: 30, left: 60},
+        let margin = {top: 10, right: 30, bottom: 30, left: 60},
             height = 400 - margin.top - margin.bottom;
         width = width || $("#chartContainer").width() - margin.left - margin.right;
         
         // append the svg object to the body of the page
-        var svg = d3.select("#chartContainer")
+        let svg = d3.select("#chartContainer")
           .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -313,30 +325,40 @@ var vm = new Vue({
           .range([ 0, width ]);
         
         // Get the extent of the combined extents of the min and max values
-        let yExtent = d3.extent( 
-          [].concat(
-            d3.extent(vm.dailyFormatted, function(d) {return d.ValueMax; }),
-            d3.extent(vm.dailyFormatted, function(d) {return d.ValueMin; })),
-          function(d) {return d});
+        let yExtent = null;
+        if (chartType === 'lineRange') {
+          yExtent = d3.extent( 
+            [].concat(
+              d3.extent(vm.dailyFormatted, function(d) {return d.ValueMax; }),
+              d3.extent(vm.dailyFormatted, function(d) {return d.ValueMin; })),
+            function(d) {return d});
+        } else if (chartType === 'bar') {
+          yExtent = [0, d3.max(vm.dailyFormatted, function(d) {return d.ValueSum; })];
+        } else if (chartType === 'polar') {
+          yExtent = [0, 360];
+        } else {
+          yExtent = d3.extent(vm.dailyFormatted, function(d) {return d.Value; })
+        }
         
         let y = d3.scaleLinear()
           .domain(yExtent)
           .range([ height, 0 ]);
         
-        let area = d3.area()
-          .defined(d => { return d.ValueMin!=null & d.ValueMax!=null; })
-          .x(d => x(d.dtm))
-          .y0(d => y(d.ValueMin))
-          .y1(d => y(d.ValueMax));
-        
-        // Add the range polygon
-        svg.append("path")
-          .datum(vm.dailyFormatted)
-          .attr("d", area)
-          .attr("fill", "lightblue");
-        
-        // Add the line
-        svg.append("path")
+        if (chartType === 'lineRange') {
+          let area = d3.area()
+            .defined(d => { return d.ValueMin!=null & d.ValueMax!=null; })
+            .x(d => x(d.dtm))
+            .y0(d => y(d.ValueMin))
+            .y1(d => y(d.ValueMax));
+          
+          // Add the range polygon
+          svg.append("path")
+            .datum(vm.dailyFormatted)
+            .attr("d", area)
+            .attr("fill", "lightblue");
+            
+          // Add the line
+          svg.append("path")
           .datum(vm.dailyFormatted)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
@@ -346,7 +368,46 @@ var vm = new Vue({
             .x(d => { return x(d.dtm) })
             .y(d => { return y(d.Value) })
             )
-          
+        };
+        
+        if (chartType === 'bar') {
+          svg.selectAll('plotBars')
+            .data(vm.dailyFormatted)
+            .enter()
+            .append('rect')
+              .attr('x', d => { return x(d.dtm); })
+              .attr('y', d => { return y(d.ValueSum); })
+              .attr('width', 1)
+              .attr('height', d => { return height - y(d.ValueSum) })
+              .attr('fill', 'steelblue')
+        };
+        
+        if (chartType === 'point') {
+          svg.append('g')
+            .selectAll('dot')
+            .data(vm.dailyFormatted)
+            .enter()
+            .append('circle')
+              .attr('cx', d => { return x(d.dtm) })
+              .attr('cy', d => { return y(d.Value) })
+              .attr('r', 1.5)
+              .style('fill', 'steelblue')
+        }
+        
+        if (chartType === 'polar') {
+          svg.append('g')
+            .selectAll('dot')
+            .data(vm.dailyFormatted)
+            .enter()
+            .append('circle')
+              .attr('cx', d => { return x(d.dtm) })
+              .attr('cy', d => { return y(d.ValueDegrees) })
+              .attr('r', 1.5)
+              .style('fill', 'steelblue')
+        }
+        
+        
+        
         // Add the axes
         svg.append("g")
           .attr("transform", "translate(0," + height + ")")

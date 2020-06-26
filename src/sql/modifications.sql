@@ -26,6 +26,10 @@ INSERT INTO Alqwu.dbo.GraphType (Name, Description)
 VALUES ('Point', 'A simple scatterplot with one dot representing each data point.')
 GO
 
+INSERT INTO Alqwu.dbo.GraphType (Name, Description)
+VALUES ('Polar', 'A scatterplot on polar coordinates, where the minimum extent is next to the maximum.')
+GO
+
 
 /* Add new graph column to parameter table, and create the foreign key */
 ALTER TABLE Alqwu.dbo.[Parameter]

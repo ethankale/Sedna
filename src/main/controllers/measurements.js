@@ -50,8 +50,6 @@ let controller = {
       var returndata = [];
       var connection = new Connection(mssql_config);
       
-      console.log(req.query);
-      
       let spID      = req.query.spID;
       let paramid   = req.query.paramid;
       let methodid  = req.query.methodid;
@@ -63,20 +61,47 @@ let controller = {
           console.log('Error: ', err);
           res.status(400).json(err);
         } else {
-          let statement = `SELECT CollectedDate, 
-              min(Value) as ValueMin, max(Value) as ValueMax, avg(Value) as Value
-            FROM Measurement as ms
-            WHERE ms.MetadataID IN (
-              SELECT MetadataID
-              FROM Metadata as md
-              WHERE md.SamplePointID = @spID
+          let statement = `
+            with q as
+            (
+              SELECT CollectedDate, Value, Value * PI()/180. as radians
+              FROM Measurement as ms
+              WHERE ms.MetadataID IN (
+                SELECT MetadataID
+                FROM Metadata as md
+                WHERE md.SamplePointID = @spID
                 AND md.ParameterID = @paramid
                 AND md.MethodID = @methodid
-              )
-              AND ms.CollectedDate >= @startdate
-              AND ms.CollectedDate <= @enddate
-              GROUP BY CollectedDate
-              ORDER BY CollectedDate ASC`
+                )
+                AND ms.CollectedDate >= @startdate
+                AND ms.CollectedDate <= @enddate
+            ), q2 as
+            (
+              select 
+                CollectedDate, 
+                min(Value) as ValueMin,  
+                max(Value) as ValueMax,
+                sum(Value) as ValueSum,
+                avg(Value) as Value,
+                avg(sin(radians)) as x, 
+                avg(cos(radians)) as y
+              from q
+              group by CollectedDate
+            ), q3 as
+            (
+            select CollectedDate, ValueMin, ValueMax, ValueSum, Value,
+              case 
+                when x>=0 and y>=0 then 0 + atan(x/y) --NE quadrant
+                when x>=0 and y<0  then Pi() - atan(x/-y)  --SE quadrant
+                when x<0  and y<0  then Pi() + atan(-x/-y) --SW quadrant
+                when x<0  and y>=0 then  2*PI() - atan(-x/y)  
+              end AS avgRadians --NW quadrant
+            from q2
+            )
+            select CollectedDate, ValueMin, ValueMax, ValueSum, Value,
+              avgRadians * 180./PI() as ValueDegrees
+            from q3
+            ORDER BY CollectedDate ASC`
           
           let request = new Request(statement, function(err, rowCount) {
             if (err) {
