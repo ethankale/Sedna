@@ -279,14 +279,21 @@ var vm = new Vue({
           .filter(function(m) {return m.MetadataID == metaID})[0]
           .DecimalPoints;
       };
+      
+      console.log(metaID);
+      console.log(frequency);
+      console.log(decimals);
+      
       let metaObj   = {
         "metaid":    metaID,
         "offset":    0,
         "drift":     0,
         "frequency": frequency,
         "decimals":  decimals,
-        "nOverlap":  0};
+        "nOverlap":  0
+      };
 
+      console.log(metaObj);
       this.$set(this.headerMetadataMap, header, metaObj);
     },
 
@@ -367,7 +374,7 @@ var vm = new Vue({
         //   a gap between this entry and the last one entered.  If not,
         //   just push the new object; if so, set values to NaN and push.
         // console.time("Gap filling");
-        if (i === 0) {
+        if (i === 0 || stepchange === 0) {
           returnData.push(d2);
           n += 1;
         } else {
