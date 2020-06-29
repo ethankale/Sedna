@@ -8,8 +8,6 @@ let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 let dataload   = require('./dataload.js');
 
-let paramcurrent  = 0;
-let methodcurrent = 0;
 let paramMarkup   = "";
 
 let wylist       = [];
@@ -31,18 +29,21 @@ var vm = new Vue({
   el: '#vueWrapper',
   
   data: {
-    samplePoints: [],
-    workups:      [],
-    dailySummary: [],
-    graphTypes:   [],
+    samplePoints:  [],
+    workups:       [],
+    dailySummary:  [],
+    graphTypes:    [],
     
-    hideInactive: true,
+    hideInactive:  true,
     
-    measurements: [],
-    params:       [],
+    measurements:  [],
+    params:        [],
     
-    waterYears:   [],
-    paramDetails: [],
+    paramcurrent:  null,
+    methodcurrent: null,
+    
+    waterYears:    [],
+    paramDetails:  [],
     
     spID: null,
     
@@ -180,6 +181,31 @@ var vm = new Vue({
       // });
     },
     
+    clickParameter(clickedParam, e) {
+      $("#paramList div a").removeClass('active');
+      
+      $(e.target).addClass('active');
+      
+      var lastdtm   = clickedParam.maxdtm;
+      var wateryear = alqwuutils.calcWaterYear(lastdtm);
+      var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
+      
+      this.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
+      this.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
+      
+      this.paramcurrent  = clickedParam.ParameterID;
+      this.methodcurrent = clickedParam.MethodID;
+      
+      wymarkup = "";
+      wylist = alqwuutils.createWYList(clickedParam.mindtm, lastdtm);
+      wylist.forEach(wy => {
+          wymarkup += `<option value=${wy}>${wy}</option>\n`
+      });
+      $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
+      
+      this.updateDates();
+    },
+    
     changeSamplePoint() {
       $("#chartContainer").empty();
       this.getWorkups();
@@ -200,8 +226,8 @@ var vm = new Vue({
     getDailyMeasurements() {
       let query = {
         spID:      this.spID,
-        paramid:   paramcurrent,
-        methodid:  methodcurrent,
+        paramid:   this.paramcurrent,
+        methodid:  this.methodcurrent,
         startdate: this.downloadStartDateString,
         enddate:   this.downloadEndDateString
       };
@@ -219,7 +245,7 @@ var vm = new Vue({
     
     getParameterDetails() {
       let query = {
-        ParameterID:   paramcurrent
+        ParameterID: this.paramcurrent
       };
       
       let request = $.ajax({
@@ -264,9 +290,6 @@ var vm = new Vue({
         contentType: 'application/json'
       });
       return request;
-      // .done((data) => {
-        // this.samplePoints = data;
-      // })
     },
     
     getWorkups() {
@@ -515,53 +538,30 @@ function loadParamList() {
             
         });
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
-        
-        $("#paramList").off('click', 'div a');
-        $("#paramList").on('click', 'div a', function() {
-            $("#paramList div a").removeClass('active');
-            $(this).addClass('active');
-            
-            var lastdtm   = new Date($(this).data("lastcollectdtm"));
-            var wateryear = alqwuutils.calcWaterYear(lastdtm);
-            var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
-            
-            vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-            vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
-            
-            paramcurrent  = $(this).data("paramid");
-            methodcurrent = $(this).data("methodid");
-            
-            wymarkup = "";
-            wylist = alqwuutils.createWYList(new Date($(this).data("firstcollectdtm")), lastdtm);
-            wylist.forEach(wy => {
-                wymarkup += `<option value=${wy}>${wy}</option>\n`
-            });
-            $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
-            //$('#wylist').val(wylist[wylist.length-1]);
-            
-            vm.updateDates();
-        });
-        $("#paramList div a:first").click();
     });
 };
 
 function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
+    let ajaxData = {
+      spID:       vm.spID,
+      paramid:    paramid,
+      methodid:   methodid,
+      startdtm:   startdtm,
+      enddtm:     enddtm,
+      utcoffset:  utcoffset
+    };
     
-    var url = 'http://localhost:3000/api/v1/getMeasurements' +
-        '?spID='      + vm.spID +
-        '&paramid='   + paramid +
-        '&methodid='  + methodid +
-        '&startdtm='  + startdtm +
-        '&enddtm='    + enddtm +
-        '&utcoffset=' + utcoffset
-    
-    $.ajax({url: url
-        }).done(function(data) {
-            vm.measurements = data;
-            vm.measurements.forEach(function(d) {
-                d.dtm = Date.parse(d.CollectedDateTime);
-            });
-            vm.graphMeasurements();
+    $.ajax({
+      url:  'http://localhost:3000/api/v1/getMeasurements',
+      data: ajaxData,
+      method:  'GET',
+      timeout: 3000
+    }).done(function(data) {
+        vm.measurements = data;
+        vm.measurements.forEach(function(d) {
+            d.dtm = Date.parse(d.CollectedDateTime);
+        });
+        vm.graphMeasurements();
     });
 };
 

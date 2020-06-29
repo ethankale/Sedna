@@ -407,16 +407,11 @@
             
             <div class="row border-top">
               <div id="paramList" class="col-4">
-                <!-- <p v-show="spID != null">Loading Parameters...</p> -->
                 
                 <div class="list-group list-group-flush">
                   <a href="#"
                     v-for="param in params"
-                    
-                    :data-paramid="param.ParameterID" 
-                    :data-methodid="param.MethodID"
-                    :data-lastcollectdtm="param.maxdtm.toLocaleDateString()" 
-                    :data-firstcollectdtm="param.mindtm.toLocaleDateString()" 
+                    @click="clickParameter(param, $event)"
                     class="list-group-item list-group-item-action">
                     <h5>{{ param.Name }}</h5>
                     <small>{{ param.Method }}</small>

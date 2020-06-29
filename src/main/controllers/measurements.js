@@ -50,6 +50,8 @@ let controller = {
       var returndata = [];
       var connection = new Connection(mssql_config);
       
+      // console.log(req.query);
+      
       let spID      = req.query.spID;
       let paramid   = req.query.paramid;
       let methodid  = req.query.methodid;
