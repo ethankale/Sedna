@@ -139,8 +139,8 @@ GO
 1522 is the id for the 'recording piezometer' method
 12 is the id for the 'feet' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT G_ID, 3261, 1522, 12, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT G_ID, 3261, 1522, 12, 1, 15
 FROM GDATA.dbo.tblDischargeGauging
 GROUP BY G_ID
 GO
@@ -187,8 +187,8 @@ GO
 1499 is the id for the 'streamflow from stage-discharge' method
 7 is the id for the 'cfs' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT G_ID, 1548, 1499, 7, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT G_ID, 1548, 1499, 7, 1, 15
 FROM GDATA.dbo.tblDischargeGauging
 WHERE D_Discharge IS NOT NULL
 GROUP BY G_ID
@@ -218,8 +218,8 @@ GO
 1476 is the id for the 'temperature by thermistor' method
 6 is the id for the 'degrees C' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT G_ID, 3307, 1476, 6, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT G_ID, 3307, 1476, 6, 1, 15
 FROM GDATA.dbo.tblWaterTempGauging
 WHERE W_Value IS NOT NULL
 GROUP BY G_ID
@@ -251,8 +251,8 @@ GO
 */
 INSERT INTO Alqwu.dbo.Metadata 
   WITH (TABLOCK)
-  (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT bg.G_ID, 740, 1458, 100, 1
+  (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT bg.G_ID, 740, 1458, 100, 1, 15
 FROM GDATA.dbo.tblBarometerGauging as bg
 LEFT JOIN GDATA.dbo.tblGaugeLLID as gl
 ON bg.G_ID = gl.G_ID
@@ -285,8 +285,8 @@ GO
 1527 is the id for the 'Rain gage' method
 14 is the id for the 'in' (inches) unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT rg.G_ID, 3090, 1527, 14, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, , FrequencyMinutes)
+SELECT rg.G_ID, 3090, 1527, 14, 1, 15
 FROM GDATA.dbo.tblRainGauging as rg
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON rg.G_ID = gl.G_ID
@@ -321,8 +321,8 @@ GO
 1574 is the id for the 'RHumidityLoggerCalc' method
 3 is the id for the '%' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT rh.G_ID, 3172, 1574, 3, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT rh.G_ID, 3172, 1574, 3, 1, 15
 FROM GDATA.dbo.tblRelativeHumidityGauging as rh
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON rh.G_ID = gl.G_ID
@@ -357,8 +357,8 @@ GO
 1497 is the id for the 'STAGE-ELEV' method
 12 is the id for the 'ft' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT ll.G_ID, 1840, 1497, 12, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT ll.G_ID, 1840, 1497, 12, 1, 60
 FROM GDATA.dbo.tblLakeLevelGauging as ll
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON ll.G_ID = gl.G_ID
@@ -393,8 +393,8 @@ GO
 1509 is the id for the 'water level by pressure transducer' method
 12 is the id for the 'ft' unit
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 10001, 1509, 12, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 10001, 1509, 12, 1, 15
 FROM GDATA.dbo.tblPiezometerGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
@@ -430,8 +430,8 @@ GO
 1610 is the id for the 'solar radiation by pyranometer' method
 101 is the id for the 'W/m2' unit (see where this is created in this script above)
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 3242, 1610, 101, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 3242, 1610, 101, 1, 15
 FROM GDATA.dbo.tblSolarRadiationGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
@@ -466,8 +466,8 @@ GO
 1476 is the id for the 'thermistor' method
 6 is the id for the 'W/m2' unit (see where this is created in this script above)
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 3301, 1476, 6, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 3301, 1476, 6, 1, 15
 FROM GDATA.dbo.tblAirTempGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
@@ -502,8 +502,8 @@ GO
 1629 is the id for the 'wind speed by field meter' method
 102 is the id for the 'mph' unit (see where this is created in this script above)
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 3541, 1629, 102, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 3541, 1629, 102, 1, 15
 FROM GDATA.dbo.tblWindSpeedGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
@@ -537,8 +537,8 @@ GO
 10000 is the id for the 'wind direction' method (created earlier in script)
 103 is the id for the '°' unit (see where this is created in this script above)
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 3540, 10000, 103, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 3540, 10000, 103, 1, 15
 FROM GDATA.dbo.tblWindSpeedGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
@@ -572,8 +572,8 @@ GO
 1629 is the id for the 'wind speed by field meter' method
 102 is the id for the 'mph' unit (see where this is created in this script above)
 */
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
-SELECT gd.G_ID, 10000, 1629, 102, 1
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
+SELECT gd.G_ID, 10000, 1629, 102, 1, 15
 FROM GDATA.dbo.tblWindSpeedGauging as gd
 LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 ON gd.G_ID = gl.G_ID
