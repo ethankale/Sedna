@@ -131,7 +131,11 @@ var vm = new Vue({
           // h.cmean = r[5];
 
           headersFiltered.push(h);
-          this.graphColumn(h);
+          
+          Vue.nextTick(() => {
+            this.graphColumn(h);
+          });
+          
         };
       });
 
@@ -280,10 +284,6 @@ var vm = new Vue({
           .DecimalPoints;
       };
       
-      console.log(metaID);
-      console.log(frequency);
-      console.log(decimals);
-      
       let metaObj   = {
         "metaid":    metaID,
         "offset":    0,
@@ -293,7 +293,6 @@ var vm = new Vue({
         "nOverlap":  0
       };
 
-      console.log(metaObj);
       this.$set(this.headerMetadataMap, header, metaObj);
     },
 
@@ -337,8 +336,6 @@ var vm = new Vue({
           .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
 
-        // console.time("Set Values");
-
         d2.ValueOriginal        = d[header].trim() == ''   ? NaN  : Number(d[header]);
         d2.Depth_M              = this.depthColName == ''  ? null : d[this.depthColName];
         d2.QualifierID          = null;
@@ -353,9 +350,6 @@ var vm = new Vue({
           let qualifierobj = this.qualifiers.find(o => o.Code.trim() === d[this.qualColName]);
           d2.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
         };
-        // console.timeEnd("Set Values");
-
-        // console.time("Update stats");
 
         mindate = d2.CollectedDTM > mindate ? mindate : d2.CollectedDTM;
         maxdate = d2.CollectedDTM < maxdate ? maxdate : d2.CollectedDTM;
@@ -368,12 +362,10 @@ var vm = new Vue({
           cmax = newVal > cmax ? newVal : cmax;
           cmin = newVal < cmin ? newVal : cmin;
         };
-        // console.timeEnd("Update stats");
 
         // Now that we've calculated all the values, find determine if there's
         //   a gap between this entry and the last one entered.  If not,
         //   just push the new object; if so, set values to NaN and push.
-        // console.time("Gap filling");
         if (i === 0 || stepchange === 0) {
           returnData.push(d2);
           n += 1;
@@ -404,9 +396,7 @@ var vm = new Vue({
             n += 1;
           };
         };
-        // console.timeEnd("Gap filling");
       });
-      // cmean = csum/returnData.length;
 
       return [returnData, cmis, csum, cmin, cmax, mindate, maxdate];
     },
@@ -427,7 +417,7 @@ var vm = new Vue({
     graphColumn(headerWithMeta) {
       let selector     = '#graph' + headerWithMeta.name;
       let measurements = headerWithMeta.measurements;
-
+      
       $(selector).empty();
       let margin = {top: 10, right: 60, bottom: 30, left: 60},
           width = $("#uploadModal .modal-content").width() - margin.left - margin.right,
@@ -455,8 +445,6 @@ var vm = new Vue({
       let filledExtent = d3.extent(measurements, function(d) {return d.Value; });
 
       let yextent = [d3.min(valueExtent.concat(filledExtent)), d3.max(valueExtent.concat(filledExtent))]
-
-      // console.log(valueExtent + " - " + filledExtent + " - " + yextent);
 
       // Add Y axis
       let y = d3.scaleLinear()
@@ -539,7 +527,6 @@ var vm = new Vue({
                           'offset': this.utcoffset,
                           'loadnumber': i/stepSize,
                           'measurements': m};
-        //console.log("Starting Post #" + i/stepSize);
         calls.push(
           $.ajax({
             type: 'POST',
@@ -574,8 +561,6 @@ var vm = new Vue({
 
       Promise.all(calls)
       .then((result) => {
-        // console.log("All loads completed.");
-        // console.log("Errors: " + errors + "; Successes: " + successes);
         if (errors > 0) {
           let msg = "Loading complete.  Encountered errors with " +
             errors + " records out of " +
@@ -609,7 +594,6 @@ var vm = new Vue({
         dataType:    'json',
         timeout:     3000
       }).done((data) => {
-        // console.log("Workup loaded");
       }).fail((err) => {
         console.log("Workup load failed; " + err);
       });
@@ -783,7 +767,6 @@ var vm = new Vue({
 
 // From column selection back to CSV upload
 var showUpload = function() {
-    // console.log("showUpload");
     $("#uploadCSVContainer").removeClass("d-none");
     $("#uploadColumnSelectContainer").addClass("d-none");
     $("#uploadReviewContainer").addClass("d-none");
@@ -803,7 +786,6 @@ var showUpload = function() {
 };
 
 var showColumnSelect = function() {
-    // console.log("showColumnSelect");
     $("#uploadCSVContainer").addClass("d-none");
     $("#uploadColumnSelectContainer").removeClass("d-none");
     $("#uploadReviewContainer").addClass("d-none");
@@ -818,7 +800,6 @@ var showColumnSelect = function() {
 
 // From column selection to data review
 var showReview = function() {
-    // console.log("showReview");
     $("#uploadColumnSelectContainer").addClass("d-none");
     $("#uploadCSVContainer").addClass("d-none");
     $("#uploadReviewContainer").removeClass("d-none");
