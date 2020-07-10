@@ -21,6 +21,8 @@ var vm = new Vue({
       }
     },
     metasFromSite:     [],
+    uploadProgress:    0,
+
 
     singleMeasureData: {
       'metaid':  null,
@@ -47,6 +49,7 @@ var vm = new Vue({
     depthID:     -4,
 
     headerMetadataMap: {},
+    headerNotices:     {},
     measurements:      [],
 
     papaConfig:     {
@@ -111,6 +114,7 @@ var vm = new Vue({
           h.frequency = metas[i].frequency;
           h.decimals  = metas[i].decimals;
           h.nOverlap  = metas[i].nOverlap;
+          h.notice    = metas[i].notice;
 
           let r = this.formatDataForUpload(
             h.name,
@@ -290,7 +294,8 @@ var vm = new Vue({
         "drift":     0,
         "frequency": frequency,
         "decimals":  decimals,
-        "nOverlap":  0
+        "nOverlap":  0,
+        "notice":    ""
       };
 
       this.$set(this.headerMetadataMap, header, metaObj);
@@ -518,8 +523,10 @@ var vm = new Vue({
       let successes     = 0;
       let completeSteps = 0;
       let stepSize      = 30;    // The max number of rows to bulk insert.
-
+      
       let calls         = [];
+
+      let headerMeta = this.headerMetadataMap[h.name];
 
       for (let i=0; i<h.measurements.length; i+=stepSize) {
         let m = h.measurements.slice(i, i+stepSize)
@@ -546,14 +553,24 @@ var vm = new Vue({
           }).always(() => {
 
             if (errors > 0) {
-              let msg = "Loading in progress.  Encountered errors with " +
-                errors + " records out of " +
-                (errors + successes) + "so far.";
-              this.setNotice('alert-warning', msg);
+              // let msg = "Loading in progress.  Encountered errors with " +
+                // errors + " records out of " +
+                // (errors + successes) + "so far.";
+              // headerMeta.notice = msg;
             } else {
-              let msg = "Loading in progress.  Successfully loaded " +
-                successes + " records so far.";
-              this.setNotice('alert-info', msg);
+              
+              // Change this to a progress bar
+              
+              this.uploadProgress = ((successes + errors) / h.measurements.length) * 100;
+              
+              // let msg = "Loading in progress.  Successfully loaded " +
+                // successes + " records so far.";
+              // headerMeta.notice = msg;
+              
+              // Refactor the notice so we don't have to recalculate 
+              //   the entire metadata record on every update
+              
+              // this.setNotice('alert-info', msg);
             };
           })
         );
@@ -565,11 +582,13 @@ var vm = new Vue({
           let msg = "Loading complete.  Encountered errors with " +
             errors + " records out of " +
             (errors + successes);
-          this.setNotice('alert-danger', msg);
+          headerMeta.notice = msg;
+          // this.setNotice('alert-danger', msg);
         } else {
           let msg = "Loading complete.  Successfully loaded " +
             successes + " records.";
-          this.setNotice('alert-success', msg);
+          headerMeta.notice = msg;
+          // this.setNotice('alert-success', msg);
         };
         if (successes > 0) {
           this.setWorkup(headerWithMeta);
@@ -613,15 +632,15 @@ var vm = new Vue({
 
             if (data.measurementCount == 0) {
               this.uploadMeasurements(headerWithMeta);
+              headerMeta.notice = "Loading measurements..."
             } else {
-              this.setNotice('alert-warning',
-                'Found ' + data.measurementCount + ' existing measurements.  Delete?');
+              headerMeta.notice = 'Found ' + data.measurementCount + ' existing measurements.  Delete?'
             };
           });
       } else {
         this.deleteMeasurements(headerWithMeta)
           .then(() => {
-            this.setNotice('alert-info', 'Deleted ' + nOverlap + ' measurements.');
+            headerMeta.notice = 'Deleted ' + nOverlap + ' measurements.'
             headerMeta.nOverlap = 0;
             this.$set(this.headerMetadataMap, headerWithMeta.name, headerMeta);
           });

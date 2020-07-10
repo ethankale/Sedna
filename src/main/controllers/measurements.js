@@ -200,8 +200,8 @@ let controller = {
         
         // console.log("startdtm = " + startdtm + "; enddtm = " + enddtm);
         
-        let paramstring  = Array.isArray(paramids)  ? paramstring  = paramids.join(", ")  : paramids
-        let methodstring = Array.isArray(methodids) ? methodstring = methodids.join(", ") : methodids
+        let paramstring  = Array.isArray(paramids)  ? paramids.join(", ")  : paramids
+        let methodstring = Array.isArray(methodids) ? methodids.join(", ") : methodids
         
       connection.on('connect', function(err) {
         let returndata = [];
