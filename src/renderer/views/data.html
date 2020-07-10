@@ -229,8 +229,9 @@
                             <br>
                             
                             <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: 100%">
-                              <!-- v-bind:style="{ width: uploadProgress + '%' }"> -->
+                            <div class="progress-bar" role="progressbar"
+                              v-bind:style="{ width: uploadProgress + '%' }"
+                              style = 'transition:none;'>
                               {{ uploadProgress }}%</div>
                             </div>
                             

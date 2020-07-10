@@ -561,7 +561,7 @@ var vm = new Vue({
               
               // Change this to a progress bar
               
-              this.uploadProgress = ((successes + errors) / h.measurements.length) * 100;
+              this.uploadProgress = Math.floor(((successes + errors) / h.measurements.length) * 100);
               
               // let msg = "Loading in progress.  Successfully loaded " +
                 // successes + " records so far.";
