@@ -182,9 +182,17 @@ var vm = new Vue({
     },
     
     clickParameter(clickedParam, e) {
-      $("#paramList div a").removeClass('active');
       
-      $(e.target).addClass('active');
+      this.params.forEach(d => {
+        d.active = false;
+      });
+      
+      clickedParam.active = true;
+      
+      // $("#paramList div a").removeClass('active');
+      
+      // Vue.nextTick($(e.target).addClass('active'));
+      // console.log(e.target);
       
       var lastdtm   = clickedParam.maxdtm;
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
@@ -530,6 +538,7 @@ function loadParamList() {
         vm.params.forEach(param => {
           param.maxdtm = new Date(param.maxdtm);
           param.mindtm = new Date(param.mindtm);
+          param.active = false;
           
           downloadParamMarkup += `<option 
             value=${param.ParameterID}|${param.MethodID}>
