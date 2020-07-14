@@ -25,7 +25,7 @@ You'll need Node 12 and NPM 6.  On Windows, highly recommended you start by inst
 2. `npm install` to install all the dependencies. 
 3. `npm run build` to execute webpack and bundle the javascript code.  
 4. `npm start` to run the Electron app. 
-5. `npm make` to create an Electron project.
+5. `npm run make` to create an Electron project.
 
 Some SQL Server caveats:
 

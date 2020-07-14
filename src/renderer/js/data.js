@@ -189,11 +189,6 @@ var vm = new Vue({
       
       clickedParam.active = true;
       
-      // $("#paramList div a").removeClass('active');
-      
-      // Vue.nextTick($(e.target).addClass('active'));
-      // console.log(e.target);
-      
       var lastdtm   = clickedParam.maxdtm;
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
       var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
