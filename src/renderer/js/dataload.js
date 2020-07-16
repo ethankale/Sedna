@@ -762,6 +762,8 @@ var vm = new Vue({
     },
     
     reset() {
+      $("#uploadColumnSelectContainer select").val(-1).change();
+      
       this.filePath                = '';
       this.fileText                = '';
       this.headerMetadataMap       = {};

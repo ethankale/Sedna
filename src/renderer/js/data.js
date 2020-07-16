@@ -178,7 +178,6 @@ var vm = new Vue({
         
         window.makePDF(siteName, subtitle, table, svg);
         this.graphMeasurements();
-      // });
     },
     
     clickParameter(clickedParam, e) {
