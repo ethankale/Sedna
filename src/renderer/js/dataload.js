@@ -5,6 +5,10 @@ let lx         = require('luxon');
 let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 
+let $          = require('jquery');
+let select2    = require('select2');
+let bootstrap  = require('bootstrap');
+
 var vm = new Vue({
   el: '#uploadModal',
 

@@ -1,12 +1,14 @@
 
-// Node modules.  Remember to run browserify every time to bundle this.
-// browserify src/js/data.js -o src/js/data_bundle.js
-
 let lx         = require('luxon');
 let Papa       = require('papaparse');
 let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 let dataload   = require('./dataload.js');
+let d3         = require('d3');
+
+let $          = require('jquery');
+let select2    = require('select2');
+let bootstrap  = require('bootstrap');
 
 let paramMarkup   = "";
 

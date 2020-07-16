@@ -5,6 +5,9 @@ let lx       = require('luxon');
 let d3       = require('d3');
 let utils    = require('./utils.js');
 
+let $          = require('jquery');
+let select2    = require('select2');
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
