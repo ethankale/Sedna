@@ -45,3 +45,19 @@ ON DELETE CASCADE
 GO
 ALTER TABLE Alqwu.dbo.[Parameter] CHECK CONSTRAINT [Measurement_Default_GraphType_fk]
 GO
+
+/* Add some new fields specifically for water quality/lab data */
+ALTER TABLE Alqwu.dbo.[Measurement]
+ADD Duplicate BIT NULL
+DEFAULT 0
+GO
+
+ALTER TABLE Alqwu.dbo.[Measurement]
+ADD LabBatch VARCHAR(255) NULL
+GO
+
+ALTER TABLE Alqwu.dbo.[Measurement]
+ADD Symbol CHAR(1) NULL
+DEFAULT '='
+GO
+
