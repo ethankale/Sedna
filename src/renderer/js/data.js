@@ -21,8 +21,6 @@ let wylist       = [];
 let wycurrent    = 0;
 let wymarkup     = "";
 
-// var measurements = []
-
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -594,8 +592,8 @@ function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     
     $.ajax({url: url
     }).done(function(data) {
-        measurements = data;
-        measurements.forEach(function(d) {
+        vm.measurements = data;
+        vm.measurements.forEach(function(d) {
           // This is super ugly, but javascript insists on treating every date like it's UTC, 
           //   and I specifically want all the dates in the front end to be local, 
           //   with UTC on the back end.

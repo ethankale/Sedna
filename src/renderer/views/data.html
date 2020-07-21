@@ -99,6 +99,25 @@
                         </select>
                       </div>
                       
+                      <div class="row">
+                        <label for="singleMeasureDuplicate">Duplicate</label>
+                        <input id="singleMeasureDuplicate" type="checkbox" class="form-control" 
+                          v-model="singleMeasureData.measurements[0].Duplicate"></input>
+                      </div>
+                      
+                      <div class="row">
+                        <label for="singleMeasureLabBatch">Lab Batch</label>
+                        <input id="singleMeasureLabBatch" type="text" class="form-control" 
+                          v-model="singleMeasureData.measurements[0].LabBatch"></input>
+                      </div>
+                      
+                      <div class="row">
+                        <label for="singleMeasureSymbol">Symbol (=, &lt;, or &gt;)</label>
+                        <input id="singleMeasureSymbol" type="text" class="form-control" 
+                          maxlength="1" size="1"
+                          v-model="singleMeasureData.measurements[0].Symbol"></input>
+                      </div>
+                      
                       <br>
                       
                       <div class="row">
