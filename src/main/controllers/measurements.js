@@ -208,6 +208,7 @@ let controller = {
         let statement = `SELECT 
             DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
             ms.Value, qf.Code as Qualifier, ms.Depth_M as Depth_Meters,
+            ms.Duplicate, ms.LabBatch, ms.Symbol,
             unit.Symbol as Unit,
             pm.Name as Parameter, mt.Code as Method,
             st.Code as SiteCode, st.Name as SiteName,
@@ -320,6 +321,9 @@ let controller = {
           bulkLoad.addColumn('MeasurementQualityID', TYPES.Int,       { nullable: true });
           bulkLoad.addColumn('QualifierID',          TYPES.Int,       { nullable: true });
           bulkLoad.addColumn('Depth_M',              TYPES.Numeric,   { nullable: true, precision: 6, scale: 2 });
+          bulkLoad.addColumn('Duplicate',            TYPES.Bit,       { nullable: true });
+          bulkLoad.addColumn('LabBatch',             TYPES.VarChar,   { nullable: true });
+          bulkLoad.addColumn('Symbol',               TYPES.Char,      { nullable: true });
           
           let errorMsg = '';
           
@@ -343,6 +347,9 @@ let controller = {
             measurement_new.MeasurementQualityID = measurement.MeasurementQualityID;
             measurement_new.QualifierID          = measurement.QualifierID;
             measurement_new.Depth_M              = measurement.Depth_M;
+            measurement_new.Duplicate            = measurement.Duplicate;
+            measurement_new.LabBatch             = measurement.LabBatch;
+            measurement_new.Symbol               = measurement.Symbol;
             
             if (isNaN(measurement_new.CollectedDTM) || measurement_new.CollectedDTM == null) {
               errorMsg += ('Bad date in measurement #' + index + '; ')

@@ -3,6 +3,7 @@ let Vue        = require('vue');
 let $          = require('jquery');
 let select2    = require('select2');
 let bootstrap  = require('bootstrap');
+let _          = require('lodash');
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'select2/dist/css/select2.min.css';
@@ -25,14 +26,15 @@ var vm = new Vue({
       mssql: {
         server: null,
         options: {
-          database: null
+          database: null,
+          trustServerCertificate: true,
         },
         authentication: {
           type: 'default',
           options: {
             userName: null,
             password: null
-          }
+          },
         },
       },
       utcoffset: -8,
@@ -121,7 +123,7 @@ var vm = new Vue({
     getConfig() {
       let config = window.getConfig();
       if (typeof(config) !== 'undefined') {
-        this.config = {...this.config, ...config};
+        this.config = _.merge(this.config, config);
       };
     },
     

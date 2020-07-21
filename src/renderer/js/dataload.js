@@ -27,7 +27,6 @@ var vm = new Vue({
     metasFromSite:     [],
     uploadProgress:    0,
 
-
     singleMeasureData: {
       'metaid':  null,
       'offset':  null,
@@ -39,7 +38,10 @@ var vm = new Vue({
           'MeasurementCommentID': null,
           'MeasurementQualityID': null,
           'QualifierID':          null,
-          'Depth_M':              null
+          'Depth_M':              null,
+          'Duplicate':            false,
+          'LabBatch':             null,
+          'Symbol':               '='
         }
       ]
     },
@@ -51,6 +53,9 @@ var vm = new Vue({
     datetimeID:  -2,
     qualifierID: -3,
     depthID:     -4,
+    dupID:       -5,
+    labBatchID:  -6,
+    symbolID:    -7,
 
     headerMetadataMap: {},
     headerNotices:     {},
@@ -168,6 +173,18 @@ var vm = new Vue({
           MetadataID: this.depthID,
           Parameter:  "Depth"
         },
+        {
+          MetadataID: this.dupID,
+          Parameter:  "Duplicate"
+        },
+        {
+          MetadataID: this.labBatchID,
+          Parameter:  "Lab Batch"
+        },
+        {
+          MetadataID: this.symbolID,
+          Parameter:  "Symbol (<, =, or >)"
+        },
       ]
     },
 
@@ -206,7 +223,6 @@ var vm = new Vue({
         name = k[i];
       }
       return name;
-      // return count;
     },
 
     depthColName: function() {
@@ -218,6 +234,48 @@ var vm = new Vue({
         let k = Object.keys(this.headerMetadataMap);
         let v = Object.values(this.headerMetadataMap);
         let i = v.findIndex(m => m.metaid == this.depthID);
+        name = k[i];
+      }
+      return name;
+    },
+    
+    duplicateColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m.metaid == this.dupID).length;
+      let name    = null;
+
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m.metaid == this.dupID);
+        name = k[i];
+      }
+      return name;
+    },
+    
+    labBatchColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m.metaid == this.labBatchID).length;
+      let name    = null;
+
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m.metaid == this.labBatchID);
+        name = k[i];
+      }
+      return name;
+    },
+    
+    symbolColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m.metaid == this.symbolID).length;
+      let name    = null;
+
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m.metaid == this.symbolID);
         name = k[i];
       }
       return name;
@@ -345,8 +403,11 @@ var vm = new Vue({
           .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
 
-        d2.ValueOriginal        = d[header].trim() == ''   ? NaN  : Number(d[header]);
-        d2.Depth_M              = this.depthColName == ''  ? null : d[this.depthColName];
+        d2.ValueOriginal        = d[header].trim() == ''      ? NaN  : Number(d[header]);
+        d2.Depth_M              = this.depthColName == ''     ? null : d[this.depthColName];
+        d2.Duplicate            = this.duplicateColName == '' ? null : d[this.duplicateColName];
+        d2.LabBatch             = this.labBatchColName == ''  ? null : d[this.labBatchColName];
+        d2.Symbol               = this.symbolColName == ''    ? null : d[this.symbolColName];
         d2.QualifierID          = null;
         d2.MeasurementCommentID = null;
         d2.MeasurementQualityID = null;
@@ -557,24 +618,10 @@ var vm = new Vue({
           }).always(() => {
 
             if (errors > 0) {
-              // let msg = "Loading in progress.  Encountered errors with " +
-                // errors + " records out of " +
-                // (errors + successes) + "so far.";
-              // headerMeta.notice = msg;
+              
             } else {
-              
-              // Change this to a progress bar
-              
               this.uploadProgress = Math.floor(((successes + errors) / h.measurements.length) * 100);
               
-              // let msg = "Loading in progress.  Successfully loaded " +
-                // successes + " records so far.";
-              // headerMeta.notice = msg;
-              
-              // Refactor the notice so we don't have to recalculate 
-              //   the entire metadata record on every update
-              
-              // this.setNotice('alert-info', msg);
             };
           })
         );
