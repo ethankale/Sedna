@@ -4,6 +4,9 @@ let $          = require('jquery');
 let select2    = require('select2');
 let bootstrap  = require('bootstrap');
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'select2/dist/css/select2.min.css';
+
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {

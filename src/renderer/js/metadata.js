@@ -1,4 +1,7 @@
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'select2/dist/css/select2.min.css';
+
 let alqwuutils     = require('./utils.js');
 
 let datarecord     = require('./meta-datarecord.js');

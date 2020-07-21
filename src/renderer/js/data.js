@@ -1,4 +1,9 @@
 
+// CSS first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'select2/dist/css/select2.min.css';
+
+// Then JS
 let lx         = require('luxon');
 let Papa       = require('papaparse');
 let alqwuutils = require('./utils.js');
