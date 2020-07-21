@@ -7,6 +7,7 @@ let utils    = require('./utils.js');
 
 let $          = require('jquery');
 let select2    = require('select2');
+let bootstrap  = require('bootstrap');
 
 Vue.directive('select', {
   twoWay: true,

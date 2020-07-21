@@ -13,4 +13,6 @@ let unit           = require('./meta-unit.js');
 let qualifier      = require('./meta-qualifier.js');
 let conversion     = require('./meta-conversion.js');
 
+let bootstrap  = require('bootstrap');
+
 let utcoffset  = alqwuutils.utcoffset;

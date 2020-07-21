@@ -1,7 +1,9 @@
 
-let Vue  = require('vue');
-let d3   = require('d3');
-var Papa = require('papaparse');
+let Vue        = require('vue')
+let $          = require('jquery');
+let select2    = require('select2');
+let d3         = require('d3');
+var Papa       = require('papaparse');
 
 import NewEditCancel from './new-edit-cancel.vue';
 

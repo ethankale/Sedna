@@ -1,5 +1,7 @@
 
-let Vue = require('vue')
+let Vue        = require('vue')
+let $          = require('jquery');
+let select2    = require('select2');
 
 import NewEditCancel from './new-edit-cancel.vue';
 
