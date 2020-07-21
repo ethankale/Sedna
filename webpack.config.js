@@ -7,7 +7,8 @@ module.exports = {
     analysis_webpack: './src/renderer/js/analysis.js',
     data_webpack:     './src/renderer/js/data.js',
     metadata_webpack: './src/renderer/js/metadata.js',
-    settings_webpack: './src/renderer/js/settings.js'
+    settings_webpack: './src/renderer/js/settings.js',
+    index_webpack:    './src/renderer/js/index.js'
   },
   
   output: {

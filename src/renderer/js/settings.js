@@ -1,5 +1,8 @@
 var alqwuutils = require('./utils.js');
 let Vue        = require('vue');
+let $          = require('jquery');
+let select2    = require('select2');
+let bootstrap  = require('bootstrap');
 
 Vue.directive('select', {
   twoWay: true,
@@ -114,7 +117,6 @@ var vm = new Vue({
     
     getConfig() {
       let config = window.getConfig();
-      console.log(config);
       if (typeof(config) !== 'undefined') {
         this.config = {...this.config, ...config};
       };
