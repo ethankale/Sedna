@@ -141,7 +141,6 @@ var vm = new Vue({
           h.cmin         = r[4];
           h.mindate      = r[5];
           h.maxdate      = r[6];
-          // h.cmean = r[5];
 
           headersFiltered.push(h);
           
@@ -403,11 +402,10 @@ var vm = new Vue({
           .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
 
-        d2.ValueOriginal        = d[header].trim() == ''      ? NaN  : Number(d[header]);
-        d2.Depth_M              = this.depthColName == ''     ? null : d[this.depthColName];
-        d2.Duplicate            = this.duplicateColName == '' ? null : d[this.duplicateColName];
-        d2.LabBatch             = this.labBatchColName == ''  ? null : d[this.labBatchColName];
-        d2.Symbol               = this.symbolColName == ''    ? null : d[this.symbolColName];
+        d2.ValueOriginal        = d[header].trim() == ''     ? NaN  : Number(d[header]);
+        d2.Depth_M              = this.depthColName == ''    ? null : d[this.depthColName];
+        d2.Symbol               = this.symbolColName == ''   ? null : d[this.symbolColName];
+        d2.LabBatch             = this.labBatchColName == '' ? null : d[this.labBatchColName];
         d2.QualifierID          = null;
         d2.MeasurementCommentID = null;
         d2.MeasurementQualityID = null;
@@ -420,6 +418,34 @@ var vm = new Vue({
           let qualifierobj = this.qualifiers.find(o => o.Code.trim() === d[this.qualColName]);
           d2.QualifierID = typeof qualifierobj == 'undefined' ? null : qualifierobj.QualifierID;
         };
+        
+        if (this.duplicateColName !== null) {
+          let isFalse = false;
+          let isTrue  = false;
+          
+          let r   = /(^false$)/i;
+          isFalse = r.test(d[this.duplicateColName].trim()) ? true : isFalse;
+          
+          r       = /^0$/;
+          isFalse = r.test(d[this.duplicateColName].trim()) ? true : isFalse;
+          
+          r       = /(^true$)/i;
+          isTrue  = r.test(d[this.duplicateColName].trim()) ? true : isTrue;
+          
+          r       = /^1$/;
+          isTrue  = r.test(d[this.duplicateColName].trim()) ? true : isTrue;
+          
+          if (isFalse) {
+            d2.Duplicate = false;
+          } else if (isTrue) {
+            d2.Duplicate = true;
+          } else {
+            d2.Duplicate = null;
+          }
+          
+        }
+        
+        d2.Symbol               = this.symbolColName == ''    ? null : d[this.symbolColName];
 
         mindate = d2.CollectedDTM > mindate ? mindate : d2.CollectedDTM;
         maxdate = d2.CollectedDTM < maxdate ? maxdate : d2.CollectedDTM;
