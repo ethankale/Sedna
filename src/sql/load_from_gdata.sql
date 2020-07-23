@@ -166,14 +166,14 @@ GO
 */
 INSERT INTO Alqwu.dbo.Measurement 
   WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
 SELECT amd.MetadataID, D_TimeDate, -480, D_Stage, 
   CASE 
 	WHEN abs([D_Warning]) > 0 THEN 10 
 	WHEN abs([D_Est]) > 0 THEN 17 
-	WHEN abs([D_Provisional]) > 0 THEN 27 
 	ELSE NULL END 
-	as QualifierID
+	as QualifierID,
+    D_Provisional
 FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
@@ -197,14 +197,14 @@ GO
 /* Insert discharge measurements */
 INSERT INTO Alqwu.dbo.Measurement 
   WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
 SELECT amd.MetadataID, D_TimeDate, -480, D_Discharge,   
   CASE 
     WHEN abs([D_Warning]) > 0 THEN 10 
 	WHEN abs([D_Est]) > 0 THEN 17 
-    WHEN abs([D_Provisional]) > 0 THEN 27 
 	ELSE NULL END 
-	as QualifierID
+	as QualifierID,
+    D_Provisional
 FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
@@ -228,14 +228,14 @@ GO
 /* Insert temperature measurements */
 INSERT INTO Alqwu.dbo.Measurement
   WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
 SELECT amd.MetadataID, W_TimeDate, -480, W_Value, 
   CASE 
     WHEN abs([W_Warning]) > 0 THEN 10 
 	WHEN abs([W_Est]) > 0 THEN 17 
-    WHEN abs([W_Provisional]) > 0 THEN 27 
 	ELSE NULL END 
-	as QualifierID
+	as QualifierID,
+    W_Provisional
 FROM [GDATA].[dbo].[tblWaterTempGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
@@ -264,14 +264,14 @@ GO
 /* Insert barometer measurements */
 INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
 SELECT amd.MetadataID, B_TimeDate, -480, B_Value, 
   CASE 
     WHEN abs([B_Warning]) > 0 THEN 10 
 	WHEN abs([B_Est]) > 0 THEN 17 
-    WHEN abs([B_Provisional]) > 0 THEN 27 
 	ELSE NULL END 
-	as QualifierID
+	as QualifierID,
+    B_Provisional
 FROM [GDATA].[dbo].[tblBarometerGauging] as gdg
 LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
@@ -298,14 +298,14 @@ GO
 /* Insert rainfall measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, R_TimeDate, -480, R_Value, 
    CASE 
    WHEN abs([R_Warning]) > 0 THEN 10 
    WHEN abs([R_Est]) > 0 THEN 17 
-   WHEN abs([Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   Provisional
  FROM [GDATA].[dbo].tblRainGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -334,14 +334,14 @@ GO
 /* Insert relative humidity measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, H_TimeDate, -480, H_Value, 
    CASE 
    WHEN abs([H_Warning]) > 0 THEN 10 
    WHEN abs([H_Est]) > 0 THEN 17 
-   WHEN abs([H_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   H_Provisional
  FROM [GDATA].[dbo].tblRelativeHumidityGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -370,14 +370,14 @@ GO
 /* Insert lake level measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, L_TimeDate, -480, L_Value, 
    CASE 
    WHEN abs([L_Warning]) > 0 THEN 10 
    WHEN abs([L_Est]) > 0 THEN 17 
-   WHEN abs([L_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   L_Provisional
  FROM [GDATA].[dbo].tblLakeLevelGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -406,14 +406,14 @@ GO
 /* Insert well level measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, P_TimeDate, -480, P_Value, 
    CASE 
    WHEN abs([P_Warning]) > 0 THEN 10 
    WHEN abs([P_Est]) > 0 THEN 17 
-   WHEN abs([P_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   P_Provisional
  FROM [GDATA].[dbo].tblPiezometerGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -443,14 +443,14 @@ GO
 /* Insert solar radiation measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, S_TimeDate, -480, S_Value, 
    CASE 
    WHEN abs([S_Warning]) > 0 THEN 10 
    WHEN abs([S_Est]) > 0 THEN 17 
-   WHEN abs([Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   Provisional
  FROM [GDATA].[dbo].tblSolarRadiationGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -479,14 +479,14 @@ GO
 /* Insert air temperature measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, A_TimeDate, -480, A_Value, 
    CASE 
    WHEN abs([A_Warning]) > 0 THEN 10 
    WHEN abs([A_Est]) > 0 THEN 17 
-   WHEN abs([A_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   A_Provisional
  FROM [GDATA].[dbo].tblAirTempGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -515,13 +515,13 @@ GO
 /* Insert wind speed measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Value, 
    CASE 
    WHEN abs([Wi_Warning]) > 0 THEN 10 
-   WHEN abs([Wi_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   Wi_Provisional
  FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -550,13 +550,13 @@ GO
 /* Insert wind direction measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Direction, 
    CASE 
    WHEN abs([Wi_Warning]) > 0 THEN 10 
-   WHEN abs([Wi_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   Wi_Provisional
  FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID
@@ -585,13 +585,13 @@ GO
 /* Insert wind gust measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
- (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID)
+ (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
  SELECT amd.MetadataID, Wi_TimeDate, -480, Wi_Gust_Speed, 
    CASE 
    WHEN abs([Wi_Warning]) > 0 THEN 10 
-   WHEN abs([Wi_Provisional]) > 0 THEN 27 
    ELSE NULL END 
-   as QualifierID
+   as QualifierID,
+   Wi_Provisional
  FROM [GDATA].[dbo].tblWindSpeedGauging as gdg
  LEFT JOIN Alqwu.dbo.Metadata as amd
  ON amd.SamplePointID = gdg.G_ID

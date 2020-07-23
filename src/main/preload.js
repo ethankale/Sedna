@@ -77,19 +77,21 @@ window.makePDF = function(title, subtitle, table, svg) {
     const writestream = createWriteStream(path);
     doc.pipe(writestream);
     
+    writestream.on('error', function (err) {
+      console.log(err);
+    });
+    
     // Title
     doc
       .font('Helvetica')
       .fontSize(16)
       .text(title, {align: 'center'})
-    // console.log(title);
     
     // Subtitle
     doc
       .fontSize(12)
       .text(subtitle, {align: 'center'})
       .moveDown();
-    // console.log(subtitle);
     
     // Daily table
     doc
@@ -114,8 +116,6 @@ window.makePDF = function(title, subtitle, table, svg) {
         {align: 'left', lineBreak: false});
     });
     
-    // console.log(months);
-    
     let days = [...Array(32).keys()];
     days.forEach((d, i) => {
       let dstring = (d+":").padStart(10);
@@ -124,8 +124,6 @@ window.makePDF = function(title, subtitle, table, svg) {
           {align: 'left', lineBreak: false})
       };
     });
-    
-    // console.log(table);
     
     table.forEach(row => {
       row.x = (row.month >= 10 ? (row.month-9) : (row.month+3)) * colwidth;
@@ -150,13 +148,12 @@ window.makePDF = function(title, subtitle, table, svg) {
     
     writestream.on('finish', function () {
       console.log('done writing to file ' + path);
-      // console.log(writestream);
-    })
+    });
     
     doc.end();
     // console.log(writestream);
     // console.log(doc);
-    
+    return "done";
   };
 };
 

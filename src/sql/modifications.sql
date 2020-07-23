@@ -61,3 +61,7 @@ ADD Symbol CHAR(1) NULL
 DEFAULT '='
 GO
 
+ALTER TABLE Alqwu.dbo.[Measurement]
+ADD Provisional BIT NULL
+DEFAULT 0
+GO
