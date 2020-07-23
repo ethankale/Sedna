@@ -387,11 +387,28 @@ var vm = new Vue({
             .attr("d", area)
             .attr("fill", "lightblue");
             
-          // Add the line
+          svg.append("path")
+            .datum(vm.dailyFormatted.filter(d => { return d.Provisional == 1}))
+            .attr("d", area)
+            .attr("fill", "lemonchiffon");
+            
+          // Add the line (all data)
           svg.append("path")
           .datum(vm.dailyFormatted)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+            .defined(d => { return d.Value!=null; })
+            .x(d => { return x(d.dtm) })
+            .y(d => { return y(d.Value) })
+            )
+          
+          // Add the line (just the provisional data)
+          svg.append("path")
+          .datum(vm.dailyFormatted.filter(d => { return d.Provisional == 1}))
+          .attr("fill", "none")
+          .attr("stroke", "firebrick")
           .attr("stroke-width", 1.5)
           .attr("d", d3.line()
             .defined(d => { return d.Value!=null; })
@@ -409,7 +426,8 @@ var vm = new Vue({
               .attr('y', d => { return y(d.ValueSum); })
               .attr('width', 1)
               .attr('height', d => { return height - y(d.ValueSum) })
-              .attr('fill', 'steelblue')
+              .attr('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
+              // .attr('fill', 'steelblue')
         };
         
         if (chartType === 'point') {
@@ -421,7 +439,7 @@ var vm = new Vue({
               .attr('cx', d => { return x(d.dtm) })
               .attr('cy', d => { return y(d.Value) })
               .attr('r', 1.5)
-              .style('fill', 'steelblue')
+              .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
         if (chartType === 'polar') {
@@ -433,7 +451,7 @@ var vm = new Vue({
               .attr('cx', d => { return x(d.dtm) })
               .attr('cy', d => { return y(d.ValueDegrees) })
               .attr('r', 1.5)
-              .style('fill', 'steelblue')
+              .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
         

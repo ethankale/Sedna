@@ -66,7 +66,7 @@ let controller = {
           let statement = `
             with q as
             (
-              SELECT CollectedDate, Value, Value * PI()/180. as radians
+              SELECT CollectedDate, Value, Provisional, Value * PI()/180. as radians
               FROM Measurement as ms
               WHERE ms.MetadataID IN (
                 SELECT MetadataID
@@ -85,6 +85,7 @@ let controller = {
                 max(Value) as ValueMax,
                 sum(Value) as ValueSum,
                 avg(Value) as Value,
+                count(nullif(Provisional, 0)) as Provisional,
                 avg(sin(radians)) as x, 
                 avg(cos(radians)) as y
               from q
@@ -92,6 +93,7 @@ let controller = {
             ), q3 as
             (
             select CollectedDate, ValueMin, ValueMax, ValueSum, Value,
+              IIF(Provisional>0, 1, null) as Provisional,
               case 
                 when x>=0 and y>=0 then 0 + atan(x/y) --NE quadrant
                 when x>=0 and y<0  then Pi() - atan(x/-y)  --SE quadrant
@@ -100,7 +102,7 @@ let controller = {
               end AS avgRadians --NW quadrant
             from q2
             )
-            select CollectedDate, ValueMin, ValueMax, ValueSum, Value,
+            select CollectedDate, ValueMin, ValueMax, ValueSum, Value, Provisional,
               avgRadians * 180./PI() as ValueDegrees
             from q3
             ORDER BY CollectedDate ASC`
