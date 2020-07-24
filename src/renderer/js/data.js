@@ -323,6 +323,7 @@ var vm = new Vue({
     
     graphMeasurements(width) {
       
+      // Different charts for different parameters; hardcoded into the DB right now
       let chartType = 1;
       if (this.paramDetails.GraphTypeID === 1) {
         chartType = 'lineRange';
@@ -333,6 +334,13 @@ var vm = new Vue({
       } else if (this.paramDetails.GraphTypeID === 4) {
         chartType = 'polar';
       };
+      
+      // Create columns for just provisional values
+      this.dailyFormatted.forEach(d => {
+        d.ValueProvisional    = d.Provisional == 1 ? d.Value    : null;
+        d.ValueProvisionalMin = d.Provisional == 1 ? d.ValueMin : null;
+        d.ValueProvisionalMax = d.Provisional == 1 ? d.ValueMax : null;
+      });
       
       $("#chartContainer").empty();
       if(vm.dailyFormatted.length > 0) {
@@ -374,12 +382,19 @@ var vm = new Vue({
           .domain(yExtent)
           .range([ height, 0 ]);
         
+        // Creating the charts, starting with line + range polygon
         if (chartType === 'lineRange') {
           let area = d3.area()
             .defined(d => { return d.ValueMin!=null & d.ValueMax!=null; })
             .x(d => x(d.dtm))
             .y0(d => y(d.ValueMin))
             .y1(d => y(d.ValueMax));
+          
+          let areaProvisional = d3.area()
+            .defined(d => { return d.ValueProvisionalMin!=null & d.ValueProvisionalMax!=null; })
+            .x(d => x(d.dtm))
+            .y0(d => y(d.ValueProvisionalMin))
+            .y1(d => y(d.ValueProvisionalMax));
           
           // Add the range polygon
           svg.append("path")
@@ -388,8 +403,8 @@ var vm = new Vue({
             .attr("fill", "lightblue");
             
           svg.append("path")
-            .datum(vm.dailyFormatted.filter(d => { return d.Provisional == 1}))
-            .attr("d", area)
+            .datum(vm.dailyFormatted)
+            .attr("d", areaProvisional)
             .attr("fill", "lemonchiffon");
             
           // Add the line (all data)
@@ -406,14 +421,14 @@ var vm = new Vue({
           
           // Add the line (just the provisional data)
           svg.append("path")
-          .datum(vm.dailyFormatted.filter(d => { return d.Provisional == 1}))
+          .datum(vm.dailyFormatted)
           .attr("fill", "none")
           .attr("stroke", "firebrick")
           .attr("stroke-width", 1.5)
           .attr("d", d3.line()
-            .defined(d => { return d.Value!=null; })
+            .defined(d => { return d.ValueProvisional!=null; })
             .x(d => { return x(d.dtm) })
-            .y(d => { return y(d.Value) })
+            .y(d => { return y(d.ValueProvisional) })
             )
         };
         
