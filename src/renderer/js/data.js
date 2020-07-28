@@ -10,6 +10,7 @@ let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
 let dataload   = require('./dataload.js');
 let d3         = require('d3');
+let legend     = require('d3-svg-legend');
 
 let $          = require('jquery');
 let select2    = require('select2');
@@ -358,11 +359,12 @@ var vm = new Vue({
                   "translate(" + margin.left + "," + margin.top + ")");
 
         // Create the scale functions
+		// x scale
         let x = d3.scaleTime()
           .domain(d3.extent(this.dailyFormatted, function(d) { return d.dtm; }))
           .range([ 0, width ]);
         
-        // Get the extent of the combined extents of the min and max values
+        // y scales
         let yExtent = null;
         if (chartType === 'lineRange') {
           yExtent = d3.extent( 
@@ -379,9 +381,15 @@ var vm = new Vue({
         }
         
         let y = d3.scaleLinear()
+		
           .domain(yExtent)
           .range([ height, 0 ]);
         
+		// color scale (just provisional vs. non-provisional)
+		let ordinal = d3.scaleOrdinal()
+		  .domain(["Non-Provisional", "Provisional"])
+		  .range(["steelblue", "firebrick"]);
+		
         // Creating the charts, starting with line + range polygon
         if (chartType === 'lineRange') {
           let area = d3.area()
@@ -479,6 +487,22 @@ var vm = new Vue({
         
         svg.append("g")
           .call(d3.axisLeft(y));
+		  
+		// Add the legend
+		svg.append("g")
+		  .attr("class", "legendOrdinal")
+		  .attr("transform", "translate(20,20)");
+		
+		var legendOrdinal = legend.legendColor()
+		  .shape("path", d3.symbol().type(d3.symbolCircle).size(100)())
+		  .shapePadding(5)
+		  //use cellFilter to hide the "e" cell
+		  // .cellFilter(function(d){ return d.label !== "e" })
+		  .scale(ordinal);
+		
+		svg.select(".legendOrdinal")
+		  .call(legendOrdinal);
+		
       };
     },
     
