@@ -29,8 +29,8 @@ You'll need Node 12 and NPM 6.  On Windows, highly recommended you start by inst
 
 Some SQL Server caveats:
 
-1: Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
-2: You have to enable SQL Server logins; by default it only allows Windows connections.
+1. Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
+2. You have to enable SQL Server logins; by default it only allows Windows connections.  See <https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server>.
 
 ### Naming Conventions
 #### SQL
