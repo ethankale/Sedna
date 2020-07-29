@@ -61,99 +61,140 @@ window.setConfig = function(config) {
 };
 
 // PDF Reports
+function composePDF(title, subtitle, table, svg) {
+  let doc = new PDFDocument();
+  
+  // Title
+  doc
+    .font('Helvetica')
+    .fontSize(16)
+    .text(title, {align: 'center'})
+  
+  // Subtitle
+  doc
+    .fontSize(12)
+    .text(subtitle, {align: 'center'})
+    .moveDown();
+  
+  // Daily table
+  doc
+    .font('Courier')
+    .fontSize(8);
+    
+  const titley = doc.y;
+  let maxY = 0;
+  
+  let marginleft = 20;
+  let colwidth   = 40;
+  let lineheight = 12;
+  let cellchars  = 10;
+  
+  let months = [
+    "Oct", "Nov", "Dec", "Jan", "Feb", "Mar",
+    "Apr", "May", "Jun", "Jul", "Aug", "Sep"
+  ];
+  months.forEach((m, i) => {
+    let mstring = m.padStart(cellchars, " ");
+    doc.text(mstring, ((i+1)*colwidth)+marginleft, titley, 
+      {align: 'left', lineBreak: false});
+  });
+  
+  let days = [...Array(32).keys()];
+  days.forEach((d, i) => {
+    let dstring = (d+":").padStart(10);
+    if (i > 0) {
+      doc.text(dstring, marginleft, (i*lineheight)+titley, 
+        {align: 'left', lineBreak: false})
+    };
+  });
+  
+  table.forEach(row => {
+    row.x = (row.month >= 10 ? (row.month-9) : (row.month+3)) * colwidth;
+    row.y = row.day*lineheight;
+    maxY  = maxY < row.y ? row.y : maxY;
+    
+    row.valString = row.Value.toFixed(2).padStart(cellchars, " ");
+    
+    doc.text(row.valString, row.x+marginleft, row.y+titley, 
+      {align:'left', lineBreak: false});
+  });
+  
+  // Graph
+  SVGtoPDF(doc, svg, 56, 570, options = {
+    width:  500,
+    height: 200,
+    preserveAspectRatio: 'xMidYMin meet',
+    useCSS: true
+  });
+
+  return doc;
+}
+
+// See https://github.com/foliojs/pdfkit/issues/265.  PDFKit is bad at
+//   handling errors & closing correctly.
+function savePdfToFile(pdf, fileName) {
+  return new Promise((resolve, reject) => {
+
+    // To determine when the PDF has finished being written successfully 
+    // we need to confirm the following 2 conditions:
+    //
+    //   1. The write stream has been closed
+    //   2. PDFDocument.end() was called syncronously without an error being thrown
+
+    let writeStream = createWriteStream(fileName);
+    
+    writeStream.on('close', () => {
+      // console.log("Close event triggered for " + fileName);
+      // stepFinished();
+    });
+    
+    writeStream.on("error", (e) => {
+      // console.log("Error encountered for " + fileName);
+      reject(e);
+    });
+    
+    writeStream.on("finish", () => {
+      // console.log("Write complete for " + fileName);
+      resolve();
+    });
+    
+    writeStream.on("pipe", () => {
+      // console.log("Pipe event triggered for " + fileName);
+      // console.log(writeStream);
+    });
+    
+    writeStream.on("drain", () => {
+      // console.log("Drain event triggered for " + fileName);
+      // writeStream.destroy();
+    });
+    
+    pdf.pipe(writeStream);
+
+    pdf.end();
+    
+    setTimeout(() => {
+      // console.log(fileName);
+      // console.log(writeStream);
+      writeStream.end();
+    }, 2000);
+    // stepFinished();
+  }); 
+}
+
 window.makePDF = function(title, subtitle, table, svg) {
   let defaultPath = window.getConfig().userDefaultPath;
   // console.log(defaultPath);
   
-  let path = dialog.showSaveDialogSync({
+  path = dialog.showSaveDialogSync({
     title: "Save the report as",
     defaultPath: defaultPath
   });
   
-  if (typeof path == 'undefined') {
+  if (typeof path === 'undefined') {
     // console.log("User cancelled save.")
   } else {
-    const doc = new PDFDocument();
-    const writestream = createWriteStream(path);
-    doc.pipe(writestream);
-    
-    writestream.on('error', function (err) {
-      console.log(err);
-    });
-    
-    // Title
-    doc
-      .font('Helvetica')
-      .fontSize(16)
-      .text(title, {align: 'center'})
-    
-    // Subtitle
-    doc
-      .fontSize(12)
-      .text(subtitle, {align: 'center'})
-      .moveDown();
-    
-    // Daily table
-    doc
-      .font('Courier')
-      .fontSize(8);
-      
-    const titley = doc.y;
-    let maxY = 0;
-    
-    let marginleft = 20;
-    let colwidth   = 40;
-    let lineheight = 12;
-    let cellchars  = 10;
-    
-    let months = [
-      "Oct", "Nov", "Dec", "Jan", "Feb", "Mar",
-      "Apr", "May", "Jun", "Jul", "Aug", "Sep"
-    ];
-    months.forEach((m, i) => {
-      let mstring = m.padStart(cellchars, " ");
-      doc.text(mstring, ((i+1)*colwidth)+marginleft, titley, 
-        {align: 'left', lineBreak: false});
-    });
-    
-    let days = [...Array(32).keys()];
-    days.forEach((d, i) => {
-      let dstring = (d+":").padStart(10);
-      if (i > 0) {
-        doc.text(dstring, marginleft, (i*lineheight)+titley, 
-          {align: 'left', lineBreak: false})
-      };
-    });
-    
-    table.forEach(row => {
-      row.x = (row.month >= 10 ? (row.month-9) : (row.month+3)) * colwidth;
-      row.y = row.day*lineheight;
-      maxY  = maxY < row.y ? row.y : maxY;
-      
-      row.valString = row.Value.toFixed(2).padStart(cellchars, " ");
-      
-      doc.text(row.valString, row.x+marginleft, row.y+titley, 
-        {align:'left', lineBreak: false});
-    });
-    
-    // Graph
-    SVGtoPDF(doc, svg, 56, 570, options = {
-      width:  500,
-      height: 200,
-      preserveAspectRatio: 'xMidYMin meet',
-      useCSS: true
-    });
-    
-    console.log("next is doc.end()");
-    
-    writestream.on('finish', function () {
-      console.log('done writing to file ' + path);
-    });
-    
-    doc.end();
-    // console.log(writestream);
-    // console.log(doc);
-    return "done";
+    let doc = composePDF(title, subtitle, table, svg, path);
+    savePdfToFile(doc, path)
   };
 };
 

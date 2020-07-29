@@ -175,15 +175,26 @@ var vm = new Vue({
       //   than one wy present.
       
       this.graphMeasurements(1000);
-        
-        let table    = this.dailyFormatted;
-        let siteName = $("#spSelect :selected").text();
-        let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
-                       $("#wylist :selected").val();
-        let svg      = $("#chartContainer svg")[0];
-        
-        window.makePDF(siteName, subtitle, table, svg);
-        this.graphMeasurements();
+      
+      let table    = this.dailyFormatted;
+      let siteName = $("#spSelect :selected").text();
+      let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
+                     $("#wylist :selected").val();
+      let svg      = $("#chartContainer svg")[0];
+      
+      // let filepath = window.makePDF(siteName, subtitle, table, svg);
+      // async function asyncMakePDF() {
+        // let filepath = await window.makePDF(siteName, subtitle, table, svg);
+        // console.log("Finished writing " + filepath);
+      // };
+      
+      window.makePDF(siteName, subtitle, table, svg);
+      
+      // asyncMakePDF();
+      this.graphMeasurements();
+      // setTimeout(() => {
+        // window.makePDF(siteName, subtitle, table, svg, filepath);
+      // }, 2000);
     },
     
     clickParameter(clickedParam, e) {
