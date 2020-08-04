@@ -194,6 +194,18 @@ WHERE D_Discharge IS NOT NULL
 GROUP BY G_ID
 GO
 
+/* Insert discharge workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, FileName, Start_Time, End_Time, AutoDTStamp, WorkedUp_By
+FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 1548
+  AND amd.MethodID = 1499
+GO
+
 /* Insert discharge measurements */
 INSERT INTO Alqwu.dbo.Measurement 
   WITH (TABLOCK)
@@ -223,6 +235,19 @@ SELECT G_ID, 3307, 1476, 6, 1, 15
 FROM GDATA.dbo.tblWaterTempGauging
 WHERE W_Value IS NOT NULL
 GROUP BY G_ID
+GO
+
+/* Insert water temperature workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3307
+  AND amd.MethodID = 1476
+  AND gwu.Parameter = 3
 GO
 
 /* Insert temperature measurements */
@@ -261,6 +286,19 @@ AND gl.G_ID IS NOT NULL
 GROUP BY bg.G_ID
 GO
 
+/* Insert barometric pressure workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 740
+  AND amd.MethodID = 1458
+  AND gwu.Parameter = 10
+GO
+
 /* Insert barometer measurements */
 INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
@@ -293,6 +331,19 @@ ON rg.G_ID = gl.G_ID
 WHERE R_Value IS NOT NULL
 AND gl.G_ID IS NOT NULL
 GROUP BY rg.G_ID
+GO
+
+/* Insert rainfall workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3090
+  AND amd.MethodID = 1527
+  AND gwu.Parameter = 1
 GO
 
 /* Insert rainfall measurements */
@@ -331,6 +382,19 @@ AND gl.G_ID IS NOT NULL
 GROUP BY rh.G_ID
 GO
 
+/* Insert relative humidity workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3172
+  AND amd.MethodID = 1574
+  AND gwu.Parameter = 34
+GO
+
 /* Insert relative humidity measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
@@ -367,6 +431,11 @@ AND gl.G_ID IS NOT NULL
 GROUP BY ll.G_ID
 GO
 
+/* As far as I could tell, there aren't any lake level workups.
+  I could be missing something.
+*/
+
+
 /* Insert lake level measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
@@ -402,6 +471,20 @@ WHERE P_Value IS NOT NULL
 AND gl.G_ID IS NOT NULL
 GROUP BY gd.G_ID
 GO
+
+/* Insert well level workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 10001
+  AND amd.MethodID = 1509
+  AND gwu.Parameter = 36
+GO
+
 
 /* Insert well level measurements */
  INSERT INTO Alqwu.dbo.Measurement 
@@ -440,6 +523,19 @@ AND gl.G_ID IS NOT NULL
 GROUP BY gd.G_ID
 GO
 
+/* Insert solar radiation workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3242
+  AND amd.MethodID = 1610
+  AND gwu.Parameter = 32
+GO
+
 /* Insert solar radiation measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
@@ -476,6 +572,19 @@ AND gl.G_ID IS NOT NULL
 GROUP BY gd.G_ID
 GO
 
+/* Insert air temperature workups */
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3301
+  AND amd.MethodID = 1476
+  AND gwu.Parameter = 4
+GO
+
 /* Insert air temperature measurements */
  INSERT INTO Alqwu.dbo.Measurement 
  WITH (TABLOCK)
@@ -510,6 +619,21 @@ ON gd.G_ID = gl.G_ID
 WHERE Wi_Value IS NOT NULL
 AND gl.G_ID IS NOT NULL
 GROUP BY gd.G_ID
+GO
+
+/* Insert wind workups (there's only one wind table in GData, 
+   so same workups for all three parameters 
+*/
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
+SELECT DISTINCT amd.MetadataID, WorkUp_Notes, Start_Time, End_Time, WorkUp_Date, WorkedUp_By
+FROM [GDATA].[dbo].[tblWorkUpTransactions] as gwu
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON gwu.G_ID = amd.SamplePointID
+WHERE amd.ParameterID = 3541
+  AND amd.MethodID = 1629
+  AND gwu.Parameter = 33
 GO
 
 /* Insert wind speed measurements */
@@ -601,3 +725,75 @@ GO
  AND amd.SamplePointID IS NOT NULL
  ORDER BY Wi_TimeDate
 GO
+
+/* Water quality - start by deleting duplicates, which I failed to prevent
+   because the indexes in GData were not defined correctly.
+*/
+DELETE
+FROM [GDATA].[dbo].tblWQResult
+WHERE id NOT IN (
+  SELECT MAX(id)
+  FROM [GDATA].[dbo].tblWQResult as gdg
+  GROUP BY gdg.gid, gdg.param_id, gdg.method_id, sample_datetime, sample_utc_offset, depth_m, dup
+);
+
+/* Insert water quality metadata 
+  param_id and method_id in GData are the same as ParameterID and MethodID in Alqwu
+  unit is text in GData but an ID in Alqwu - but the text in GData is the same as the Symbol in Alqwu
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, DecimalPoints)
+SELECT DISTINCT gid, param_id, method_id, au.UnitID, 1, 3
+FROM [GDATA].[dbo].[tblWQResult] as gm
+LEFT JOIN Alqwu.dbo.Unit as au
+  ON gm.unit = au.Symbol
+LEFT JOIN GDATA.dbo.tblGaugeLLID gl
+  ON gm.gid = gl.G_ID
+WHERE gl.G_ID IS NOT NULL
+GO
+
+/* Insert water quality workups.  Different setup from other workups, because the 
+   water quality workup table is different from the rest of GData.
+*/
+INSERT INTO Alqwu.dbo.Workup 
+  WITH (TABLOCK) 
+  (MetadataID, FileName, LoadedOn, Notes, UserID, DataStarts, DataEnds)
+SELECT amd.MetadataID, gwu.file_name, gwu.workup_datetime, gwu.notes, guser.Data_Processor_ID, min(gresult.sample_datetime) as mindt, max(gresult.sample_datetime) as maxdt
+  FROM [GDATA].[dbo].[tblWQWorkUpResult] as gwur
+  LEFT JOIN [GDATA].[dbo].[tblWQWorkUp] as gwu
+    ON gwur.workup_id = gwu.id
+  LEFT JOIN [GDATA].[dbo].[tblDataProcessor] as guser
+    ON gwu.workedup_by = guser.Processor_Name
+  LEFT JOIN [GDATA].[dbo].tblWQResult as gresult
+    ON gwur.result_id = gresult.id
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+    ON gresult.gid = amd.SamplePointID
+	AND gresult.param_id = amd.ParameterID
+	AND gresult.method_id = amd.MethodID
+WHERE amd.MetadataID IS NOT NULL
+GROUP BY amd.MetadataID, gwu.file_name, gwu.workup_datetime, gwu.notes, guser.Data_Processor_ID
+
+/* Insert water quality measurements */
+INSERT INTO Alqwu.dbo.Measurement 
+WITH (TABLOCK)
+(MetadataID, CollectedDtm, CollectedDTMOffset, Value, Depth_M, Duplicate, LabBatch, QualifierID)
+SELECT DISTINCT amd.MetadataID, sample_datetime, sample_utc_offset, value, depth_m, dup, lab_batch, aql.QualifierID
+FROM [GDATA].[dbo].tblWQResult as gdg
+LEFT JOIN Alqwu.dbo.Metadata as amd
+  ON amd.SamplePointID = gdg.gid
+  AND amd.ParameterID = gdg.param_id
+  AND amd.MethodID = gdg.method_id
+LEFT JOIN Alqwu.dbo.Qualifier as aql
+  ON aql.Code = gdg.qualifier
+WHERE sample_datetime > '1900-01-02'
+AND amd.SamplePointID IS NOT NULL
+GO
+
+/* Generally speaking the water quality parameters should be graphed with points;
+   points are id #3. */
+UPDATE Alqwu.dbo.Parameter
+SET GraphTypeID = 3
+WHERE ParameterID IN (
+  SELECT DISTINCT param_id
+  FROM GDATA.dbo.tblWQResult)
+
+

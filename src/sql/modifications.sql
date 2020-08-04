@@ -65,3 +65,22 @@ ALTER TABLE Alqwu.dbo.[Measurement]
 ADD Provisional BIT NULL
 DEFAULT 0
 GO
+
+/* Modify the indexes to support flagged duplicate values */
+DROP INDEX [measurement_unique_idx]
+  ON Alqwu.dbo.[Measurement]
+GO
+
+
+CREATE UNIQUE NONCLUSTERED INDEX [measurement_unique_idx] ON [dbo].[Measurement]
+(
+	[MetadataID] ASC,
+	[CollectedDateTime] ASC,
+	[Depth_M] ASC,
+  [Duplicate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+
+ALTER TABLE Alqwu.dbo.[Workup]
+ADD Notes varchar(255) NULL
+GO
