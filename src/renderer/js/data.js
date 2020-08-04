@@ -16,6 +16,8 @@ let $          = require('jquery');
 let select2    = require('select2');
 let bootstrap  = require('bootstrap');
 
+let _          = require('lodash');
+
 let paramMarkup   = "";
 
 let wylist       = [];
@@ -588,6 +590,8 @@ function loadParamList() {
       method:  'GET',
       timeout: 3000
     }).done(function(data) {
+        let dataSorted = _.sortBy(data, ['nmeasure', 'Name']);
+        
         vm.params = data;
         var downloadParamMarkup = "";
         
@@ -602,6 +606,9 @@ function loadParamList() {
             </option>`
             
         });
+        
+        
+        
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
     });
 };
