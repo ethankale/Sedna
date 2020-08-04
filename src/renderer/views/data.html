@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <!-- REMOVE! -->
-    <!-- <script src="http://localhost:8098"></script> -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -406,8 +406,6 @@
                     <label class="form-check-label" for="spActiveCheck">Hide Inactive</label>
                   </div>
                   
-                  
-                  
                 </div>
               </div>
               
@@ -437,21 +435,24 @@
             </div>
             
             <div class="row border-top">
-              <div id="paramList" class="col-4">
+              <div id="paramList" class="col-3">
                 
                 <div class="list-group list-group-flush">
                   <a href="#"
                     v-for="param in params"
                     @click="clickParameter(param, $event)"
-                    class="list-group-item list-group-item-action"
+                    class="list-group-item list-group-item-action py-1"
                     v-bind:class="{active: param.active}">
-                    <h5>{{ param.Name }}</h5>
-                    <small>{{ param.Method }}</small>
+                    <p>
+                      <strong>{{ param.Name }}</strong>
+                      <br>
+                      <span class="badge badge-secondary">{{ param.nmeasure }}</span>
+                    </p>
                   </a>
                 </div>
                 
               </div>
-              <div id="chartContainer" class="col-8">
+              <div id="chartContainer" class="col-9">
               </div>
             </div>
             

@@ -196,12 +196,18 @@ var vm = new Vue({
       
       clickedParam.active = true;
       
+      console.log(clickedParam);
+      
       var lastdtm   = clickedParam.maxdtm;
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
-      var firstdtm  = new Date(`${wateryear-1}-10-01T00:00:00`);
+      var firstdtm  = clickedParam.mindtm;
+      
+      if ( clickedParam.GraphTypeID == 1 & clickedParam.nmeasure > 1000) {
+        firstdtm = new Date(`${wateryear-1}-10-01T00:00:00`);
+      };
       
       this.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-      this.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
+      this.downloadEndDateString   = lx.DateTime.fromJSDate(lastdtm).toISODate();
       
       this.paramcurrent  = clickedParam.ParameterID;
       this.methodcurrent = clickedParam.MethodID;
@@ -479,8 +485,6 @@ var vm = new Vue({
               .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
-        
-        
         // Add the axes
         svg.append("g")
           .attr("transform", "translate(0," + height + ")")
@@ -590,9 +594,9 @@ function loadParamList() {
       method:  'GET',
       timeout: 3000
     }).done(function(data) {
-        let dataSorted = _.sortBy(data, ['nmeasure', 'Name']);
+        let dataSorted = _.orderBy(data, ['nmeasure', 'Name'], ['desc', 'asc']);
         
-        vm.params = data;
+        vm.params = dataSorted;
         var downloadParamMarkup = "";
         
         vm.params.forEach(param => {

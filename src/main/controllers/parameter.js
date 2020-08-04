@@ -92,7 +92,8 @@ let controller = {
               mt.Description AS Method,
               MAX(ms.CollectedDateTime) AS maxdtm, 
               MIN(ms.CollectedDateTime) AS mindtm, 
-              COUNT(ms.MeasurementID) AS nmeasure
+              COUNT(ms.MeasurementID) AS nmeasure,
+              pm.GraphTypeID
             FROM Measurement AS ms INNER JOIN 
               Metadata AS md 
                 ON ms.MetadataID = md.MetadataID INNER JOIN
@@ -101,7 +102,7 @@ let controller = {
               Method AS mt 
                 ON md.MethodID = mt.MethodID
             WHERE SamplePointID = @spID
-            GROUP BY md.SamplePointID, md.ParameterID, md.MethodID, pm.Name, mt.Description`
+            GROUP BY md.SamplePointID, md.ParameterID, md.MethodID, pm.Name, mt.Description, pm.GraphTypeID`
             
           var request = new Request(statement, function(err, rowCount) {
             if (err) {
