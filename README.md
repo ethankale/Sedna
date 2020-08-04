@@ -7,13 +7,17 @@ Getting Started
 To install the application:
 
 1. Get access to an MSSQL instance (2012 or above).  You can install the Express version on your desktop from <https://www.microsoft.com/en-us/sql-server/sql-server-downloads>.
-2. Run the database install/setup scripts in the following order:
+2. Install SQL Server Management Studio (SSMS).  Download from <https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver15>.
+3. Open a new Query window in SSMS and run the database install/setup scripts in the following order:
     1. ./src/sql/schema.sql
     2. ./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  Only works if the GData database is on the same server as the Sedna database)
     3. ./src/sql/indexes.sql
-3. Set up a user with read/write access on the newly created database.  This users can't use the windows login; it has to use a password login.
-4. Download the program (currently, grab it from Github.  No formal distributions yet).
-5. Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
+4. Use SSMS to set up a user with read/write access on the newly created database.  
+    1. This users can't use the windows login; it has to use a password login.
+    2. Enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
+    3. Enable SQL Server logins; by default it only allows Windows connections.  See <https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server>.
+5. Download the program (currently, grab it from Github.  No formal distributions yet).
+6. Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
 
 That should do it.  Most likely issue is with the user; make sure the user you create & use has permission to read, write, and delete for every table in the database.
 
@@ -26,11 +30,6 @@ You'll need Node 12 and NPM 6.  On Windows, highly recommended you start by inst
 3. `npm run build` to execute webpack and bundle the javascript code.  
 4. `npm start` to run the Electron app. 
 5. `npm run make` to create an Electron project.
-
-Some SQL Server caveats:
-
-1. Make sure you enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
-2. You have to enable SQL Server logins; by default it only allows Windows connections.  See <https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server>.
 
 ### Naming Conventions
 #### SQL
