@@ -441,12 +441,14 @@
                   <a href="#"
                     v-for="param in params"
                     @click="clickParameter(param, $event)"
-                    class="list-group-item list-group-item-action py-1"
-                    v-bind:class="{active: param.active}">
+                    class="list-group-item list-group-item-action py-0"
+                    v-bind:class="{active: param.active}"
+                    data-toggle="tooltip" v-tooltip:right="param.Method" >
                     <p>
                       <strong>{{ param.Name }}</strong>
                       <br>
-                      <span class="badge badge-secondary">{{ param.nmeasure }}</span>
+                      <small>{{ param.nmeasure.toLocaleString() }}</small>
+                      <small>{{ '(' + param.Unit.trim() + ')' }}</small>
                     </p>
                   </a>
                 </div>

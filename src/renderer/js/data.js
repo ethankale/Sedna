@@ -24,6 +24,7 @@ let wylist       = [];
 let wycurrent    = 0;
 let wymarkup     = "";
 
+// This directive makes Vue work with Select2
 Vue.directive('select', {
   twoWay: true,
   bind: function (el, binding, vnode) {
@@ -31,6 +32,15 @@ Vue.directive('select', {
       el.dispatchEvent(new Event('change', { target: e.target }));
     });
   },
+});
+
+// This directive makes Vue work with Bootstrap's tooltip functionality
+Vue.directive('tooltip', function(el, binding){
+  $(el).tooltip({
+    title: binding.value,
+    placement: binding.arg,
+    trigger: 'hover'             
+  });
 });
 
 var vm = new Vue({
@@ -49,6 +59,7 @@ var vm = new Vue({
     
     paramcurrent:  null,
     methodcurrent: null,
+    unitcurrent:   null,
     
     waterYears:    [],
     paramDetails:  [],
@@ -90,8 +101,8 @@ var vm = new Vue({
         let diff        = dt.diff(dtOld, 'days').days;
         
         if (diff === 1) {
-          let d_new       = {...d};
-          dtOld = dt.plus({'minutes':0});
+          let d_new   = {...d};
+          dtOld       = dt.plus({'minutes':0});
           
           d_new.year  = dt.year;
           d_new.month = dt.month;
@@ -202,7 +213,8 @@ var vm = new Vue({
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
       var firstdtm  = clickedParam.mindtm;
       
-      if ( clickedParam.GraphTypeID == 1 & clickedParam.nmeasure > 1000) {
+      // Chart type 1 is the line & range chart; chart type 2 is the bar graph (precip).      
+      if ( (clickedParam.GraphTypeID == 1 | clickedParam.GraphTypeID == 2) & clickedParam.nmeasure > 1000) {
         firstdtm = new Date(`${wateryear-1}-10-01T00:00:00`);
       };
       
@@ -211,6 +223,7 @@ var vm = new Vue({
       
       this.paramcurrent  = clickedParam.ParameterID;
       this.methodcurrent = clickedParam.MethodID;
+      this.unitcurrent   = clickedParam.Unit;
       
       wymarkup = "";
       wylist = alqwuutils.createWYList(clickedParam.mindtm, lastdtm);
@@ -367,7 +380,7 @@ var vm = new Vue({
                   "translate(" + margin.left + "," + margin.top + ")");
 
         // Create the scale functions
-		// x scale
+        // x scale
         let x = d3.scaleTime()
           .domain(d3.extent(this.dailyFormatted, function(d) { return d.dtm; }))
           .range([ 0, width ]);
@@ -389,14 +402,13 @@ var vm = new Vue({
         }
         
         let y = d3.scaleLinear()
-		
           .domain(yExtent)
           .range([ height, 0 ]);
         
-		// color scale (just provisional vs. non-provisional)
-		let ordinal = d3.scaleOrdinal()
-		  .domain(["Non-Provisional", "Provisional"])
-		  .range(["steelblue", "firebrick"]);
+        // color scale (just provisional vs. non-provisional)
+        let ordinal = d3.scaleOrdinal()
+          .domain(["Non-Provisional", "Provisional"])
+          .range(["steelblue", "firebrick"]);
 		
         // Creating the charts, starting with line + range polygon
         if (chartType === 'lineRange') {
@@ -450,7 +462,8 @@ var vm = new Vue({
         
         if (chartType === 'bar') {
           svg.selectAll('plotBars')
-            .data(vm.dailyFormatted)
+            .data(this.dailyFormatted)
+            .data(this.dailyFormatted.filter(d => d.Value != null))
             .enter()
             .append('rect')
               .attr('x', d => { return x(d.dtm); })
@@ -458,30 +471,29 @@ var vm = new Vue({
               .attr('width', 1)
               .attr('height', d => { return height - y(d.ValueSum) })
               .attr('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
-              // .attr('fill', 'steelblue')
         };
         
         if (chartType === 'point') {
           svg.append('g')
             .selectAll('dot')
-            .data(vm.dailyFormatted)
+            .data(this.dailyFormatted.filter(d => d.Value != null))
             .enter()
             .append('circle')
               .attr('cx', d => { return x(d.dtm) })
               .attr('cy', d => { return y(d.Value) })
-              .attr('r', 1.5)
+              .attr('r', 3)
               .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
         if (chartType === 'polar') {
           svg.append('g')
             .selectAll('dot')
-            .data(vm.dailyFormatted)
+            .data(this.dailyFormatted.filter(d => d.ValueDegrees != null))
             .enter()
             .append('circle')
               .attr('cx', d => { return x(d.dtm) })
               .attr('cy', d => { return y(d.ValueDegrees) })
-              .attr('r', 1.5)
+              .attr('r', 3)
               .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
@@ -493,22 +505,25 @@ var vm = new Vue({
         
         svg.append("g")
           .call(d3.axisLeft(y));
-		  
-		// Add the legend
-		svg.append("g")
-		  .attr("class", "legendOrdinal")
-		  .attr("transform", "translate(20,20)");
-		
-		var legendOrdinal = legend.legendColor()
-		  .shape("path", d3.symbol().type(d3.symbolCircle).size(100)())
-		  .shapePadding(5)
-		  //use cellFilter to hide the "e" cell
-		  // .cellFilter(function(d){ return d.label !== "e" })
-		  .scale(ordinal);
-		
-		svg.select(".legendOrdinal")
-		  .call(legendOrdinal);
-		
+        
+        svg.append("text")
+          .attr("x", 2)
+          .attr("y", height-2)
+          .text(this.unitcurrent);
+          
+        
+        // Add the legend
+        svg.append("g")
+          .attr("class", "legendOrdinal")
+          .attr("transform", "translate(20,20)");
+        
+        var legendOrdinal = legend.legendColor()
+          .shape("path", d3.symbol().type(d3.symbolCircle).size(100)())
+          .shapePadding(5)
+          .scale(ordinal);
+        
+        svg.select(".legendOrdinal")
+          .call(legendOrdinal);
       };
     },
     
