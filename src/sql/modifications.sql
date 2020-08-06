@@ -84,3 +84,17 @@ GO
 ALTER TABLE Alqwu.dbo.[Workup]
 ADD Notes varchar(255) NULL
 GO
+
+ALTER TABLE Alqwu.dbo.[Measurement]
+DROP COLUMN MeasurementCommentID
+GO
+
+ALTER TABLE Alqwu.dbo.[Measurement]
+DROP COLUMN MeasurementQualityID
+GO
+
+ALTER TABLE Alqwu.dbo.[Measurement]
+ADD Note varchar(255) NULL
+GO
+
+

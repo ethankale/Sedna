@@ -210,11 +210,12 @@ let controller = {
         let statement = `SELECT 
             DATEADD(minute, ms.CollectedDTMOffset, CollectedDateTime) as CollectedDateTime,
             ms.Value, qf.Code as Qualifier, ms.Depth_M as Depth_Meters,
-            ms.Duplicate, ms.LabBatch, ms.Symbol,
+            ms.Duplicate, ms.LabBatch, ms.Symbol, 
             unit.Symbol as Unit,
             pm.Name as Parameter, mt.Code as Method,
             st.Code as SiteCode, st.Name as SiteName,
-            sp.Name as SamplePoint, sp.Latitude, sp.Longitude
+            sp.Name as SamplePoint, sp.Latitude, sp.Longitude,
+            ms.Note as MeasurementNote
           FROM Measurement as ms
             WITH (INDEX(measurement_metadataid_idx))
           LEFT JOIN Metadata as md
