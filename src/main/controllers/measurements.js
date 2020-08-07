@@ -316,17 +316,16 @@ let controller = {
             bulkConnection.close();
           });
           
-          bulkLoad.addColumn('CollectedDTM',         TYPES.DateTime2, { nullable: false, scale: 0 });
-          bulkLoad.addColumn('Value',                TYPES.Numeric,   { nullable: true, precision: 18, scale: 6 });
-          bulkLoad.addColumn('MetadataID',           TYPES.Int,       { nullable: false });
-          bulkLoad.addColumn('CollectedDTMOffset',   TYPES.Int,       { nullable: false });
-          bulkLoad.addColumn('MeasurementCommentID', TYPES.Int,       { nullable: true });
-          bulkLoad.addColumn('MeasurementQualityID', TYPES.Int,       { nullable: true });
-          bulkLoad.addColumn('QualifierID',          TYPES.Int,       { nullable: true });
-          bulkLoad.addColumn('Depth_M',              TYPES.Numeric,   { nullable: true, precision: 6, scale: 2 });
-          bulkLoad.addColumn('Duplicate',            TYPES.Bit,       { nullable: true });
-          bulkLoad.addColumn('LabBatch',             TYPES.VarChar,   { nullable: true });
-          bulkLoad.addColumn('Symbol',               TYPES.Char,      { nullable: true });
+          bulkLoad.addColumn('CollectedDTM',       TYPES.DateTime2, { nullable: false, scale: 0 });
+          bulkLoad.addColumn('Value',              TYPES.Numeric,   { nullable: true, precision: 18, scale: 6 });
+          bulkLoad.addColumn('MetadataID',         TYPES.Int,       { nullable: false });
+          bulkLoad.addColumn('CollectedDTMOffset', TYPES.Int,       { nullable: false });
+          bulkLoad.addColumn('QualifierID',        TYPES.Int,       { nullable: true });
+          bulkLoad.addColumn('Depth_M',            TYPES.Numeric,   { nullable: true, precision: 6, scale: 2 });
+          bulkLoad.addColumn('Duplicate',          TYPES.Bit,       { nullable: true });
+          bulkLoad.addColumn('LabBatch',           TYPES.VarChar,   { nullable: true });
+          bulkLoad.addColumn('Symbol',             TYPES.Char,      { nullable: true });
+          bulkLoad.addColumn('Note',               TYPES.VarChar,   { nullable: true });
           
           let errorMsg = '';
           
@@ -343,16 +342,15 @@ let controller = {
               .setZone('UTC', {keepLocalTime: true })
               .toJSDate();
             
-            measurement_new.Value                = val;
-            measurement_new.MetadataID           = metaid;
-            measurement_new.CollectedDTMOffset   = offset;
-            measurement_new.MeasurementCommentID = measurement.MeasurementCommentID;
-            measurement_new.MeasurementQualityID = measurement.MeasurementQualityID;
-            measurement_new.QualifierID          = measurement.QualifierID;
-            measurement_new.Depth_M              = measurement.Depth_M;
-            measurement_new.Duplicate            = measurement.Duplicate;
-            measurement_new.LabBatch             = measurement.LabBatch;
-            measurement_new.Symbol               = measurement.Symbol;
+            measurement_new.Value              = val;
+            measurement_new.MetadataID         = metaid;
+            measurement_new.CollectedDTMOffset = offset;
+            measurement_new.QualifierID        = measurement.QualifierID;
+            measurement_new.Depth_M            = measurement.Depth_M;
+            measurement_new.Duplicate          = measurement.Duplicate;
+            measurement_new.LabBatch           = measurement.LabBatch;
+            measurement_new.Symbol             = measurement.Symbol;
+            measurement_new.Note               = measurement.Note;
             
             if (isNaN(measurement_new.CollectedDTM) || measurement_new.CollectedDTM == null) {
               errorMsg += ('Bad date in measurement #' + index + '; ')

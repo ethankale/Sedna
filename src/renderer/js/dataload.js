@@ -35,13 +35,12 @@ var vm = new Vue({
         {
           'Value':                null,
           'CollectedDTM':         null,
-          'MeasurementCommentID': null,
-          'MeasurementQualityID': null,
           'QualifierID':          null,
           'Depth_M':              null,
           'Duplicate':            false,
           'LabBatch':             null,
-          'Symbol':               '='
+          'Symbol':               '=',
+          'Note':                 ''
         }
       ]
     },
@@ -56,6 +55,7 @@ var vm = new Vue({
     dupID:       -5,
     labBatchID:  -6,
     symbolID:    -7,
+    noteID:      -8,
 
     headerMetadataMap: {},
     headerNotices:     {},
@@ -184,6 +184,10 @@ var vm = new Vue({
           MetadataID: this.symbolID,
           Parameter:  "Symbol (<, =, or >)"
         },
+        {
+          MetadataID: this.noteID,
+          Parameter:  "Notes"
+        },
       ]
     },
 
@@ -275,6 +279,20 @@ var vm = new Vue({
         let k = Object.keys(this.headerMetadataMap);
         let v = Object.values(this.headerMetadataMap);
         let i = v.findIndex(m => m.metaid == this.symbolID);
+        name = k[i];
+      }
+      return name;
+    },
+    
+    noteColName: function() {
+      let metaIDs = Object.values(this.headerMetadataMap);
+      let count   = metaIDs.filter(m => m.metaid == this.noteID).length;
+      let name    = null;
+
+      if (count === 1) {
+        let k = Object.keys(this.headerMetadataMap);
+        let v = Object.values(this.headerMetadataMap);
+        let i = v.findIndex(m => m.metaid == this.noteID);
         name = k[i];
       }
       return name;
@@ -402,15 +420,14 @@ var vm = new Vue({
           .setZone(this.utcstring);
         d2.CollectedDTM = d2.jsdate;
 
-        d2.ValueOriginal        = d[header].trim() == ''     ? NaN  : Number(d[header]);
-        d2.Depth_M              = this.depthColName == ''    ? null : d[this.depthColName];
-        d2.Symbol               = this.symbolColName == ''   ? null : d[this.symbolColName];
-        d2.LabBatch             = this.labBatchColName == '' ? null : d[this.labBatchColName];
-        d2.QualifierID          = null;
-        d2.MeasurementCommentID = null;
-        d2.MeasurementQualityID = null;
-        d2.MetadataID           = metaid;
-        d2.CollectedDTMOffset   = this.utcoffset;
+        d2.ValueOriginal      = d[header].trim() == ''     ? NaN  : Number(d[header]);
+        d2.Depth_M            = this.depthColName == ''    ? null : d[this.depthColName];
+        d2.Symbol             = this.symbolColName == ''   ? null : d[this.symbolColName];
+        d2.LabBatch           = this.labBatchColName == '' ? null : d[this.labBatchColName];
+        d2.Note               = this.noteColName == ''     ? null : d[this.noteColName];
+        d2.QualifierID        = null;
+        d2.MetadataID         = metaid;
+        d2.CollectedDTMOffset = this.utcoffset;
 
         d2.Value = this.roundToDecimal((d2.ValueOriginal + ((stepchange*n) + offset)), decimals);
 
@@ -442,10 +459,7 @@ var vm = new Vue({
           } else {
             d2.Duplicate = null;
           }
-          
-        }
-        
-        d2.Symbol               = this.symbolColName == ''    ? null : d[this.symbolColName];
+        };
 
         mindate = d2.CollectedDTM > mindate ? mindate : d2.CollectedDTM;
         maxdate = d2.CollectedDTM < maxdate ? maxdate : d2.CollectedDTM;
@@ -459,7 +473,7 @@ var vm = new Vue({
           cmin = newVal < cmin ? newVal : cmin;
         };
 
-        // Now that we've calculated all the values, find determine if there's
+        // Now that we've calculated all the values, determine if there's
         //   a gap between this entry and the last one entered.  If not,
         //   just push the new object; if so, set values to NaN and push.
         if (i === 0 || stepchange === 0) {
