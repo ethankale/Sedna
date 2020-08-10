@@ -2,6 +2,8 @@ Sedna
 =====
 An environmental database for high-rate data, individual data points, and everything in between.
 
+Many of the design decisions for this database were inspired by the paper '[Towards a water quality database for raw and validated data with emphasis on structured metadata]' (https://iwaponline.com/wqrj/article/54/1/1/64706/Towards-a-water-quality-database-for-raw-and).
+
 Getting Started
 ---------------
 To install the application:

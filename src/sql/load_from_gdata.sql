@@ -796,4 +796,51 @@ WHERE ParameterID IN (
   SELECT DISTINCT param_id
   FROM GDATA.dbo.tblWQResult)
 
+/* Insert manual discharge metadata 
+1548 is the id for the 'Flow' parameter
+1535 is the id for the 'Streamflow by acoustic doppler velocimeter' method
+7 is the id for the 'cfs' unit
+*/
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active)
+SELECT gd.G_ID, 1548, 1535, 7, 1
+FROM [GDATA].[dbo].[tblFieldData] as gd
+WHERE Parameter = 2
+GROUP BY gd.G_ID
+GO
 
+/* Insert manual discharge measurements 
+
+Need to fix possible duplicate values in the GData table BEFORE running this query
+Since duplicates could be mislabelled values (wrong parameter, for instance), can't
+just run a query to delete all the bad ones.
+
+*/
+
+/* Find duplicates */
+-- SELECT MAX(fd.FieldData_ID), count(fd.FieldData_ID) as theCount
+-- FROM [GDATA].[dbo].[tblFieldData] as fd
+-- LEFT JOIN [GDATA].[dbo].tblFieldVisitInfo as fvi
+-- ON fd.FieldVisit_ID = fvi.FieldVisit_ID
+-- WHERE Date_Time IS NOT NULL
+-- AND fd.Parameter = 2
+-- GROUP BY fvi.Date_Time, fvi.UTC_Offset, fvi.G_ID
+-- ORDER BY theCount DESC
+-- GO
+
+/* Insert values */
+INSERT INTO Alqwu.dbo.Measurement 
+WITH (TABLOCK)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value)
+SELECT amd.MetadataID, fvi.Date_Time, fvi.UTC_Offset*-60, fd.Parameter_Value
+FROM [GDATA].[dbo].[tblFieldData] as fd
+LEFT JOIN [GDATA].[dbo].tblFieldVisitInfo as fvi
+ON fd.FieldVisit_ID = fvi.FieldVisit_ID
+  LEFT JOIN Alqwu.dbo.Metadata as amd
+    ON amd.SamplePointID = fd.G_ID
+    AND amd.ParameterID = 1548
+    AND amd.MethodID = 1535
+WHERE Parameter = 2
+AND Date_Time IS NOT NULL
+AND MetadataID IS NOT NULL
+AND Parameter_Value IS NOT NULL
+GO
