@@ -210,8 +210,6 @@ var vm = new Vue({
       
       clickedParam.active = true;
       
-      console.log(clickedParam);
-      
       var lastdtm   = clickedParam.maxdtm;
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
       var firstdtm  = clickedParam.mindtm;
