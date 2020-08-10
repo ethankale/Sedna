@@ -790,10 +790,10 @@ GO
 
 /* Generally speaking the water quality parameters should be graphed with points;
    points are id #3. */
-UPDATE Alqwu.dbo.Parameter
+UPDATE Alqwu.dbo.Method
 SET GraphTypeID = 3
-WHERE ParameterID IN (
-  SELECT DISTINCT param_id
+WHERE MethodID IN (
+  SELECT DISTINCT method_id
   FROM GDATA.dbo.tblWQResult)
 
 /* Insert manual discharge metadata 

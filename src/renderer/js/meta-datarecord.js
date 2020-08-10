@@ -39,6 +39,7 @@ var vmDR = new Vue({
     methods: [],
     units: [],
     equipment: [],
+    graphTypes:  [],
     
     editstate: 'view',
     error: false,
@@ -55,6 +56,7 @@ var vmDR = new Vue({
       DecimalPoints:    null,
       Notes:            null,
       Active:           null,
+      GraphTypeID:      1,
       equipDeployments: []
     }
   },
@@ -84,6 +86,14 @@ var vmDR = new Vue({
     let self = this;
     
     self.updateMetadataList();
+    this.getGraphTypes()
+      .done((data) => {
+        this.graphTypes = data;
+      })
+      .fail((err) => {
+        console.log("Couldn't load graph types.");
+        console.log(err);
+      });
     
     let lists     = ["sps", "params", "methods", "units", "equipment"]
     let endpoints = ["samplePointList", "parameterList", 
@@ -131,6 +141,17 @@ var vmDR = new Vue({
       }).fail((err) => {
         console.log(err);
       });
+    },
+    
+    getGraphTypes() {
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/graphTypeList`,
+        method: 'GET',
+        timeout: 3000,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
     },
     
     getCurrentDR: function(MetadataID) {

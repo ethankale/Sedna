@@ -46,6 +46,7 @@ let controller = {
             ,[Code]
             ,[Description]
             ,[Reference]
+            ,[GraphTypeID]
           FROM [Method]
           WHERE MethodID = @methodid`;
         
@@ -84,7 +85,8 @@ let controller = {
         let statement = `UPDATE [Method] SET
           Code        = @code,
           Description = @description,
-          Reference   = @reference
+          Reference   = @reference,
+          GraphTypeID = @GraphTypeID
           WHERE MethodID = @methodid`;
           
         var request = new Request(statement, function(err, rowCount) {
@@ -101,6 +103,7 @@ let controller = {
         request.addParameter('code',        TYPES.VarChar, req.body.Code);
         request.addParameter('description', TYPES.VarChar, req.body.Description);
         request.addParameter('reference',   TYPES.VarChar, req.body.Reference);
+        request.addParameter('GraphTypeID', TYPES.Int, req.body.GraphTypeID);
         
         connection.execSql(request);
       });
@@ -114,8 +117,8 @@ let controller = {
     let lastid = 0;
     
     let statement = `INSERT INTO [Method]
-      (Code, Description, Reference)
-      VALUES (@code, @description, @reference);
+      (Code, Description, Reference, GraphTypeID)
+      VALUES (@code, @description, @reference, @GraphTypeID);
       SELECT SCOPE_IDENTITY() AS LastID;\r`;
     
     connection.on('connect', function(err) {
@@ -137,6 +140,7 @@ let controller = {
       request.addParameter('code',        TYPES.VarChar, req.body.Code);
       request.addParameter('description', TYPES.VarChar, req.body.Description);
       request.addParameter('reference',   TYPES.VarChar, req.body.Reference);
+      request.addParameter('GraphTypeID', TYPES.Int, req.body.GraphTypeID);
       
       connection.execSql(request);
     });

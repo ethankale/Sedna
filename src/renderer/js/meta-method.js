@@ -30,6 +30,8 @@ var vm = new Vue({
     methods: [],
     MethodID: 0,
     
+    graphTypes:  [],
+    
     editstate: 'view',
     error:     false,
     
@@ -38,7 +40,8 @@ var vm = new Vue({
       MethodID:    null,
       Code:        null,
       Description: null,
-      Reference:   null
+      Reference:   null,
+      GraphTypeID: 1
     }
   },
   
@@ -46,6 +49,14 @@ var vm = new Vue({
     let self = this;
     
     self.updateMethodList();
+    this.getGraphTypes()
+      .done((data) => {
+        this.graphTypes = data;
+      })
+      .fail((err) => {
+        console.log("Couldn't load graph types.");
+        console.log(err);
+      });
   },
   
   methods: {
@@ -65,6 +76,17 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
       });
+    },
+    
+    getGraphTypes() {
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/graphTypeList`,
+        method: 'GET',
+        timeout: 3000,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
     },
     
     getCurrentMethod: function(MethodID) {

@@ -50,7 +50,9 @@ var vm = new Vue({
     samplePoints:  [],
     workups:       [],
     dailySummary:  [],
+    
     graphTypes:    [],
+    chartType:     "",
     
     hideInactive:  true,
     
@@ -63,6 +65,7 @@ var vm = new Vue({
     
     waterYears:    [],
     paramDetails:  [],
+    methodDetails: [],
     
     spID: null,
     
@@ -288,6 +291,22 @@ var vm = new Vue({
       return request;
     },
     
+    getMethodDetails() {
+      let query = {
+        MethodID: this.methodcurrent
+      };
+      
+      let request = $.ajax({
+        url: `http://localhost:3000/api/v1/method`,
+        method:'GET',
+        timeout: 3000,
+        data: query,
+        dataType: 'json',
+        contentType: 'application/json'
+      });
+      return request;
+    },
+    
     onPageLoad() {
       this.getSamplePoints()
         .done((data) => {
@@ -346,15 +365,14 @@ var vm = new Vue({
     graphMeasurements(width) {
       
       // Different charts for different parameters; hardcoded into the DB right now
-      let chartType = 1;
-      if (this.paramDetails.GraphTypeID === 1) {
-        chartType = 'lineRange';
-      } else if (this.paramDetails.GraphTypeID === 2) {
-        chartType = 'bar';
-      } else if (this.paramDetails.GraphTypeID === 3) {
-        chartType = 'point';
-      } else if (this.paramDetails.GraphTypeID === 4) {
-        chartType = 'polar';
+      if (this.methodDetails.GraphTypeID === 1) {
+        this.chartType = 'lineRange';
+      } else if (this.methodDetails.GraphTypeID === 2) {
+        this.chartType = 'bar';
+      } else if (this.methodDetails.GraphTypeID === 3) {
+        this.chartType = 'point';
+      } else if (this.methodDetails.GraphTypeID === 4) {
+        this.chartType = 'polar';
       };
       
       // Create columns for just provisional values
@@ -387,15 +405,15 @@ var vm = new Vue({
         
         // y scales
         let yExtent = null;
-        if (chartType === 'lineRange') {
+        if (this.chartType === 'lineRange') {
           yExtent = d3.extent( 
             [].concat(
               d3.extent(vm.dailyFormatted, function(d) {return d.ValueMax; }),
               d3.extent(vm.dailyFormatted, function(d) {return d.ValueMin; })),
             function(d) {return d});
-        } else if (chartType === 'bar') {
+        } else if (this.chartType === 'bar') {
           yExtent = [0, d3.max(vm.dailyFormatted, function(d) {return d.ValueSum; })];
-        } else if (chartType === 'polar') {
+        } else if (this.chartType === 'polar') {
           yExtent = [0, 360];
         } else {
           yExtent = d3.extent(vm.dailyFormatted, function(d) {return d.Value; })
@@ -411,7 +429,7 @@ var vm = new Vue({
           .range(["steelblue", "firebrick"]);
 		
         // Creating the charts, starting with line + range polygon
-        if (chartType === 'lineRange') {
+        if (this.chartType === 'lineRange') {
           let area = d3.area()
             .defined(d => { return d.ValueMin!=null & d.ValueMax!=null; })
             .x(d => x(d.dtm))
@@ -460,7 +478,7 @@ var vm = new Vue({
             )
         };
         
-        if (chartType === 'bar') {
+        if (this.chartType === 'bar') {
           svg.selectAll('plotBars')
             .data(this.dailyFormatted)
             .data(this.dailyFormatted.filter(d => d.Value != null))
@@ -473,7 +491,7 @@ var vm = new Vue({
               .attr('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         };
         
-        if (chartType === 'point') {
+        if (this.chartType === 'point') {
           svg.append('g')
             .selectAll('dot')
             .data(this.dailyFormatted.filter(d => d.Value != null))
@@ -485,7 +503,7 @@ var vm = new Vue({
               .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
         
-        if (chartType === 'polar') {
+        if (this.chartType === 'polar') {
           svg.append('g')
             .selectAll('dot')
             .data(this.dailyFormatted.filter(d => d.ValueDegrees != null))
@@ -529,10 +547,14 @@ var vm = new Vue({
     
     updateDates() {
       
-      Promise.allSettled([this.getDailyMeasurements(), this.getParameterDetails()])
-      .then((data) => {
-        this.dailySummary = data[0].value;
-        this.paramDetails = data[1].value;
+      Promise.allSettled([
+        this.getDailyMeasurements(), 
+        this.getParameterDetails(),
+        this.getMethodDetails()
+      ]).then((data) => {
+        this.dailySummary  = data[0].value;
+        this.paramDetails  = data[1].value;
+        this.methodDetails = data[2].value;
         this.graphMeasurements();
       })
       .catch(error => {

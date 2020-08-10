@@ -19,7 +19,6 @@ Vue.directive('select', {
 
 $(document).ready(function() {
   $("#paramSelect").select2({ width: '100%' });
-  // $("#parameter-GraphDefaultSelect").select2({ width: '100%' });
 });
 
 var vm = new Vue({
@@ -31,8 +30,6 @@ var vm = new Vue({
     params:      [],
     ParameterID: 0,
     
-    graphTypes:  [],
-    
     editstate:   'view',
     error:       false,
     
@@ -41,21 +38,12 @@ var vm = new Vue({
       ParameterID: null,
       Name:        null,
       CAS:         null,
-      Description: null,
-      GraphTypeID: 1
+      Description: null
     }
   },
   
   mounted: function () {
     this.updateParameterList();
-    this.getGraphTypes()
-      .done((data) => {
-        this.graphTypes = data;
-      })
-      .fail((err) => {
-        console.log("Couldn't load graph types.");
-        console.log(err);
-      });
   },
   
   methods: {
@@ -76,17 +64,6 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
       });
-    },
-    
-    getGraphTypes() {
-      let request = $.ajax({
-        url: `http://localhost:3000/api/v1/graphTypeList`,
-        method: 'GET',
-        timeout: 3000,
-        dataType: 'json',
-        contentType: 'application/json'
-      });
-      return request;
     },
     
     getCurrentParameter: function(ParameterID) {

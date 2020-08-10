@@ -29,7 +29,6 @@ let controller = {
               ,[Name]
               ,[CAS]
               ,[Description]
-              ,[GraphTypeID]
             FROM [Parameter]
             WHERE ParameterID = @parameterid`;
           
@@ -94,7 +93,7 @@ let controller = {
               MAX(ms.CollectedDateTime) AS maxdtm, 
               MIN(ms.CollectedDateTime) AS mindtm, 
               COUNT(ms.MeasurementID) AS nmeasure,
-              pm.GraphTypeID
+              mt.GraphTypeID
             FROM Measurement AS ms 
               INNER JOIN Metadata AS md 
                 ON ms.MetadataID = md.MetadataID 
@@ -105,7 +104,7 @@ let controller = {
               INNER JOIN Unit
                 ON md.UnitID = Unit.UnitID
             WHERE SamplePointID = @spID
-            GROUP BY md.SamplePointID, md.ParameterID, md.MethodID, pm.Name, mt.Description, pm.GraphTypeID, Unit.Symbol`
+            GROUP BY md.SamplePointID, md.ParameterID, md.MethodID, pm.Name, mt.Description, mt.GraphTypeID, Unit.Symbol`
             
           var request = new Request(statement, function(err, rowCount) {
             if (err) {
@@ -145,8 +144,7 @@ let controller = {
           let statement = `UPDATE [Parameter] SET
             Name        = @name,
             CAS         = @cas,
-            Description = @description,
-            GraphTypeID = @graphTypeID
+            Description = @description
             WHERE ParameterID = @parameterid`;
             
           var request = new Request(statement, function(err, rowCount) {
@@ -163,7 +161,6 @@ let controller = {
           request.addParameter('name',        TYPES.VarChar, req.body.Name);
           request.addParameter('cas',         TYPES.VarChar, req.body.CAS);
           request.addParameter('description', TYPES.VarChar, req.body.Description);
-          request.addParameter('graphTypeID', TYPES.Int,     req.body.GraphTypeID);
 
           connection.execSql(request);
         });
