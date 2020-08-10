@@ -97,4 +97,25 @@ ALTER TABLE Alqwu.dbo.[Measurement]
 ADD Note varchar(255) NULL
 GO
 
+/* Changed my mind; the default graph should be tied to method, not parameter */
+ALTER TABLE Alqwu.dbo.Parameter  
+DROP CONSTRAINT GraphTypeIDDefault;  
+GO 
 
+ALTER TABLE Alqwu.dbo.Parameter
+DROP CONSTRAINT Measurement_Default_GraphType_fk;
+GO
+
+ALTER TABLE Alqwu.dbo.Parameter  
+DROP COLUMN GraphTypeID;  
+GO 
+
+ALTER TABLE Alqwu.dbo.[Method]
+ADD GraphTypeID INT NULL
+CONSTRAINT GraphTypeIDDefault
+DEFAULT 1 WITH VALUES;
+GO 
+
+ALTER TABLE Alqwu.dbo.Metadata
+ADD GraphTypeID INT NULL
+GO

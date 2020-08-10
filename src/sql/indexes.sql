@@ -143,13 +143,22 @@ CREATE NONCLUSTERED INDEX [WorkupLoadedBy_idx] ON [dbo].[Workup]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
 
-/* Foreign key between Parameter and GraphType.*/
-ALTER TABLE Alqwu.dbo.[Parameter]  
+/* Foreign key between GraphType and Method and GraphType and Metadata.*/
+ALTER TABLE Alqwu.dbo.[Method]  
 WITH CHECK ADD CONSTRAINT Measurement_Default_GraphType_fk FOREIGN KEY(GraphTypeID)
 REFERENCES Alqwu.dbo.GraphType (GraphTypeID)
 ON UPDATE CASCADE
 ON DELETE CASCADE
 GO
-ALTER TABLE Alqwu.dbo.[Parameter] CHECK CONSTRAINT [Measurement_Default_GraphType_fk]
+ALTER TABLE Alqwu.dbo.[Method] CHECK CONSTRAINT [Measurement_Default_GraphType_fk]
+GO
+
+ALTER TABLE Alqwu.dbo.[Metadata]  
+WITH CHECK ADD CONSTRAINT Metadata_GraphType_fk FOREIGN KEY(GraphTypeID)
+REFERENCES Alqwu.dbo.GraphType (GraphTypeID)
+ON UPDATE CASCADE
+ON DELETE CASCADE
+GO
+ALTER TABLE Alqwu.dbo.[Metadata] CHECK CONSTRAINT [Metadata_GraphType_fk]
 GO
 
