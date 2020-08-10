@@ -585,22 +585,6 @@
                     </div>
                   </div>
                   
-                  <div class="form-group row">
-                    <label for="dr-GraphDefaultSelect" class="col-sm-2 col-form-label">Graph Type</label>
-                    <div class="col-sm-10">
-                      <select class="form-control" id="dr-GraphDefaultSelect" 
-                        v-model="currentDR.GraphTypeID" 
-                        :disabled="editstate === 'view'">
-                        <option 
-                          v-for="gtype in graphTypes" 
-                          v-bind:value="gtype.GraphTypeID" 
-                          v-bind:key="gtype.GraphTypeID">
-                          {{ gtype.Name }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  
                   <div class="form-row">
                     <label for="dr-notes" class="col-sm-2 col-form-label">Notes</label>
                     <div class="col-sm-10">
