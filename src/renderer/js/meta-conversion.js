@@ -91,6 +91,10 @@ var vm = new Vue({
     
     CVs() {
       return this.currentConversion.ConversionValues;
+    },
+    
+    showGraph() {
+      return this.currentConversion.ConversionValues.length > 0;
     }
   },
   
@@ -219,10 +223,21 @@ var vm = new Vue({
     },
     
     clickCancelConversion: function() {
-      this.getCurrentConversion(this.ConversionID);
-      
-      this.editstatus = 'view';
-      this.error       = false;
+      this.editstate        = 'view';
+      this.notificationText = "Click 'Edit' below to make changes, or 'New' to create a new Conversion.";
+      this.error            = false;
+
+      if (this.conversions.length > 0) {
+        this.getCurrentConversion(this.ConversionID);
+      } else {
+        this.line = "";
+        this.currentConversion.ConversionValues = [];
+        this.currentConversion.ConversionName   = "";
+        this.currentConversion.CreatedBy        = "";
+        this.currentConversion.Description      = "";
+        this.currentConversion.LastModified     = "";
+        this.currentConversion.Active           = true;
+      };
     },
     
     clickEditConversion: function() {
@@ -243,8 +258,9 @@ var vm = new Vue({
     },
     
     setSVGWidth() {
-      if ($("#conversionChartContainer").width() > 0) {
-        this.svgWidth = $("#conversionChartContainer").width() - this.margin.left - this.margin.right;
+      if (document.querySelectorAll("#conversion-point-header")[0].clientWidth > 0) {
+        this.svgWidth = document.querySelectorAll("#conversion-point-header")[0].clientWidth -
+          this.margin.left - this.margin.right;
       } else {
         this.svgWidth = 500;
       };
@@ -282,6 +298,9 @@ var vm = new Vue({
           this.currentConversion.ConversionValues.push({'FromValue': fromval, 'ToValue': toval});
         }
       });
+      
+      this.setSVGWidth();
+      
     }
   }
 })

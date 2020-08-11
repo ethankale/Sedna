@@ -3,7 +3,7 @@
   <head>
   
     <!-- REMOVE THIS! -->
-    <!-- <script src="http://localhost:8098"></script> -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -1160,9 +1160,19 @@
                   
                   <hr>
                   
-                  <h2>Conversion Points</h2>
+                  <div id="conversion-point-header" class="form-group row">
+                    <div class="col-sm-8">
+                      <h2>Conversion Points</h2>
+                    </div>
+                    
+                    <div class="col-sm-4">
+                      <button id="openCSVFileButton" type="button" class="btn btn-primary float-right"
+                        @click="openCVFileDialog()">Load Values</button>
+                    </div>
+                  </div>
                   
-                  <div id="ccc" class="form-group row">
+                  <div id="ccc" class="form-group row"
+                    v-show="showGraph">
                     <div id="conversionChartContainer" class="col-12">
                       <svg :width="outsideWidth" :height="outsideHeight">
                         <g :transform="`translate(${margin.left},${margin.top})`">
@@ -1175,11 +1185,6 @@
                         </g>
                       </svg>
                     </div>
-                  </div>
-                  
-                  <div class="row">
-                    <button id="openCSVFileButton" type="button" class="btn btn-primary"
-                      @click="openCVFileDialog()">Load Values</button>
                   </div>
                   
                 </fieldset>
