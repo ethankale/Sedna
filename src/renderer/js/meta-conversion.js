@@ -147,10 +147,6 @@ var vm = new Vue({
         this.error             = false;
         this.notificationText  = `Click 'Edit' below to make changes, or 'New' to create a new Conversion.`;
         
-        // The first time this loads svgWidth is 0, for reasons I can't figure out.
-        //   But the resize handler works.  So trigger that (and the subsequent
-        //   graphing function) if svgWidth is 0; otherwise, skip the resize event.
-        
         this.calculatePath();
         
       }).fail((err) => {
@@ -290,7 +286,6 @@ var vm = new Vue({
       };
       var fileData = Papa.parse(fileText, papaConfig);
       this.currentConversion.ConversionValues = [];
-      //console.log(fileData.data[0]);
       fileData.data.forEach((d, i) => {
         let fromval = parseFloat(d[0]);
         let toval   = parseFloat(d[1]);
