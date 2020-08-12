@@ -844,3 +844,30 @@ AND Date_Time IS NOT NULL
 AND MetadataID IS NOT NULL
 AND Parameter_Value IS NOT NULL
 GO
+
+/* Insert conversions from GData ratings (stage-discharge relationships) */
+
+/* Need to insert distinct ratings, but that's challenging, because 
+  multiple ratings can have the same Rating_Number 
+  
+  Also need to add a unique index on conversion name in Sedna
+  
+  */
+INSERT INTO [Alqwu].[dbo].[Conversion] 
+  WITH (TABLOCK)
+  (ConversionName, Active, Description)
+SELECT DISTINCT Rating_Number, 1, Notes
+FROM [GDATA].[dbo].[tblFlowRating_Stats]
+
+/* Insert conversion values from rating values */
+INSERT INTO [Alqwu].[dbo].[ConversionValue]
+  WITH (TABLOCK)
+  ([ConversionID], [FromValue], [ToValue])
+SELECT acf.ConversionID, WaterLevel + Offset, Discharge
+  FROM [GDATA].[dbo].[tblFlowRatings] as gfr
+  LEFT JOIN [GDATA].[dbo].[tblFlowRating_Stats] as gfrs
+  ON gfr.RatingNumber = gfrs.Rating_Number
+  LEFT JOIN Alqwu.dbo.Conversion as acf
+  ON gfr.RatingNumber = acf.ConversionName
+
+
