@@ -349,6 +349,7 @@ var vm = new Vue({
           //console.log("Loaded Post #" + i/stepSize);
         }).fail((err) => {
           console.log("Upload failed for Post #" + i/stepSize);
+          console.log(err);
           errors += dataToLoad.measurements.length;
         }).always(() => {
           this.notificationText = (`
