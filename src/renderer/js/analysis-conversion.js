@@ -121,6 +121,11 @@ var vm = new Vue({
       return nclass;
     },
     
+    showGraph: function() {
+      return this.measurements.length > 0;
+    },
+    
+    // D3 computed elements for the graph
     svgHeight: function() {
       return Math.floor(this.svgWidth / 2.2);
     },
