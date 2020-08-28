@@ -258,7 +258,9 @@ var vm = new Vue({
         'MetadataID':   this.oldDRID,
         'ConversionID': this.ConversionID,
         'FromDate':     this.fromDate,
-        'ToDate':       this.toDate
+        'ToDate':       this.toDate,
+        'Offset':       this.offset,
+        'StepChange':   this.stepChangePerMinute
       }
       $.ajax({
         url: `http://localhost:3000/api/v1/convertMeasurements`,

@@ -305,12 +305,15 @@ let controller = {
     let ConversionID = req.query.ConversionID;
     let FromDate     = req.query.FromDate;
     let ToDate       = req.query.ToDate;
+    let Offset       = req.query.Offset;
+    let StepChange   = req.query.StepChange;
     
     let returndata = [];
     
     connection.on('connect', function(err) {
       
-      let statement = `SELECT 
+      let statement = `
+        SELECT 
           cv.ToValue as Value
           ,cv.FromValue as FromValue
           ,md.[MetadataID]
@@ -327,15 +330,17 @@ let controller = {
           ,ms.[Provisional]
           ,ms.[Note]
         FROM Metadata as md
-        LEFT JOIN Measurement as ms
-        ON md.MetadataID = ms.MetadataID
+          LEFT JOIN Measurement as ms
+          ON md.MetadataID = ms.MetadataID
         LEFT JOIN ConversionValue as cv
-        ON ms.Value = cv.FromValue
-        AND cv.ConversionID = @ConversionID
+          ON ROUND(ms.Value + @Offset + (DATEDIFF(minute, @FromDate, ms.CollectedDateTime)*@StepChange), 
+            md.DecimalPoints) = cv.FromValue
+          AND cv.ConversionID = @ConversionID
         WHERE md.MetadataID = @MetadataID
-        AND ms.CollectedDateTime >= @FromDate
-        AND ms.CollectedDateTime <= @ToDate
-        ORDER BY ms.CollectedDateTime ASC;`;
+          AND ms.CollectedDateTime >= @FromDate
+          AND ms.CollectedDateTime <= @ToDate
+        ORDER BY ms.CollectedDateTime ASC;
+      `;
       
       let request = new Request(statement, function(err, rowCount) {
         if (err) {
@@ -350,6 +355,8 @@ let controller = {
       request.addParameter('MetadataID',   TYPES.Int, MetadataID);
       request.addParameter('FromDate',     TYPES.DateTime2, FromDate);
       request.addParameter('ToDate',       TYPES.DateTime2, ToDate);
+      request.addParameter('Offset',       TYPES.Numeric, Offset,     { nullable: false, precision: 18, scale: 6 });
+      request.addParameter('StepChange',   TYPES.Numeric, StepChange, { nullable: false, precision: 18, scale: 16 });
       
       request.on('row', function(columns) {
         let newrow = {};
