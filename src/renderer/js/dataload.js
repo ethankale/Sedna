@@ -385,12 +385,12 @@ var vm = new Vue({
       let data       = this.fileData.data;
       let returnData = [];
 
-      let cmis  = 0;
-      let csum  = 0;
-      let cmax  = Number(data[0][header]);
-      let cmin  = Number(data[0][header]);
-      let mindate   = lx.DateTime.local(3000,01,01);
-      let maxdate   = lx.DateTime.local(1000,01,01);
+      let cmis    = 0;
+      let csum    = 0;
+      let cmax    = Number(data[0][header]);
+      let cmin    = Number(data[0][header]);
+      let mindate = lx.DateTime.local(3000,01,01);
+      let maxdate = lx.DateTime.local(1000,01,01);
       // let cmean = Number(data[0][header]);
 
       let stepchange = 0;

@@ -36,6 +36,9 @@ var vm = new Vue({
     toDate: '',
     utcoffset: Math.floor(utils.utcoffset*60),
     
+    offset: 0,
+    drift:  0,
+    
     conversions: [],
     drs: [],
     measurements: [],
@@ -79,6 +82,22 @@ var vm = new Vue({
   },
   
   computed: {
+    
+    stepChangePerMinute: function() {
+      if (this.drift == 0) {
+        return 0;
+      } else {
+        let luxonFromDate = lx.DateTime.fromISO(this.fromDate);
+        let luxonToDate   = lx.DateTime.fromISO(this.toDate);
+        let m = lx
+          .Interval
+          .fromDateTimes(luxonFromDate, luxonToDate)
+          .length('minutes');
+        // return i.length('minutes');
+        return this.drift/m;
+      };
+    },
+    
     convertButtonText: function() {
       return this.conversionState == 'calculated' ? 'Save' : 'Start';
     },
