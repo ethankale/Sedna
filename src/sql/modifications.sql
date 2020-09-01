@@ -119,3 +119,25 @@ GO
 ALTER TABLE Alqwu.dbo.Metadata
 ADD GraphTypeID INT NULL
 GO
+
+ALTER TABLE Alqwu.dbo.Metadata
+ADD FileName VARCHAR(255) NULL,
+  DataStarts datetime2(0) NULL,
+  DataEnds datetime2(0) NULL,
+  LoadedOn date NULL,
+  UserID int NULL
+GO
+
+
+    [FileName] [varchar](255) NULL,
+    [DataStarts] [datetime2](0) NULL,
+    [DataEnds] [datetime2](0) NULL,
+    [LoadedOn] [date] NULL,
+    [UserID] [int] NULL,
+
+
+
+
+
+
+
