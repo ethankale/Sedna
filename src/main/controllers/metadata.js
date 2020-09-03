@@ -17,13 +17,13 @@ let controller = {
           ' (' + pm.Name + ' | ' + mt.Code + ' | ' + sp.Name + ')' as Metaname
           FROM Metadata as md
           INNER JOIN SamplePoint as sp
-          ON md.SamplePointID = sp.SamplePointID
+            ON md.SamplePointID = sp.SamplePointID
           INNER JOIN Site as st
-          ON sp.SiteID = st.SiteID
+            ON sp.SiteID = st.SiteID
           INNER JOIN Parameter as pm
-          ON pm.ParameterID = md.ParameterID
+            ON pm.ParameterID = md.ParameterID
           INNER JOIN Method as mt
-          ON mt.MethodID = md.MethodID\r`
+            ON mt.MethodID = md.MethodID\r`
           
         if (typeof active != "undefined") {
           statement = statement + " WHERE md.Active <> 0\r"
@@ -51,19 +51,21 @@ let controller = {
           console.log('Error: ', err)
         } else {
           
-          let statement = `SELECT md.MetadataID, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
-            md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints
+          let statement = `
+            SELECT md.MetadataID, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
+              md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints
             FROM Metadata as md
             INNER JOIN SamplePoint as sp
-            ON md.SamplePointID = sp.SamplePointID
+              ON md.SamplePointID = sp.SamplePointID
             INNER JOIN Parameter as pm
-            ON pm.ParameterID = md.ParameterID
+              ON pm.ParameterID = md.ParameterID
             INNER JOIN Method as mt
-            ON mt.MethodID = md.MethodID
+              ON mt.MethodID = md.MethodID
             INNER JOIN Unit as un
-            ON un.UnitID = md.UnitID
+              ON un.UnitID = md.UnitID
             WHERE sp.SamplePointID = @spID
-            AND md.Active = 1`
+              AND md.Active = 1
+          `
           
           let returndata = [];
           
@@ -102,24 +104,32 @@ let controller = {
         
         if (typeof metaid != 'undefined' && typeof utcoffset != 'undefined') {
             
-            var statement = `SELECT COUNT(ms.MeasurementID) as MeasurementCount,
-              DATEADD(hour, ${utcoffset}*-1, MIN(ms.CollectedDtm)) as MinDate, 
-              DATEADD(hour, ${utcoffset}*-1, MAX(ms.CollectedDtm)) as MaxDate,
-              md.[MetadataID]
-              ,[ParameterID]
-              ,[UnitID]
-              ,[SamplePointID]
-              ,[Notes]
-              ,[MethodID]
-              ,[Active]
-              ,[FrequencyMinutes]
-              ,[DecimalPoints]
+            var statement = `
+              SELECT COUNT(ms.MeasurementID) as MeasurementCount
+                ,DATEADD(hour, ${utcoffset}*-1, MIN(ms.CollectedDtm)) as MinDate
+                ,DATEADD(hour, ${utcoffset}*-1, MAX(ms.CollectedDtm)) as MaxDate
+                ,md.[MetadataID]
+                ,[ParameterID]
+                ,[UnitID]
+                ,[SamplePointID]
+                ,[Notes]
+                ,[MethodID]
+                ,[Active]
+                ,[FrequencyMinutes]
+                ,[DecimalPoints]
+                ,[FileName]
+                ,[DataStarts]
+                ,[DataEnds]
+                ,[LoadedOn]
+                ,[UserID]
+                ,[CreatedOn]
               FROM Metadata as md
               LEFT JOIN Measurement as ms
-              on md.MetadataID = ms.MetadataID
+                on md.MetadataID = ms.MetadataID
               WHERE md.MetadataID = ${metaid}
               GROUP BY md.MetadataID, md.ParameterID, md.UnitID, md.SamplePointID, 
-                md.Notes, md.MethodID, md.Active, md.FrequencyMinutes, md.DecimalPoints`
+                md.Notes, md.MethodID, md.Active, md.FrequencyMinutes, md.DecimalPoints,
+                md.FileName, md.DataStarts, md.DataEnds, md.LoadedOn, md.UserID, md.CreatedOn`
             
             connection.on('connect', function(err) {
               if(err) {
@@ -131,7 +141,6 @@ let controller = {
             });
         } else {
           res.status(400).json("Must supply both metadataid and utcoffset.");
-          
         }
     },
     
@@ -143,16 +152,24 @@ let controller = {
         
         let active = req.body.Active;
           
-        let statement = `UPDATE Metadata SET 
-            SamplePointID = @samplePointID,
-            ParameterID = @parameterID,
-            MethodID = @methodID,
-            UnitID = @unitID,
-            FrequencyMinutes = @frequency,
-            DecimalPoints = @decimals,
-            Active = @active,
-            Notes = @notes
-          WHERE metadataID = @metadataID`
+        let statement = `
+          UPDATE Metadata SET 
+            SamplePointID     = @samplePointID,
+            ParameterID       = @parameterID,
+            MethodID          = @methodID,
+            UnitID            = @unitID,
+            FrequencyMinutes  = @frequency,
+            DecimalPoints     = @decimals,
+            Active            = @active,
+            Notes             = @notes,
+            GraphTypeID       = @graphTypeID,
+            FileName          = @fileName,
+            DataStarts        = @dataStarts,
+            DataEnds          = @dataEnds,
+            LoadedOn          = @loadedOn,
+            UserID            = @userID
+          WHERE metadataID = @metadataID
+        `
         
         var request = new Request(statement, function(err, rowCount) {
           if (err) {
@@ -164,19 +181,22 @@ let controller = {
           connection.close();
         });
         
-        request.addParameter('metadataID',    TYPES.Int, req.body.MetadataID)
-        request.addParameter('samplePointID', TYPES.Int, req.body.SamplePointID)
-        request.addParameter('parameterID',   TYPES.Int, req.body.ParameterID)
-        request.addParameter('methodID',      TYPES.Int, req.body.MethodID)
-        request.addParameter('unitID',        TYPES.Int, req.body.UnitID)
-        request.addParameter('frequency',     TYPES.Int, req.body.FrequencyMinutes)
-        request.addParameter('decimals',      TYPES.Int, req.body.DecimalPoints)
-        request.addParameter('notes',         TYPES.VarChar, req.body.Notes)
-        request.addParameter('active',        TYPES.Bit, active)
+        request.addParameter('metadataID',    TYPES.Int,       req.body.MetadataID)
+        request.addParameter('samplePointID', TYPES.Int,       req.body.SamplePointID)
+        request.addParameter('parameterID',   TYPES.Int,       req.body.ParameterID)
+        request.addParameter('methodID',      TYPES.Int,       req.body.MethodID)
+        request.addParameter('unitID',        TYPES.Int,       req.body.UnitID)
+        request.addParameter('frequency',     TYPES.Int,       req.body.FrequencyMinutes)
+        request.addParameter('decimals',      TYPES.Int,       req.body.DecimalPoints)
+        request.addParameter('notes',         TYPES.VarChar,   req.body.Notes)
+        request.addParameter('active',        TYPES.Bit,       active)
+        request.addParameter('fileName',      TYPES.VarChar,   req.body.FileName)
+        request.addParameter('dataStarts',    TYPES.datetime2, req.body.DataStarts)
+        request.addParameter('dataEnds',      TYPES.datetime2, req.body.DataEnds)
+        request.addParameter('loadedOn',      TYPES.datetime2, req.body.LoadedOn)
+        request.addParameter('userID',        TYPES.Int,       req.body.UserID)
         
         connection.execSql(request);
-        
-        //console.log(statement);
       });
     },
     
@@ -198,7 +218,8 @@ let controller = {
           VALUES 
             (@samplePointID, @parameterID, @methodID,
             @unitID, @frequency, @decimals,
-            @active, @notes);
+            @active, @notes,
+            @fileName, @dataStarts, @dataEnds, @loadedOn, @userID);
           SELECT SCOPE_IDENTITY() AS LastID;`
         
         var request = new Request(statement, function(err, rowCount) {
@@ -223,6 +244,12 @@ let controller = {
         request.addParameter('decimals',        TYPES.Int, req.body.DecimalPoints)
         request.addParameter('notes',           TYPES.VarChar, req.body.Notes)
         request.addParameter('active',          TYPES.Bit, active)
+        request.addParameter('graphTypeID',     TYPES.Int,       req.body.GraphTypeID)
+        request.addParameter('fileName',        TYPES.VarChar,   req.body.FileName)
+        request.addParameter('dataStarts',      TYPES.datetime2, req.body.DataStarts)
+        request.addParameter('dataEnds',        TYPES.datetime2, req.body.DataEnds)
+        request.addParameter('loadedOn',        TYPES.datetime2, req.body.LoadedOn)
+        request.addParameter('userID',          TYPES.Int,       req.body.UserID)
         
         connection.execSql(request);
         

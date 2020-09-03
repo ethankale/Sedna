@@ -9,8 +9,14 @@ let $          = require('jquery');
 let select2    = require('select2');
 let bootstrap  = require('bootstrap');
 
+import DataCSVLoad from './data-csv-load.vue';
+
 var vm = new Vue({
   el: '#uploadModal',
+
+  components: {
+    'data-csv-load': DataCSVLoad
+  },
 
   data: {
     utcHours: alqwuutils.utcoffset,
@@ -389,8 +395,8 @@ var vm = new Vue({
       let csum    = 0;
       let cmax    = Number(data[0][header]);
       let cmin    = Number(data[0][header]);
-      let mindate = lx.DateTime.local(3000,01,01);
-      let maxdate = lx.DateTime.local(1000,01,01);
+      let mindate = lx.DateTime.local(3000,1,1);
+      let maxdate = lx.DateTime.local(1000,1,1);
       // let cmean = Number(data[0][header]);
 
       let stepchange = 0;
@@ -928,20 +934,20 @@ var showReview = function() {
     vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
 };
 
-$(document).ready(function() {
-    vm.getQualifiers();
-    $("#siteSelect").change(function() {
-      $("#uploadCSVContainer").removeClass("d-none");
-      $("#uploadColumnSelectContainer").addClass("d-none");
-      $("#uploadReviewContainer").addClass("d-none");
-      $("#uploadBackButton").addClass("d-none");
-      $("#uploadNextButton").addClass("d-none");
-    });
+// $(document).ready(function() {
+    // vm.getQualifiers();
+    // $("#siteSelect").change(function() {
+      // $("#uploadCSVContainer").removeClass("d-none");
+      // $("#uploadColumnSelectContainer").addClass("d-none");
+      // $("#uploadReviewContainer").addClass("d-none");
+      // $("#uploadBackButton").addClass("d-none");
+      // $("#uploadNextButton").addClass("d-none");
+    // });
 
-    $("#openCSVFileButton").click(() => {
-      vm.openCSV();
-    });
-});
+    // $("#openCSVFileButton").click(() => {
+      // vm.openCSV();
+    // });
+// });
 
 var reviewData = function() {
 

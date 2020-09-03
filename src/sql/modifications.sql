@@ -128,16 +128,6 @@ ADD FileName VARCHAR(255) NULL,
   UserID int NULL
 GO
 
-
-    [FileName] [varchar](255) NULL,
-    [DataStarts] [datetime2](0) NULL,
-    [DataEnds] [datetime2](0) NULL,
-    [LoadedOn] [date] NULL,
-    [UserID] [int] NULL,
-
-
-
-
-
-
-
+ALTER TABLE Alqwu.dbo.Metadata
+ADD CreatedOn datetime2(0) DEFAULT(getdate())
+GO
