@@ -95,6 +95,67 @@ let controller = {
       });
     },
     
+    getLatestMetadatasBySamplePoint: function (req, res) {
+      let mssql_config = cfg.getConfig().mssql;
+      var connection = new Connection(mssql_config);
+      
+      var spID    = req.query.spID;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err)
+        } else {
+          
+          let statement = `
+            SELECT DISTINCT m.SamplePointID, m.ParameterID, m.MethodID, m.UnitID, m3.*
+            FROM Alqwu.dbo.Metadata as m
+            CROSS APPLY	(
+              SELECT TOP 1 m2.Active, m2.FrequencyMinutes, m2.DecimalPoints, m2.GraphTypeID,
+                m2.FileName, m2.DataStarts, m2.DataEnds, m2.LoadedOn, m2.UserID, m2.CreatedOn, m2.Notes
+              FROM Alqwu.dbo.Metadata as m2
+              WHERE m.SamplePointID = m2.SamplePointID 
+                AND m.ParameterID = m2.ParameterID
+                AND m.MethodID = m2.MethodID
+                AND m.UnitID = m2.UnitID
+              ORDER BY DataEnds DESC
+            ) as m3
+            INNER JOIN Parameter as pm
+                ON m.ParameterID = pm.ParameterID
+            INNER JOIN Method as mt
+                ON m.MethodID = mt.MethodID
+            INNER JOIN Unit as un
+                ON m.UnitID = un.UnitID
+            WHERE m.SamplePointID = @spID
+          `
+          
+          let returndata = [];
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              res.status(400).end();
+              console.log(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+            connection.close();
+          });
+          
+          request.on('row', function(columns) {
+            let thisrow = {}
+            columns.forEach(function(column) {
+                thisrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(thisrow);
+          });
+          
+          request.addParameter('spID', TYPES.Int, spID)
+          
+          connection.execSql(request);
+          
+        }
+      });
+    },
+    
     getMetadataDetails: function (req, res) {
         let mssql_config = cfg.getConfig().mssql;
         var connection = new Connection(mssql_config);

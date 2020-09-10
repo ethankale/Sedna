@@ -89,12 +89,28 @@ export default {
     },
     
     reviewData() {
-      if (this.datetimeCol != '' & this.columnsToLoad.length > 0) {
+      let readyToProceed = this.datetimeCol != '' & 
+        this.columnsToLoad.length > 0 &
+        !this.columnsToLoad.includes(this.datetimeCol);
+      if (readyToProceed) {
         this.showContainer = 'reviewData';
+        this.setNotice('alert-info', 'Finish loading the data.');
       } else {
         this.setNotice('alert-warning', 'Pick a date/time column and at least one data column to proceed.');
       };
     },
+    
+    backToUpload() {
+      this.setNotice('alert-info', 'Select a File...');
+      this.showContainer = 'uploadCSV';
+    },
+    
+    backToColumns() {
+      this.setNotice('alert-info', 'Select the columns with data you wish to load.');
+      this.datetimeCol   = '';
+      this.columnsToLoad = [];
+      this.showContainer = 'pickColumns';
+    }
   }
 }
 </script>
@@ -164,8 +180,16 @@ export default {
             @click="reviewData()"
           >Review Data</button>
         </div>
+        
+        <div class="col-6">
+          <button 
+            id="backToUploadButton" 
+            type="button" 
+            class="btn btn-primary float-right"
+            @click="backToUpload()"
+          >Back</button>
+        </div>
       </div>
-      
       
     </div>
     
@@ -202,6 +226,18 @@ export default {
             :valueField="column"
             :dataToLoad="fileData.data"></data-review-upload>
           
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-6">&nbsp;</div>
+        <div class="col-6">
+          <button 
+            id="backToReviewButton" 
+            type="button" 
+            class="btn btn-primary float-right"
+            @click="backToColumns()"
+          >Back</button>
         </div>
       </div>
       

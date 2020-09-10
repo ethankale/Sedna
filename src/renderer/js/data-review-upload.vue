@@ -12,6 +12,17 @@ export default {
     dataToLoad: {}
   },
   
+  data: function() {
+    return {
+      QualifierID: 'None',
+      Depth_M:     'None',
+      Duplicate:   'None',
+      LabBatch:    'None',
+      Symbol:      'None',
+      Note:        'None'
+    }
+  },
+  
   computed: {
     fieldsForSelect: function() {
       return ["None"].concat(this.fields);
@@ -35,17 +46,17 @@ export default {
       
       <tbody>
         <tr> 
-          <td>QualifierID</td>
+          <td>Qualifier ID</td>
           <td>
-            <select>
+            <select v-model="QualifierID">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
         </tr>
         <tr>
-          <td>Depth_M</td>
+          <td>Depth (meters)</td>
           <td>
-            <select>
+            <select v-model="Depth_M">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
@@ -53,15 +64,15 @@ export default {
         <tr>
           <td>Duplicate</td>
           <td>
-            <select>
+            <select v-model="Duplicate">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
         </tr>
         <tr>
-          <td>LabBatch</td>
+          <td>Lab Batch</td>
           <td>
-            <select>
+            <select v-model="LabBatch">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
@@ -69,7 +80,7 @@ export default {
         <tr>
           <td>Symbol</td>
           <td>
-            <select>
+            <select v-model="Symbol">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
@@ -77,7 +88,7 @@ export default {
         <tr>
           <td>Note</td> 
           <td>
-            <select>
+            <select v-model="Note">
               <option v-for="field in fieldsForSelect">{{ field }}</option>
             </select>
           </td>
