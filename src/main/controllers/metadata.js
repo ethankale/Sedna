@@ -107,7 +107,8 @@ let controller = {
         } else {
           
           let statement = `
-            SELECT DISTINCT m.SamplePointID, m.ParameterID, m.MethodID, m.UnitID, m3.*
+            SELECT DISTINCT m.SamplePointID, m.ParameterID, m.MethodID, m.UnitID, m3.*,
+              pm.Name, mt.Description, un.Symbol
             FROM Alqwu.dbo.Metadata as m
             CROSS APPLY	(
               SELECT TOP 1 m2.Active, m2.FrequencyMinutes, m2.DecimalPoints, m2.GraphTypeID,
