@@ -8,17 +8,20 @@ let _          = require('lodash');
 import vSelect from "vue-select";
 import "vue-select/dist/vue-select.css";
 
+import d3chart from "./d3chart.vue";
+
 export default {
   components: {
-    'v-select': vSelect
+    'v-select': vSelect,
+    'd3chart':  d3chart
   },
   
   props: {
-    fields: [],
+    fields:        [],
     SamplePointID: 0,
     datetimeField: '',
-    valueField: '',
-    dataFromFile: {}
+    valueField:    '',
+    dataFromFile:  {}
   },
   
   data: function() {
@@ -133,7 +136,6 @@ export default {
         stepchange = this.drift/(totalTimesteps-1);
       };
       
-      
       let n = 0;
       dtl.forEach((d) => {
         d.CollectedDTM = lx.DateTime
@@ -162,6 +164,10 @@ export default {
       
       return dtl;
     },
+    
+    modalWidth: function() {
+      return this.$refs.wrapper.clientWidth;
+    }
     
   },
   
@@ -229,71 +235,9 @@ export default {
       this.metaToCreate = interimMeta;
     },
     
-    graphData() {
-      
-      $("#graph").empty();
-      let margin = {top: 10, right: 60, bottom: 30, left: 60},
-          width = $("#graph").width() - margin.left - margin.right,
-          height = 200 - margin.top - margin.bottom;
-      // append the svg object to the body of the page
-      let svg = d3.select(selector)
-        .append("svg")
-          .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-          .attr("transform",
-                "translate(" + margin.left + "," + margin.top + ")");
-
-      //Read the data
-      // Add X axis --> it is a date format
-      let x = d3.scaleTime()
-        .domain(d3.extent(dataToLoad, function(d) { return new Date(d.CollectedDTM); }))
-        .range([ 0, width ]);
-      svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x)
-          .ticks(3));
-
-      let valueExtent  = d3.extent(dataToLoad, function(d) {return d.ValueOriginal; });
-      let filledExtent = d3.extent(dataToLoad, function(d) {return d.Value; });
-
-      let yextent = [d3.min(valueExtent.concat(filledExtent)), d3.max(valueExtent.concat(filledExtent))]
-
-      // Add Y axis
-      let y = d3.scaleLinear()
-        .domain(yextent)
-        .range([ height, 0 ]);
-      svg.append("g")
-        .call(d3.axisLeft(y));
-
-      // Add the line for filled & adjusted data
-      svg.append("path")
-        .datum(dataToLoad)
-        .attr("fill", "none")
-        .attr("stroke", "orange")
-        .attr("stroke-width", 2.5)
-        .attr("d", d3.line()
-          .defined(d => !isNaN(d.Value))
-          .x(function(d) { return x(new Date(d.CollectedDTM)) })
-          .y(function(d) { return y(d.Value) })
-          );
-
-      // Add the line for original data
-      svg.append("path")
-        .datum(dataToLoad)
-        .attr("fill", "none")
-        .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-          .defined(d => !isNaN(d.ValueOriginal))
-          .x(function(d) { return x(new Date(d.CollectedDTM)) })
-          .y(function(d) { return y(d.ValueOriginal) })
-          );
-    },
-    
     roundToDecimal(number, decimal) {
       return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
-    }
+    },
     
   },
   
@@ -323,7 +267,7 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div ref="wrapper">
     <br>
     <div class="row">
     
@@ -531,11 +475,14 @@ export default {
       v-if="screen == 'adjustAndReview'">
       <br>
       <p>Set an offset and drift, if applicable.  Review dates/times, values, and other columns
-        before moving to the upload screen</p>
+        before moving to the upload screen.</p>
         
       <div class="row">
         <div id="graph" class="col-12">
-        
+          <d3chart 
+            :dataToLoad="dataToLoad"
+            :width="modalWidth"
+            :height="200" />
         </div>
       </div>
         
