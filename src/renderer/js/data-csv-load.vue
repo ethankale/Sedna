@@ -171,24 +171,26 @@ export default {
         </tbody>
       </table>
       
-      <div class="row">
-        <div class="col-6">
-          <button 
-            id="reviewDataButton" 
-            type="button" 
-            class="btn btn-primary"
-            @click="reviewData()"
-          >Review Data</button>
-        </div>
+      <div class="row bg-light">
         
         <div class="col-6">
           <button 
             id="backToUploadButton" 
             type="button" 
-            class="btn btn-primary float-right"
+            class="btn btn-primary"
             @click="backToUpload()"
           >Back</button>
         </div>
+        
+        <div class="col-6">
+          <button 
+            id="reviewDataButton" 
+            type="button" 
+            class="btn btn-primary float-right"
+            @click="reviewData()"
+          >Review Data</button>
+        </div>
+        
       </div>
       
     </div>
@@ -229,22 +231,26 @@ export default {
         </div>
       </div>
       
-      <div class="row">
-        <div class="col-6">&nbsp;</div>
+      <div class="row bg-light">
+      
         <div class="col-6">
           <button 
             id="backToReviewButton" 
             type="button" 
-            class="btn btn-primary float-right"
+            class="btn btn-primary"
             @click="backToColumns()"
           >Back</button>
         </div>
+        
+        <div class="col-6">&nbsp;</div>
       </div>
       
     </div>
     
-    <div class="row">
-      <small id="uploadFileName" class="text-muted">{{ filePath }}</small>
+    <div class="row bg-light">
+      <div class="col-12">
+        <small id="uploadFileName" class="text-muted">{{ filePath }}</small>
+      </div>
     </div>
   </div>
 
