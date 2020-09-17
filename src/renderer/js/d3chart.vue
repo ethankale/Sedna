@@ -14,10 +14,10 @@ export default {
   data() {
     return {
       margin: {
-        top:     0,
+        top:     10,
         right:   0,
         bottom: 30,
-        left:   60
+        left:   80
       }
     }
   },

@@ -84,6 +84,7 @@ export default {
       
       offset:     0,
       drift:      0,
+      stepchange: 0,
       
       screen:      "fieldSelect"
     }
@@ -119,7 +120,6 @@ export default {
       //   of the dataset.  Then the drift- and offset-compensated value is the 
       //   original value, plus the stepchange times the number of steps, plus the offset.
       // This assumes there are no gaps in the data.  It will be wrong if there are gaps.
-      let stepchange = 0;
       
       let firstdate = lx.DateTime
         .fromJSDate(new Date(dtl[0][this.datetimeField] + utcHoursString))
@@ -133,7 +133,7 @@ export default {
         let totalTimesteps      = (differenceInMinutes/this.metaToCreate.FrequencyMinutes)+1;
         let missingTimesteps    = totalTimesteps - dtl.length;
 
-        stepchange = this.drift/(totalTimesteps-1);
+        this.stepchange = this.drift/(totalTimesteps-1);
       };
       
       let n = 0;
@@ -152,8 +152,8 @@ export default {
         d.ValueOriginal = +d[this.valueField];
         
         // Calculate drift and offset, if applicable
-        if (stepchange != 0 | this.offset != 0) {
-          d.Value = this.roundToDecimal((d.ValueOriginal + ((stepchange*n) + this.offset)), this.metaToCreate.DecimalPoints);
+        if (this.stepchange != 0 | this.offset != 0) {
+          d.Value = _.round((d.ValueOriginal + ((this.stepchange*n) + this.offset)), this.metaToCreate.DecimalPoints);
           //d.Value = this.roundToDecimal(d.ValueOriginal + (stepchange*n) + this.offset, 2);
         } else {
           d.Value = d.ValueOriginal;
@@ -163,6 +163,61 @@ export default {
       });
       
       return dtl;
+    },
+    
+    dataToLoadSummary: function() {
+      let summary = {
+        badDates:    [],
+        nulls:       [],
+        gaps:        [],
+        sum:         0,
+        mean:        null,
+        min:         Infinity,
+        max:         -Infinity,
+        inOrder:     true,
+        badDateFlag: false,
+        gapsFlag:    false,
+        nullsFlag:   false
+      };
+      
+      let lastDate = this.dataToLoad[0].CollectedDTM;
+      
+      this.dataToLoad.forEach((e, i, arr) => {
+        
+        if (e.CollectedDTM.invalid != null) {summary.badDates.push(i+1) };
+        
+        let textDate = e.CollectedDTM.toISO();
+        
+        if (e.Value == null) { 
+          summary.nulls.push(textDate) 
+        } else {
+          summary.min = e.Value < summary.min ? e.Value : summary.min;
+          summary.max = e.Value > summary.max ? e.Value : summary.max;
+          summary.sum += e.Value;
+        };
+        
+        if (i > 0 & this.metaToCreate.FrequencyMinutes != null) {
+          let dateLessOneStep = e.CollectedDTM.minus({minutes: this.metaToCreate.FrequencyMinutes})
+          if (+dateLessOneStep != +lastDate) {
+            summary.gaps.push([textDate, dateLessOneStep, lastDate]);
+          };
+        };
+        
+        if (e.CollectedDTM < lastDate) {
+          summary.inOrder = false;
+        };
+        
+        lastDate = e.CollectedDTM;
+      });
+      
+      summary.mean = _.round(summary.sum/this.dataToLoad.length, this.metaToCreate.DecimalPoints);
+      summary.sum  = _.round(summary.sum, this.metaToCreate.DecimalPoints);
+      
+      summary.badDateFlag = summary.badDates.length > 0 ? true : false;
+      summary.gapsFlag    = summary.gaps.length > 0     ? true : false;
+      summary.nullsFlag   = summary.nulls.length > 0    ? true : false;
+      
+      return summary;
     },
     
     modalWidth: function() {
@@ -233,10 +288,6 @@ export default {
       let interimMeta = _.cloneDeep(metadata);
       
       this.metaToCreate = interimMeta;
-    },
-    
-    roundToDecimal(number, decimal) {
-      return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
     },
     
   },
@@ -476,7 +527,32 @@ export default {
       <br>
       <p>Set an offset and drift, if applicable.  Review dates/times, values, and other columns
         before moving to the upload screen.</p>
+      
+      <form>
+        <div class="row">
         
+          <div class="form-group col-6">
+            <small><label for="offset">Offset</label></small>
+            <input 
+              id="offset"
+              class="form-control"
+              type="number"
+              v-model.number="offset"></input>
+          </div>
+          
+          <div class="form-group col-6">
+            <small><label for="drift">Drift</label></small>
+            <input 
+              id="drift"
+              class="form-control"
+              type="number"
+              :disabled="metaToCreate.FrequencyMinutes == null"
+              v-model.number="drift"></input>
+          </div>
+          
+        </div>
+      </form>
+      
       <div class="row">
         <div id="graph" class="col-12">
           <d3chart 
@@ -485,7 +561,45 @@ export default {
             :height="200" />
         </div>
       </div>
-        
+      
+      <div class="row">
+        <div class="col-12">
+          <strong><p class="text-center">Summary Stats</p></strong>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-3" :class="{ 'text-danger': dataToLoadSummary.badDateFlag}">
+          <p>Bad Dates: {{ dataToLoadSummary.badDates.length }}</p>
+        </div>
+        <div class="col-3" :class="{ 'text-warning': dataToLoadSummary.gapsFlag}">
+          <p>Gaps: {{ dataToLoadSummary.gaps.length }}</p>
+        </div>
+        <div class="col-3" :class="{ 'text-danger': !dataToLoadSummary.inOrder}">
+          <p>Dates are {{ dataToLoadSummary.inOrder ? "" : "not" }} in order</p>
+        </div>
+        <div class="col-3" :class="{ 'text-warning': dataToLoadSummary.nullsFlag}">
+          <p>Null Values: {{ dataToLoadSummary.nulls.length }}</p>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-3">
+          <p>Min Value: {{ dataToLoadSummary.min }}</p>
+        </div>
+        <div class="col-3">
+          <p>Max Value: {{ dataToLoadSummary.max }}</p>
+        </div>
+        <div class="col-3">
+          <p>Mean Value: {{ dataToLoadSummary.mean }}</p>
+        </div>
+        <div class="col-3">
+          <p>Sum: {{ dataToLoadSummary.sum }}</p>
+        </div>
+      </div>
+      
+
+      
     </div>
     
     <br>
