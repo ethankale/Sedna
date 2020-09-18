@@ -17,11 +17,12 @@ export default {
   },
   
   props: {
-    fields:        [],
-    SamplePointID: 0,
-    datetimeField: '',
-    valueField:    '',
-    dataFromFile:  {}
+    fields:        Array,
+    SamplePointID: Number,
+    datetimeField: String,
+    valueField:    String,
+    dataFromFile:  Object,
+    filePath:      String,
   },
   
   data: function() {
@@ -272,6 +273,8 @@ export default {
         this.screen = 'metadataForm';
       } else if (this.screen == 'metadataForm') {
         this.screen = 'adjustAndReview';
+      } else if (this.screen = 'adjustAndReview') {
+        this.screen = 'upload';
       }
     },
     
@@ -280,6 +283,8 @@ export default {
         this.screen = 'fieldSelect';
       } else if (this.screen == 'adjustAndReview') {
         this.screen = 'metadataForm';
+      } else if (this.screen == 'upload') {
+        this.screen = 'adjustAndReview';
       }
     },
     
@@ -288,6 +293,7 @@ export default {
       let interimMeta = _.cloneDeep(metadata);
       
       this.metaToCreate = interimMeta;
+      this.metaToCreate.FileName = this.fileName;
     },
     
   },
@@ -347,12 +353,18 @@ export default {
         <h5 class="text-center">Adjust and Review</h5>
       </div>
       
+      <div class="col-10"
+        v-if="screen == 'upload'">
+        <h5 class="text-center">Upload Data</h5>
+      </div>
+      
       <div class="col-1">
         <button 
           id="backScreenButton" 
           type="button" 
           class="btn btn-light float-right"
           @click="nextScreen()"
+          :disabled="screen == 'upload'"
         >&gt;</button>
       </div>
     </div>
@@ -572,14 +584,14 @@ export default {
         <div class="col-3" :class="{ 'text-danger': dataToLoadSummary.badDateFlag}">
           <p>Bad Dates: {{ dataToLoadSummary.badDates.length }}</p>
         </div>
+        <div class="col-3" :class="{ 'text-warning': dataToLoadSummary.nullsFlag}">
+          <p>Bad Values: {{ dataToLoadSummary.nulls.length }}</p>
+        </div>
         <div class="col-3" :class="{ 'text-warning': dataToLoadSummary.gapsFlag}">
           <p>Gaps: {{ dataToLoadSummary.gaps.length }}</p>
         </div>
         <div class="col-3" :class="{ 'text-danger': !dataToLoadSummary.inOrder}">
           <p>Dates are {{ dataToLoadSummary.inOrder ? "" : "not" }} in order</p>
-        </div>
-        <div class="col-3" :class="{ 'text-warning': dataToLoadSummary.nullsFlag}">
-          <p>Null Values: {{ dataToLoadSummary.nulls.length }}</p>
         </div>
       </div>
       
@@ -588,10 +600,10 @@ export default {
           <p>Min Value: {{ dataToLoadSummary.min }}</p>
         </div>
         <div class="col-3">
-          <p>Max Value: {{ dataToLoadSummary.max }}</p>
+          <p>Mean Value: {{ dataToLoadSummary.mean }}</p>
         </div>
         <div class="col-3">
-          <p>Mean Value: {{ dataToLoadSummary.mean }}</p>
+          <p>Max Value: {{ dataToLoadSummary.max }}</p>
         </div>
         <div class="col-3">
           <p>Sum: {{ dataToLoadSummary.sum }}</p>
@@ -600,6 +612,17 @@ export default {
       
 
       
+    </div>
+    
+    <div id="upload"
+      v-if="screen == 'upload'">
+    
+      <div class="row">
+        
+        
+        
+      </div>
+    
     </div>
     
     <br>

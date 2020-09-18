@@ -226,7 +226,8 @@ export default {
             :SamplePointID="SamplePointID"
             :datetimeField="datetimeCol"
             :valueField="column"
-            :dataFromFile="fileData.data"></data-review-upload>
+            :dataFromFile="fileData.data"
+            :filePath="filePath"></data-review-upload>
           
         </div>
       </div>
