@@ -175,6 +175,8 @@ export default {
         mean:        null,
         min:         Infinity,
         max:         -Infinity,
+        mindate:     this.dataToLoad[0].CollectedDTM,
+        maxdate:     this.dataToLoad[0].CollectedDTM,
         inOrder:     true,
         badDateFlag: false,
         gapsFlag:    false,
@@ -185,7 +187,12 @@ export default {
       
       this.dataToLoad.forEach((e, i, arr) => {
         
-        if (e.CollectedDTM.invalid != null) {summary.badDates.push(i+1) };
+        if (e.CollectedDTM.invalid != null) {
+          summary.badDates.push(i+1);
+        } else {
+          summary.mindate = e.CollectedDTM < summary.mindate ? e.CollectedDTM : summary.mindate;
+          summary.maxdate = e.CollectedDTM > summary.maxdate ? e.CollectedDTM : summary.maxdate;
+        };
         
         let textDate = e.CollectedDTM.toISO();
         
@@ -196,6 +203,7 @@ export default {
           summary.max = e.Value > summary.max ? e.Value : summary.max;
           summary.sum += e.Value;
         };
+        
         
         if (i > 0 & this.metaToCreate.FrequencyMinutes != null) {
           let dateLessOneStep = e.CollectedDTM.minus({minutes: this.metaToCreate.FrequencyMinutes})
@@ -293,7 +301,12 @@ export default {
       let interimMeta = _.cloneDeep(metadata);
       
       this.metaToCreate = interimMeta;
+    },
+    
+    uploadData() {
+      // Fill in all the metadata info that is specific to this file & not automatic
       this.metaToCreate.FileName = this.fileName;
+      
     },
     
   },
@@ -576,7 +589,7 @@ export default {
       
       <div class="row">
         <div class="col-12">
-          <strong><p class="text-center">Summary Stats</p></strong>
+          <strong><p class="text-center">Summary Stats - {{ dataFromFile.length }} Records</p></strong>
         </div>
       </div>
       
