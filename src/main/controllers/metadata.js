@@ -2,6 +2,7 @@
 
 let { Connection, TYPES, Request} = require('tedious');
 let cfg = require('./config.js')
+let lx  = require('luxon');
 
 const sqlfunctions = require('./sqlexecutefunction.js');
 
@@ -268,7 +269,7 @@ let controller = {
       
       let lastid     = 0;
       
-      //console.log(req.body);
+      console.log(req.body);
       
       connection.on('connect', function(err) {
         
@@ -276,13 +277,15 @@ let controller = {
           
         let statement = `INSERT INTO Metadata
           (SamplePointID, ParameterID, MethodID, UnitID,
-          FrequencyMinutes, DecimalPoints, Active, Notes)
+          FrequencyMinutes, DecimalPoints, Active, Notes,
+          FileName, DataStarts, DataEnds, UserID)
           VALUES 
             (@samplePointID, @parameterID, @methodID,
             @unitID, @frequency, @decimals,
             @active, @notes,
-            @fileName, @dataStarts, @dataEnds, @loadedOn, @userID);
+            @fileName, @dataStarts, @dataEnds, @userID);
           SELECT SCOPE_IDENTITY() AS LastID;`
+          
         
         var request = new Request(statement, function(err, rowCount) {
           if (err) {
@@ -298,20 +301,36 @@ let controller = {
           lastid = columns[0].value;
         });
         
-        request.addParameter('samplePointID',   TYPES.Int, req.body.SamplePointID)
-        request.addParameter('parameterID',     TYPES.Int, req.body.ParameterID)
-        request.addParameter('methodID',        TYPES.Int, req.body.MethodID)
-        request.addParameter('unitID',          TYPES.Int, req.body.UnitID)
-        request.addParameter('frequency',       TYPES.Int, req.body.FrequencyMinutes)
-        request.addParameter('decimals',        TYPES.Int, req.body.DecimalPoints)
-        request.addParameter('notes',           TYPES.VarChar, req.body.Notes)
-        request.addParameter('active',          TYPES.Bit, active)
-        request.addParameter('graphTypeID',     TYPES.Int,       req.body.GraphTypeID)
-        request.addParameter('fileName',        TYPES.VarChar,   req.body.FileName)
-        request.addParameter('dataStarts',      TYPES.datetime2, req.body.DataStarts)
-        request.addParameter('dataEnds',        TYPES.datetime2, req.body.DataEnds)
-        request.addParameter('loadedOn',        TYPES.datetime2, req.body.LoadedOn)
-        request.addParameter('userID',          TYPES.Int,       req.body.UserID)
+        // Calculate some values that can't be inserted directly from JSON
+        let offset       = req.body.UTCOffset;
+        let offsetstring = offset < 0 ? 'UTC' + offset/60 : 'UTC+' + (offset/60);
+        
+        let dataStarts = lx.DateTime
+              .fromISO(req.body.DataStarts)
+              .setZone(offsetstring)
+              .setZone('UTC', {keepLocalTime: true })
+              .toJSDate();
+        
+        let dataEnds = lx.DateTime
+              .fromISO(req.body.DataEnds)
+              .setZone(offsetstring)
+              .setZone('UTC', {keepLocalTime: true })
+              .toJSDate();
+        
+        // Add parameters
+        request.addParameter('samplePointID',   TYPES.Int,       req.body.SamplePointID);
+        request.addParameter('parameterID',     TYPES.Int,       req.body.ParameterID);
+        request.addParameter('methodID',        TYPES.Int,       req.body.MethodID);
+        request.addParameter('unitID',          TYPES.Int,       req.body.UnitID);
+        request.addParameter('frequency',       TYPES.Int,       req.body.FrequencyMinutes);
+        request.addParameter('decimals',        TYPES.Int,       req.body.DecimalPoints);
+        request.addParameter('notes',           TYPES.VarChar,   req.body.Notes);
+        request.addParameter('active',          TYPES.Bit,       active);
+        request.addParameter('graphTypeID',     TYPES.Int,       req.body.GraphTypeID);
+        request.addParameter('fileName',        TYPES.VarChar,   req.body.FileName);
+        request.addParameter('dataStarts',      TYPES.DateTime2, dataStarts, { nullable: false, scale: 0 });
+        request.addParameter('dataEnds',        TYPES.DateTime2, dataEnds,   { nullable: false, scale: 0 });
+        request.addParameter('userID',          TYPES.Int,       req.body.UserID);
         
         connection.execSql(request);
         

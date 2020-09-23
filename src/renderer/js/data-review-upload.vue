@@ -27,6 +27,7 @@ export default {
   
   data: function() {
     return {
+    
       Qualifier  : 'None',
       Depth_M:     'None',
       Duplicate:   'None',
@@ -75,7 +76,8 @@ export default {
         SamplePointID:    null,
         Symbol:           "",
         UnitID:           null,
-        UserID:           null
+        UserID:           null,
+        UTCOffset:        null
       },
       
       parameters: [],
@@ -305,8 +307,24 @@ export default {
     
     uploadData() {
       // Fill in all the metadata info that is specific to this file & not automatic
-      this.metaToCreate.FileName = this.fileName;
+      this.metaToCreate.FileName      = this.filePath;
+      this.metaToCreate.DataStarts    = this.dataToLoadSummary.mindate.toISO();
+      this.metaToCreate.DataEnds      = this.dataToLoadSummary.maxdate.toISO();
+      this.metaToCreate.SamplePointID = +this.SamplePointID;
+      this.metaToCreate.UserID        = window.getConfig().userid;
+      this.metaToCreate.UTCOffset     = alqwuutils.utcoffset*60;
       
+      $.ajax({
+        url:         `http://localhost:3000/api/v1/metadata`,
+        data:        JSON.stringify(this.metaToCreate),
+        contentType: 'application/json',
+        method:      'POST',
+        timeout:     3000
+      }).done((metadataID) => {
+        console.log("Loaded " + metadataID + " successfully.");
+      });
+      
+      //console.log(this.dataToLoadSummary.maxdate.toISO());
     },
     
   },
@@ -631,8 +649,14 @@ export default {
       v-if="screen == 'upload'">
     
       <div class="row">
-        
-        
+        <div class="col-12">
+          <button 
+            id="uploadButton" 
+            type="button" 
+            class="btn btn-primary"
+            @click="uploadData()"
+          >Upload</button>
+        </div>
         
       </div>
     
