@@ -35,7 +35,7 @@ export default {
   computed: {
     
     x_extent: function() {
-      return d3.extent(this.dataToLoad, function(d) { return new Date(d.CollectedDTM.toISO()); });
+      return d3.extent(this.dataToLoad, function(d) { return new Date(d.CollectedDTM); });
     },
     
     y_extent: function() {
@@ -61,7 +61,7 @@ export default {
     lineOriginal: function() {
       let path =  d3.line()
         .defined(d => !isNaN(d.ValueOriginal))
-        .x(d => this.x(new Date(d.CollectedDTM.toISO())) )
+        .x(d => this.x(new Date(d.CollectedDTM)) )
         .y(d => this.y(d.ValueOriginal) );
         
       return path(this.dataToLoad);
@@ -70,7 +70,7 @@ export default {
     lineAdjusted: function() {
       let path = d3.line()
         .defined(d => !isNaN(d.Value))
-        .x(d => this.x(new Date(d.CollectedDTM.toISO())) )
+        .x(d => this.x(new Date(d.CollectedDTM)) )
         .y(d => this.y(d.Value) );
         
       return path(this.dataToLoad);

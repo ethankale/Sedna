@@ -41,6 +41,72 @@ let controller = {
         });
     },
     
+    getMetadatasBySPParamMethodDate: function(req, res) {
+      let mssql_config = cfg.getConfig().mssql;
+      var connection = new Connection(mssql_config);
+      
+      var spID        = req.query.spID;
+      var ParameterID = req.query.ParameterID;
+      var MethodID    = req.query.MethodID;
+      
+      // Dates expected in ISO format with time zone
+      var MinDate     = req.query.MinDate;
+      var MaxDate     = req.query.MaxDate;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err)
+        } else {
+          
+          let statement = `
+            SELECT md.MetadataID, md.SamplePointID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, 
+              COUNT(mt.MeasurementID) as nmeasures, MIN(mt.CollectedDateTime) as mindt, MAX(mt.CollectedDateTime) as maxdt,
+              md.LoadedOn, md.FileName
+            FROM Metadata as md
+            LEFT JOIN Measurement as mt
+              ON md.MetadataID = mt.MetadataID
+            WHERE SamplePointID = @spID
+              AND ParameterID = @ParameterID
+              AND MethodID = @MethodID
+            GROUP BY md.MetadataID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, md.SamplePointID,
+              md.LoadedOn, md.FileName
+            HAVING MIN(mt.CollectedDateTime) >= @MinDate
+              AND MAX(mt.CollectedDateTime) <= @MaxDate
+            ORDER BY md.MetadataID
+          `
+          
+          let returndata = [];
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              res.status(400).end();
+              console.log(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+            connection.close();
+          });
+          
+          request.on('row', function(columns) {
+            let thisrow = {}
+            columns.forEach(function(column) {
+                thisrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(thisrow);
+          });
+          
+          request.addParameter('spID',        TYPES.Int, spID)
+          request.addParameter('ParameterID', TYPES.Int, ParameterID)
+          request.addParameter('MethodID',    TYPES.Int, MethodID)
+          request.addParameter('MinDate',     TYPES.VarChar, MinDate)
+          request.addParameter('MaxDate',     TYPES.VarChar, MaxDate)
+          
+          connection.execSql(request);
+          
+        }
+      });
+    },
+    
     getMetadatasBySamplePoint: function (req, res) {
       let mssql_config = cfg.getConfig().mssql;
       var connection = new Connection(mssql_config);
@@ -268,8 +334,6 @@ let controller = {
       let connection = new Connection(mssql_config);
       
       let lastid     = 0;
-      
-      console.log(req.body);
       
       connection.on('connect', function(err) {
         

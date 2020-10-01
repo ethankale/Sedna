@@ -21,6 +21,9 @@ let controller = {
         var enddtm    = req.query.enddtm;
         var utcoffset = req.query.utcoffset;
         
+        // This approach to doing dates & times, while clever seeming, doesn't work.
+        //   DATEADD will assume the supplied date is in the time zone of the 
+        //   server, which isn't known, and defeats the whole purpose.
         var statement = `SELECT 
             CollectedDateTime, ms.Value, ms.Depth_M, md.ParameterID
           FROM Measurement as ms
@@ -270,7 +273,7 @@ let controller = {
         if (Object.keys(req.body).length === 0) {
           res.status(400).json("No data sent.  ");
           return;
-        }
+        };
         
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
@@ -291,7 +294,6 @@ let controller = {
           get loadMeasurement() {
             if(this.requestComplete & this.bulkConnected) {
               loadBulkMeasurements(multiplier, metaid, offset, measurements);
-              //return req.body.measurements;
             } else {
               //return "Waiting for request or bulk connect, or both";
             }

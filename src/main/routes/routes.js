@@ -64,13 +64,14 @@ module.exports = function (app) {
     app.delete('/api/v1/measurements',       measurements.deleteMeasurements);
     
     // Metadata (or Data Record)
-    app.get('/api/v1/getMetadatasBySite',       sites.getMetadatasBySite);
-    app.get('/api/v1/metadataBySamplePt',       metadata.getMetadatasBySamplePoint);
-    app.get('/api/v1/metadataLatestBySamplePt', metadata.getLatestMetadatasBySamplePoint);
-    app.get('/api/v1/metadataList',             metadata.getMetadataList);
-    app.get('/api/v1/metadataDetails',          metadata.getMetadataDetails);
-    app.put('/api/v1/metadata',                 metadata.updateMetadata);
-    app.post('/api/v1/metadata',                metadata.addMetadata);
+    app.get('/api/v1/getMetadatasBySite',          sites.getMetadatasBySite);
+    app.get('/api/v1/metadataBySamplePt',          metadata.getMetadatasBySamplePoint);
+    app.get('/api/v1/metadataBySPParamMethodDate', metadata.getMetadatasBySPParamMethodDate);
+    app.get('/api/v1/metadataLatestBySamplePt',    metadata.getLatestMetadatasBySamplePoint);
+    app.get('/api/v1/metadataList',                metadata.getMetadataList);
+    app.get('/api/v1/metadataDetails',             metadata.getMetadataDetails);
+    app.put('/api/v1/metadata',                    metadata.updateMetadata);
+    app.post('/api/v1/metadata',                   metadata.addMetadata);
     
     // Methods
     app.get('/api/v1/methodList',   method.getMethodList);

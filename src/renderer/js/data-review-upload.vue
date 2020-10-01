@@ -89,7 +89,8 @@ export default {
       drift:      0,
       stepchange: 0,
       
-      screen:      "fieldSelect"
+      uploadProgress: 0,
+      screen:         "fieldSelect"
     }
   },
   
@@ -141,9 +142,11 @@ export default {
       
       let n = 0;
       dtl.forEach((d) => {
-        d.CollectedDTM = lx.DateTime
+        d.dtm = lx.DateTime
           .fromJSDate(new Date(d[this.datetimeField] + utcHoursString))
           .setZone(utcString);
+        
+        d.CollectedDTM = d.dtm.toISO();
         
         d.Depth_M    = this.Depth_M == 'None'   ? null : d[this.Depth_M];
         d.Duplicate  = this.Duplicate == 'None' ? null : d[this.Duplicate];
@@ -177,26 +180,26 @@ export default {
         mean:        null,
         min:         Infinity,
         max:         -Infinity,
-        mindate:     this.dataToLoad[0].CollectedDTM,
-        maxdate:     this.dataToLoad[0].CollectedDTM,
+        mindate:     this.dataToLoad[0].dtm,
+        maxdate:     this.dataToLoad[0].dtm,
         inOrder:     true,
         badDateFlag: false,
         gapsFlag:    false,
         nullsFlag:   false
       };
       
-      let lastDate = this.dataToLoad[0].CollectedDTM;
+      let lastDate = this.dataToLoad[0].dtm;
       
       this.dataToLoad.forEach((e, i, arr) => {
         
-        if (e.CollectedDTM.invalid != null) {
+        if (e.dtm.invalid != null) {
           summary.badDates.push(i+1);
         } else {
-          summary.mindate = e.CollectedDTM < summary.mindate ? e.CollectedDTM : summary.mindate;
-          summary.maxdate = e.CollectedDTM > summary.maxdate ? e.CollectedDTM : summary.maxdate;
+          summary.mindate = e.dtm < summary.mindate ? e.dtm : summary.mindate;
+          summary.maxdate = e.dtm > summary.maxdate ? e.dtm : summary.maxdate;
         };
         
-        let textDate = e.CollectedDTM.toISO();
+        let textDate = e.dtm.toISO();
         
         if (e.Value == null) { 
           summary.nulls.push(textDate) 
@@ -208,17 +211,17 @@ export default {
         
         
         if (i > 0 & this.metaToCreate.FrequencyMinutes != null) {
-          let dateLessOneStep = e.CollectedDTM.minus({minutes: this.metaToCreate.FrequencyMinutes})
+          let dateLessOneStep = e.dtm.minus({minutes: this.metaToCreate.FrequencyMinutes})
           if (+dateLessOneStep != +lastDate) {
             summary.gaps.push([textDate, dateLessOneStep, lastDate]);
           };
         };
         
-        if (e.CollectedDTM < lastDate) {
+        if (e.dtm < lastDate) {
           summary.inOrder = false;
         };
         
-        lastDate = e.CollectedDTM;
+        lastDate = e.dtm;
       });
       
       summary.mean = _.round(summary.sum/this.dataToLoad.length, this.metaToCreate.DecimalPoints);
@@ -322,11 +325,65 @@ export default {
         timeout:     3000
       }).done((metadataID) => {
         console.log("Loaded " + metadataID + " successfully.");
+        
+        // Once we have the ID of the new metadata, we load the data
+        //   to the database in chunks of 30 at a time.  This keeps us
+        //   from overloading the call and timing out, and allows us
+        //   to provide feedback to the user about how much data has been 
+        //   loaded during the upload.
+        
+        let calls         = [];
+        
+        let errors        = 0;
+        let successes     = 0;
+        let completeSteps = 0;
+        let stepSize      = 30;    // The max number of rows to bulk insert.
+        
+        for (let i=0; i<this.dataToLoad.length; i+=stepSize) {
+          let m = this.dataToLoad.slice(i, i+stepSize)
+          let dataForAPI = {'metaid':       metadataID,
+                            'offset':       alqwuutils.utcoffset*60,
+                            'loadnumber':   i/stepSize,
+                            'measurements': m};
+          calls.push(
+            $.ajax({
+              type: 'POST',
+              url:  'http://localhost:3000/api/v1/measurements',
+              contentType: 'application/json',
+              data: JSON.stringify(dataForAPI),
+              dataType: 'json',
+              timeout: 8000
+            }).done((data) => {
+              if (data != 'Success') {
+                errors += m.length;
+              } else {
+                successes += m.length;
+              }
+            }).fail((err) => {
+              errors += m.length;
+            }).always(() => { 
+              this.uploadProgress = Math.floor(((successes + errors) / this.dataToLoad) * 100);
+            })
+          );
+        };
+
+        Promise.all(calls)
+        .then((result) => {
+          if (errors > 0) {
+            let msg = "Loading complete.  Encountered errors with " +
+              errors + " records out of " +
+              (errors + successes);
+            // headerMeta.notice = msg;
+            // this.setNotice('alert-danger', msg);
+          } else {
+            let msg = "Loading complete.  Successfully loaded " +
+              successes + " records.";
+            // headerMeta.notice = msg;
+            // this.setNotice('alert-success', msg);
+          };
+        });
       });
-      
-      //console.log(this.dataToLoadSummary.maxdate.toISO());
     },
-    
   },
   
   created() {
@@ -338,8 +395,8 @@ export default {
       this.parameters = params;
     });
     
-    this.getMethodList().done((methods) => {
-      this.methods = methods;
+    this.getMethodList().done((methodList) => {
+      this.methods = methodList;
     });
     
     this.getUnitList().done((units) => {
