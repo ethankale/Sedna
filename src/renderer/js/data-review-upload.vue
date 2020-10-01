@@ -89,7 +89,15 @@ export default {
       drift:      0,
       stepchange: 0,
       
-      uploadProgress: 0,
+      matchingDataRecords: [],
+      
+      uploadResult: {
+        progress:  0,
+        errors:    0,
+        successes: 0,
+        message:   "No data uploaded yet."
+      },
+      
       screen:         "fieldSelect"
     }
   },
@@ -97,6 +105,25 @@ export default {
   computed: {
     fieldsForSelect: function() {
       return ["None"].concat(this.fields);
+    },
+    
+    matchingMeasuresCount: function() {
+      let nmeasures = 0;
+      
+      // This is a little sneaky.  We update the original data 
+      //    while computing the count.
+      if (this.matchingDataRecords.length > 0) {
+        this.matchingDataRecords.forEach((d) => {
+          nmeasures += d.nmeasures;
+          d.minDTString = lx.DateTime
+            .fromISO(d.mindt, {zone: this.utcOffsetString})
+            .toLocaleString(lx.DateTime.DATETIME_FULL);
+          d.maxDTString = lx.DateTime
+            .fromISO(d.maxdt, {zone: this.utcOffsetString})
+            .toLocaleString(lx.DateTime.DATETIME_FULL);
+        });
+      };
+      return nmeasures;
     },
     
     metasPlusOne: function() {
@@ -109,14 +136,15 @@ export default {
       return mp1;
     },
     
+    // Timezone stuff
+    utcHours:       function() { return alqwuutils.utcoffset; },
+    utcOffset:      function() { return Math.floor(this.utcHours*60); },
+    utcHoursString: function() { return this.utcHours < 0 ? this.utcHours.toString() : "+" + this.utcHours.toString(); },
+    utcString:      function() { return alqwuutils.utcOffsetString(this.utcOffset); },
+    
     dataToLoad: function() {
       let dtl = _.cloneDeep(this.dataFromFile);
       
-      // Timezone stuff
-      let utcHours       = alqwuutils.utcoffset;
-      let utcOffset      = Math.floor(utcHours*60);
-      let utcHoursString = utcHours < 0 ? utcHours.toString() : "+" + utcHours.toString();
-      let utcString      = alqwuutils.utcOffsetString(utcOffset);
       
       // Setup for offset and drift, if necessary
       // Works like this - the stepchange is the increment that the data change for
@@ -126,11 +154,11 @@ export default {
       // This assumes there are no gaps in the data.  It will be wrong if there are gaps.
       
       let firstdate = lx.DateTime
-        .fromJSDate(new Date(dtl[0][this.datetimeField] + utcHoursString))
-          .setZone(utcString);
+        .fromJSDate(new Date(dtl[0][this.datetimeField] + this.utcHoursString))
+          .setZone(this.utcString);
       let lastdate  = lx.DateTime
-        .fromJSDate(new Date(dtl[dtl.length-1][this.datetimeField] + utcHoursString))
-          .setZone(utcString);
+        .fromJSDate(new Date(dtl[dtl.length-1][this.datetimeField] + this.utcHoursString))
+          .setZone(this.utcString);
       
       if (this.metaToCreate.FrequencyMinutes != null) {
         let differenceInMinutes = lastdate.diff(firstdate, 'minutes').as('minutes');
@@ -143,8 +171,8 @@ export default {
       let n = 0;
       dtl.forEach((d) => {
         d.dtm = lx.DateTime
-          .fromJSDate(new Date(d[this.datetimeField] + utcHoursString))
-          .setZone(utcString);
+          .fromJSDate(new Date(d[this.datetimeField] + this.utcHoursString))
+          .setZone(this.utcString);
         
         d.CollectedDTM = d.dtm.toISO();
         
@@ -281,6 +309,22 @@ export default {
       });
     },
     
+    getMatchingDataRecords() {
+      let request = {
+        spID:         this.SamplePointID,
+        ParameterID:  this.metaToCreate.ParameterID,
+        MethodID:     this.metaToCreate.MethodID,
+        MinDate:      this.dataToLoad[0].CollectedDTM,
+        MaxDate:      this.dataToLoad[this.dataToLoad.length-1].CollectedDTM
+      };
+      return $.ajax({
+        url:     `http://localhost:3000/api/v1/metadataBySPParamMethodDate`,
+        method:  'GET',
+        data:     request,
+        timeout: 3000
+      });
+    },
+    
     nextScreen() {
       if (this.screen == 'fieldSelect') {
         this.screen = 'metadataForm';
@@ -288,6 +332,9 @@ export default {
         this.screen = 'adjustAndReview';
       } else if (this.screen = 'adjustAndReview') {
         this.screen = 'upload';
+        this.getMatchingDataRecords().done((drList) => {
+          this.matchingDataRecords = drList;
+        });
       }
     },
     
@@ -306,6 +353,12 @@ export default {
       let interimMeta = _.cloneDeep(metadata);
       
       this.metaToCreate = interimMeta;
+    },
+    
+    clickUpload() {
+      if (this.matchingMeasuresCount == 0) {
+        this.uploadData();
+      };
     },
     
     uploadData() {
@@ -362,25 +415,37 @@ export default {
             }).fail((err) => {
               errors += m.length;
             }).always(() => { 
-              this.uploadProgress = Math.floor(((successes + errors) / this.dataToLoad) * 100);
+              this.uploadResult.progress = Math.floor(((successes + errors) / this.dataToLoad.length) * 100);
+              this.uploadResult.errors = errors;
+              this.uploadResult.successes = successes;
+              
+              let nprocessed = errors + successes;
+              this.uploadResult.message = `Processed ${nprocessed}; ${errors} errors and ${successes} successes.`;
             })
           );
         };
 
         Promise.all(calls)
         .then((result) => {
+          let msg = "Done!";
           if (errors > 0) {
-            let msg = "Loading complete.  Encountered errors with " +
+            msg = "Loading complete.  Encountered errors with " +
               errors + " records out of " +
               (errors + successes);
             // headerMeta.notice = msg;
             // this.setNotice('alert-danger', msg);
           } else {
-            let msg = "Loading complete.  Successfully loaded " +
+            msg = "Loading complete.  Successfully loaded " +
               successes + " records.";
             // headerMeta.notice = msg;
             // this.setNotice('alert-success', msg);
           };
+          this.uploadResult.message = msg;
+          
+          // This should get the newly created data record and add it to the list.
+          this.getMatchingDataRecords().done((drList) => {
+            this.matchingDataRecords = drList;
+          });
         });
       });
     },
@@ -704,15 +769,40 @@ export default {
     
     <div id="upload"
       v-if="screen == 'upload'">
-    
+      
+      <div class="row">
+        <div class="col-12">
+          <p> {{ this.uploadResult.message }} </p>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-12">
+          <p v-if="matchingMeasuresCount > 0">
+            There are {{ matchingMeasuresCount.toLocaleString()  }} records 
+            at this site with the same parameter, method, and date.
+          </p>
+          <ul>
+            <li v-for="dr in matchingDataRecords">
+              File {{ dr.FileName }}, with {{ dr.nmeasures.toLocaleString() }} measurements, 
+              from {{ dr.minDTString }} to {{ dr.maxDTString }}.
+            </li>
+          </ul>
+        
+        </div>
+      </div>
+      
       <div class="row">
         <div class="col-12">
           <button 
             id="uploadButton" 
             type="button" 
             class="btn btn-primary"
-            @click="uploadData()"
-          >Upload</button>
+            @click="clickUpload()"
+          >
+            <span v-if="matchingMeasuresCount == 0">Upload</span>
+            <span v-if="matchingMeasuresCount > 0">Delete and Upload</span>
+          </button>
         </div>
         
       </div>

@@ -70,8 +70,8 @@ let controller = {
               AND MethodID = @MethodID
             GROUP BY md.MetadataID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, md.SamplePointID,
               md.LoadedOn, md.FileName
-            HAVING MIN(mt.CollectedDateTime) >= @MinDate
-              AND MAX(mt.CollectedDateTime) <= @MaxDate
+            HAVING MIN(mt.CollectedDateTime) <= @MaxDate 
+              AND MAX(mt.CollectedDateTime) >= @MinDate
             ORDER BY md.MetadataID
           `
           
