@@ -358,6 +358,31 @@ export default {
     clickUpload() {
       if (this.matchingMeasuresCount == 0) {
         this.uploadData();
+      } else {
+        let calls = [];
+        this.matchingDataRecords.forEach((dr) => {
+          //calls.push(dr.MetadataID);
+          let url = 'http://localhost:3000/api/v1/measurements?' + $.param({ "MetadataID": dr.MetadataID });
+          calls.push(
+            $.ajax({
+              url:     url,
+              method:  'DELETE',
+              timeout: 3000
+            }).done((result) => {
+              //console.log(result);
+            })
+          );
+        });
+        
+        console.log(calls);
+        
+        Promise.all(calls)
+        .then((result) => {
+          this.uploadData();
+        }).catch((err) => {
+          this.uploadResult.message = "Failed to delete existing data.";
+          console.log(err);
+        });;
       };
     },
     
@@ -432,17 +457,13 @@ export default {
             msg = "Loading complete.  Encountered errors with " +
               errors + " records out of " +
               (errors + successes);
-            // headerMeta.notice = msg;
-            // this.setNotice('alert-danger', msg);
           } else {
             msg = "Loading complete.  Successfully loaded " +
               successes + " records.";
-            // headerMeta.notice = msg;
-            // this.setNotice('alert-success', msg);
           };
           this.uploadResult.message = msg;
           
-          // This should get the newly created data record and add it to the list.
+          // This gets the newly created data record and adds it to the list.
           this.getMatchingDataRecords().done((drList) => {
             this.matchingDataRecords = drList;
           });

@@ -409,23 +409,20 @@ let controller = {
     },
     
     deleteMeasurements: function(req, res) {
-      if (typeof req.body.MetadataID == 'undefined') {
+      
+      if (typeof req.query.MetadataID == 'undefined') {
         res.status(400).json('Must provide a MetadataID to delete measurements.');
       } else {
         let cfg = require('./config.js')
         let mssql_config = cfg.getConfig().mssql;
         let connection = new Connection(mssql_config);
         
-        let MetadataID = req.body.MetadataID;
-        let MinDtm     = req.body.MinDtm;
-        let MaxDtm     = req.body.MaxDtm;
+        let MetadataID = req.query.MetadataID;
         
         connection.on('connect', function(err) {
           
           let statement = `DELETE Measurement 
-           WHERE MetadataID = @MetadataID
-           AND CollectedDateTime >= @MinDtm
-           AND CollectedDateTime <= @MaxDtm`
+           WHERE MetadataID = @MetadataID`
           
            var request = new Request(statement, function(err, rowCount) {
              if (err) {
@@ -437,9 +434,7 @@ let controller = {
              connection.close();
            });
           
-          request.addParameter('MetadataID', TYPES.Int,             MetadataID);
-          request.addParameter('MinDtm',     TYPES.DateTimeOffset,  MinDtm);
-          request.addParameter('MaxDtm',     TYPES.DateTimeOffset,  MaxDtm);
+          request.addParameter('MetadataID', TYPES.Int, MetadataID);
           
           connection.execSql(request);
         });
