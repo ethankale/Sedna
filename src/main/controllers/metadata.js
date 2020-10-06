@@ -61,7 +61,7 @@ let controller = {
           let statement = `
             SELECT md.MetadataID, md.SamplePointID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, 
               COUNT(mt.MeasurementID) as nmeasures, MIN(mt.CollectedDateTime) as mindt, MAX(mt.CollectedDateTime) as maxdt,
-              md.LoadedOn, md.FileName
+              md.CreatedOn, md.FileName
             FROM Metadata as md
             LEFT JOIN Measurement as mt
               ON md.MetadataID = mt.MetadataID
@@ -69,7 +69,7 @@ let controller = {
               AND ParameterID = @ParameterID
               AND MethodID = @MethodID
             GROUP BY md.MetadataID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, md.SamplePointID,
-              md.LoadedOn, md.FileName
+              md.CreatedOn, md.FileName
             HAVING MIN(mt.CollectedDateTime) <= @MaxDate 
               AND MAX(mt.CollectedDateTime) >= @MinDate
             ORDER BY md.MetadataID
@@ -177,15 +177,16 @@ let controller = {
             SELECT DISTINCT m.SamplePointID, m.ParameterID, m.MethodID, m.UnitID, m3.*,
               pm.Name, mt.Description, un.Symbol
             FROM Alqwu.dbo.Metadata as m
-            CROSS APPLY	(
+            CROSS APPLY (
               SELECT TOP 1 m2.Active, m2.FrequencyMinutes, m2.DecimalPoints, m2.GraphTypeID,
-                m2.FileName, m2.DataStarts, m2.DataEnds, m2.LoadedOn, m2.UserID, m2.CreatedOn, m2.Notes
+                m2.FileName, m2.DataStarts, m2.DataEnds, m2.CreatedOn, m2.UserID,
+                m2.EquipmentIDLogger, m2.EquipmentIDSensor, m2.Notes
               FROM Alqwu.dbo.Metadata as m2
               WHERE m.SamplePointID = m2.SamplePointID 
                 AND m.ParameterID = m2.ParameterID
                 AND m.MethodID = m2.MethodID
                 AND m.UnitID = m2.UnitID
-              ORDER BY DataEnds DESC
+              ORDER BY DataEnds DESC, CreatedOn DESC
             ) as m3
             INNER JOIN Parameter as pm
                 ON m.ParameterID = pm.ParameterID
@@ -249,16 +250,18 @@ let controller = {
                 ,[FileName]
                 ,[DataStarts]
                 ,[DataEnds]
-                ,[LoadedOn]
                 ,[UserID]
                 ,[CreatedOn]
+                ,[EquipmentIDSensor]
+                ,[EquipmentIDLogger]
               FROM Metadata as md
               LEFT JOIN Measurement as ms
                 on md.MetadataID = ms.MetadataID
               WHERE md.MetadataID = ${metaid}
               GROUP BY md.MetadataID, md.ParameterID, md.UnitID, md.SamplePointID, 
                 md.Notes, md.MethodID, md.Active, md.FrequencyMinutes, md.DecimalPoints,
-                md.FileName, md.DataStarts, md.DataEnds, md.LoadedOn, md.UserID, md.CreatedOn`
+                md.FileName, md.DataStarts, md.DataEnds, md.UserID, md.CreatedOn,
+                EquipmentIDSensor, EquipmentIDLogger`
             
             connection.on('connect', function(err) {
               if(err) {
@@ -295,8 +298,9 @@ let controller = {
             FileName          = @fileName,
             DataStarts        = @dataStarts,
             DataEnds          = @dataEnds,
-            LoadedOn          = @loadedOn,
-            UserID            = @userID
+            UserID            = @userID,
+            EquipmentIDSensor = @equipmentIDSensor,
+            EquipmentIDLogger = @equipmentIDLogger
           WHERE metadataID = @metadataID
         `
         
@@ -310,20 +314,21 @@ let controller = {
           connection.close();
         });
         
-        request.addParameter('metadataID',    TYPES.Int,       req.body.MetadataID)
-        request.addParameter('samplePointID', TYPES.Int,       req.body.SamplePointID)
-        request.addParameter('parameterID',   TYPES.Int,       req.body.ParameterID)
-        request.addParameter('methodID',      TYPES.Int,       req.body.MethodID)
-        request.addParameter('unitID',        TYPES.Int,       req.body.UnitID)
-        request.addParameter('frequency',     TYPES.Int,       req.body.FrequencyMinutes)
-        request.addParameter('decimals',      TYPES.Int,       req.body.DecimalPoints)
-        request.addParameter('notes',         TYPES.VarChar,   req.body.Notes)
-        request.addParameter('active',        TYPES.Bit,       active)
-        request.addParameter('fileName',      TYPES.VarChar,   req.body.FileName)
-        request.addParameter('dataStarts',    TYPES.datetime2, req.body.DataStarts)
-        request.addParameter('dataEnds',      TYPES.datetime2, req.body.DataEnds)
-        request.addParameter('loadedOn',      TYPES.datetime2, req.body.LoadedOn)
-        request.addParameter('userID',        TYPES.Int,       req.body.UserID)
+        request.addParameter('metadataID',        TYPES.Int,       req.body.MetadataID)
+        request.addParameter('samplePointID',     TYPES.Int,       req.body.SamplePointID)
+        request.addParameter('parameterID',       TYPES.Int,       req.body.ParameterID)
+        request.addParameter('methodID',          TYPES.Int,       req.body.MethodID)
+        request.addParameter('unitID',            TYPES.Int,       req.body.UnitID)
+        request.addParameter('frequency',         TYPES.Int,       req.body.FrequencyMinutes)
+        request.addParameter('decimals',          TYPES.Int,       req.body.DecimalPoints)
+        request.addParameter('notes',             TYPES.VarChar,   req.body.Notes)
+        request.addParameter('active',            TYPES.Bit,       active)
+        request.addParameter('fileName',          TYPES.VarChar,   req.body.FileName)
+        request.addParameter('dataStarts',        TYPES.datetime2, req.body.DataStarts)
+        request.addParameter('dataEnds',          TYPES.datetime2, req.body.DataEnds)
+        request.addParameter('userID',            TYPES.Int,       req.body.UserID)
+        request.addParameter('equipmentIDSensor', TYPES.Int,       req.body.EquipmentIDSensor)
+        request.addParameter('equipmentIDLogger', TYPES.Int,       req.body.EquipmentIDLogger)
         
         connection.execSql(request);
       });
@@ -342,12 +347,14 @@ let controller = {
         let statement = `INSERT INTO Metadata
           (SamplePointID, ParameterID, MethodID, UnitID,
           FrequencyMinutes, DecimalPoints, Active, Notes,
-          FileName, DataStarts, DataEnds, UserID)
+          FileName, DataStarts, DataEnds, UserID,
+          EquipmentIDSensor, EquipmentIDLogger)
           VALUES 
             (@samplePointID, @parameterID, @methodID,
             @unitID, @frequency, @decimals,
             @active, @notes,
-            @fileName, @dataStarts, @dataEnds, @userID);
+            @fileName, @dataStarts, @dataEnds, @userID,
+            @equipmentIDSensor, @equipmentIDLogger);
           SELECT SCOPE_IDENTITY() AS LastID;`
           
         
@@ -382,19 +389,21 @@ let controller = {
               .toJSDate();
         
         // Add parameters
-        request.addParameter('samplePointID',   TYPES.Int,       req.body.SamplePointID);
-        request.addParameter('parameterID',     TYPES.Int,       req.body.ParameterID);
-        request.addParameter('methodID',        TYPES.Int,       req.body.MethodID);
-        request.addParameter('unitID',          TYPES.Int,       req.body.UnitID);
-        request.addParameter('frequency',       TYPES.Int,       req.body.FrequencyMinutes);
-        request.addParameter('decimals',        TYPES.Int,       req.body.DecimalPoints);
-        request.addParameter('notes',           TYPES.VarChar,   req.body.Notes);
-        request.addParameter('active',          TYPES.Bit,       active);
-        request.addParameter('graphTypeID',     TYPES.Int,       req.body.GraphTypeID);
-        request.addParameter('fileName',        TYPES.VarChar,   req.body.FileName);
-        request.addParameter('dataStarts',      TYPES.DateTime2, dataStarts, { nullable: false, scale: 0 });
-        request.addParameter('dataEnds',        TYPES.DateTime2, dataEnds,   { nullable: false, scale: 0 });
-        request.addParameter('userID',          TYPES.Int,       req.body.UserID);
+        request.addParameter('samplePointID',     TYPES.Int,       req.body.SamplePointID);
+        request.addParameter('parameterID',       TYPES.Int,       req.body.ParameterID);
+        request.addParameter('methodID',          TYPES.Int,       req.body.MethodID);
+        request.addParameter('unitID',            TYPES.Int,       req.body.UnitID);
+        request.addParameter('frequency',         TYPES.Int,       req.body.FrequencyMinutes);
+        request.addParameter('decimals',          TYPES.Int,       req.body.DecimalPoints);
+        request.addParameter('notes',             TYPES.VarChar,   req.body.Notes);
+        request.addParameter('active',            TYPES.Bit,       active);
+        request.addParameter('graphTypeID',       TYPES.Int,       req.body.GraphTypeID);
+        request.addParameter('fileName',          TYPES.VarChar,   req.body.FileName);
+        request.addParameter('dataStarts',        TYPES.DateTime2, dataStarts, { nullable: false, scale: 0 });
+        request.addParameter('dataEnds',          TYPES.DateTime2, dataEnds,   { nullable: false, scale: 0 });
+        request.addParameter('userID',            TYPES.Int,       req.body.UserID);
+        request.addParameter('equipmentIDSensor', TYPES.Int,       req.body.EquipmentIDSensor);
+        request.addParameter('equipmentIDLogger', TYPES.Int,       req.body.EquipmentIDLogger);
         
         connection.execSql(request);
         

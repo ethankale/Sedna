@@ -16,24 +16,10 @@ let controller = {
     
     let statement = `SELECT 
         eq.[EquipmentID],
-        em.Name + ' - ' + eq.[SerialNumber] + ' (' + Coalesce(em.Manufacturer, '') + ')' as Name,
-        activeDeployments.SiteCode, activeDeployments.SiteName
+        em.Name + ' - ' + eq.[SerialNumber] + ' (' + Coalesce(em.Manufacturer, '') + ')' as Name
         FROM [Equipment] AS eq
         LEFT JOIN EquipmentModel AS em
-        ON eq.EquipmentModelID = em.EquipmentModelID
-        LEFT JOIN EquipmentDeployment as ed
-        ON ed.EquipmentID = eq.EquipmentID
-        LEFT JOIN (
-            SELECT EquipmentDeploymentID, ed.EquipmentID, ed.MetadataID, st.Code as SiteCode, st.Name as SiteName
-            FROM EquipmentDeployment as ed
-            LEFT JOIN Metadata as md
-            ON md.MetadataID = ed.MetadataID
-            LEFT JOIN SamplePoint as sp
-            ON md.SamplePointID = sp.SamplePointID
-            LEFT JOIN Site as st
-            ON sp.SiteID = st.SiteID
-            WHERE md.Active = 1) as activeDeployments
-        ON ed.EquipmentDeploymentID = activeDeployments.EquipmentDeploymentID`;
+          ON eq.EquipmentModelID = em.EquipmentModelID`;
     
     if (typeof active != 'undefined') {
       active = active >= 1 ? 1 : 0;

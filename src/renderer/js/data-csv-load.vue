@@ -73,7 +73,7 @@ export default {
       //   that doesn't match, but replace with what?
 
       this.fileData      = Papa.parse(this.fileText, this.papaConfig);
-      this.SamplePointID = $("#spSelect").val();  // seriously ugly - refactor to Vue-friendly
+      this.SamplePointID = +$("#spSelect").val();  // seriously ugly - refactor to Vue-friendly
       
       if (this.fileData.data.length > 0) {
         this.setNotice('alert-success', 'File load complete!  Select the columns with data you wish to load.');

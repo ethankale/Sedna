@@ -21,7 +21,7 @@ export default {
     SamplePointID: Number,
     datetimeField: String,
     valueField:    String,
-    dataFromFile:  Object,
+    dataFromFile:  Array,
     filePath:      String,
   },
   
@@ -38,52 +38,55 @@ export default {
       Metadatas:   [],
       metaIndex:   0,
       newMeta:     {
-        Active:           true,
-        CreatedOn:        null,
-        DataEnds:         null,
-        DataStarts:       null,
-        DecimalPoints:    2,
-        Description:      "",
-        FileName:         null,
-        FrequencyMinutes: 15,
-        GraphTypeID:      null,
-        LoadedOn:         null,
-        MethodID:         null,
-        Name:             "New",
-        Notes:            null,
-        ParameterID:      null,
-        SamplePointID:    null,
-        Symbol:           "",
-        UnitID:           null,
-        UserID:           null
+        Active:            true,
+        CreatedOn:         null,
+        DataEnds:          null,
+        DataStarts:        null,
+        DecimalPoints:     2,
+        Description:       "",
+        FileName:          null,
+        FrequencyMinutes:  15,
+        GraphTypeID:       null,
+        MethodID:          null,
+        Name:              "New",
+        Notes:             null,
+        ParameterID:       null,
+        SamplePointID:     null,
+        Symbol:            "",
+        UnitID:            null,
+        UserID:            null,
+        EquipmentIDSensor: null,
+        EquipmentIDLogger: null
       },
       
       metaToCreate:     {
-        Active:           true,
-        CreatedOn:        null,
-        DataEnds:         null,
-        DataStarts:       null,
-        DecimalPoints:    2,
-        Description:      "",
-        FileName:         null,
-        FrequencyMinutes: 15,
-        GraphTypeID:      null,
-        LoadedOn:         null,
-        MethodID:         null,
-        Name:             "New",
-        Notes:            null,
-        ParameterID:      null,
-        SamplePointID:    null,
-        Symbol:           "",
-        UnitID:           null,
-        UserID:           null,
-        UTCOffset:        null
+        Active:            true,
+        CreatedOn:         null,
+        DataEnds:          null,
+        DataStarts:        null,
+        DecimalPoints:     2,
+        Description:       "",
+        FileName:          null,
+        FrequencyMinutes:  15,
+        GraphTypeID:       null,
+        MethodID:          null,
+        Name:              "New",
+        Notes:             null,
+        ParameterID:       null,
+        SamplePointID:     null,
+        Symbol:            "",
+        UnitID:            null,
+        UserID:            null,
+        EquipmentIDSensor: null,
+        EquipmentIDLogger: null,
+        UTCOffset:         null
       },
       
       parameters: [],
       methods:    [],
       units:      [],
       qualifiers: [],
+      equipment:  [],
       
       offset:     0,
       drift:      0,
@@ -309,6 +312,14 @@ export default {
       });
     },
     
+    getEquipmentList() {
+      return $.ajax({
+        url: `http://localhost:3000/api/v1/equipmentList`,
+        method:  'GET',
+        timeout: 3000
+      });
+    },
+    
     getMatchingDataRecords() {
       let request = {
         spID:         this.SamplePointID,
@@ -491,6 +502,10 @@ export default {
     
     this.getQualifierList().done((quals) => {
       this.qualifiers = quals;
+    });
+    
+    this.getEquipmentList().done((equipment) => {
+      this.equipment = equipment;
     });
   }
   
@@ -695,6 +710,32 @@ export default {
         
         <div class="row">
           <div class="form-group col-12">
+            <small><label for="sensor">Sensor</label></small>
+            <v-select
+              id="sensor"
+              v-model="metaToCreate.EquipmentIDSensor"
+              :options="equipment"
+              label="Name"
+              :reduce="equipment => equipment.EquipmentID">
+            </v-select>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="form-group col-12">
+            <small><label for="method">Logger</label></small>
+            <v-select
+              id="logger"
+              v-model="metaToCreate.EquipmentIDLogger"
+              :options="equipment"
+              label="Name"
+              :reduce="equipment => equipment.EquipmentID">
+            </v-select>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="form-group col-12">
             <small><label for="notes">Notes</label></small>
             <textarea 
               id="notes"
@@ -783,8 +824,6 @@ export default {
           <p>Sum: {{ dataToLoadSummary.sum }}</p>
         </div>
       </div>
-      
-
       
     </div>
     

@@ -131,3 +131,12 @@ GO
 ALTER TABLE Alqwu.dbo.Metadata
 ADD CreatedOn datetime2(0) DEFAULT(getdate())
 GO
+
+ALTER TABLE Alqwu.dbo.Metadata
+DROP COLUMN LoadedOn;
+GO
+
+ALTER TABLE Alqwu.dbo.Metadata
+ADD EquipmentIDSensor INT NULL,
+    EquipmentIDLogger INT NULL
+GO

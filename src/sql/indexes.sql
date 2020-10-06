@@ -169,3 +169,20 @@ CREATE UNIQUE NONCLUSTERED INDEX [conversion_unique_idx] ON [dbo].[Conversion]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
 
+ALTER TABLE Alqwu.dbo.[Metadata]
+WITH CHECK ADD CONSTRAINT Metadata_Sensor_Equipment_fk FOREIGN KEY(EquipmentIDSensor)
+References Alqwu.dbo.Equipment (EquipmentID)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION
+GO
+ALTER TABLE Alqwu.dbo.[Metadata] CHECK CONSTRAINT [Metadata_Sensor_Equipment_fk]
+GO
+
+ALTER TABLE Alqwu.dbo.[Metadata]
+WITH CHECK ADD CONSTRAINT Metadata_Logger_Equipment_fk FOREIGN KEY(EquipmentIDLogger)
+References Alqwu.dbo.Equipment (EquipmentID)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION
+GO
+ALTER TABLE Alqwu.dbo.[Metadata] CHECK CONSTRAINT [Metadata_Logger_Equipment_fk]
+GO
