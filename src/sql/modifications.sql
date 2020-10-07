@@ -140,3 +140,6 @@ ALTER TABLE Alqwu.dbo.Metadata
 ADD EquipmentIDSensor INT NULL,
     EquipmentIDLogger INT NULL
 GO
+
+DROP TABLE EquipmentDeployment
+GO

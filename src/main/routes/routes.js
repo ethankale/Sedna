@@ -3,7 +3,6 @@
 const conversion          = require('../controllers/conversion.js');
 const equipment           = require('../controllers/equipment.js');
 const equipmentModel      = require('../controllers/equipmentModel.js');
-const equipmentDeployment = require('../controllers/equipmentDeployment.js');
 const graphType           = require('../controllers/graphType.js');
 const metadata            = require('../controllers/metadata.js');
 const measurements        = require('../controllers/measurements.js');
@@ -32,13 +31,6 @@ module.exports = function (app) {
     
     app.get('/api/v1/conversionStats',     conversion.conversionStats);
     app.get('/api/v1/convertMeasurements', conversion.convertMeasurements);
-    
-    // Equipment Deployments
-    app.get('/api/v1/equipmentDeploymentList', equipmentDeployment.getEquipmentDeploymentList);
-    app.get('/api/v1/equipmentDeployment',     equipmentDeployment.getEquipmentDeploymentDetails);
-    app.put('/api/v1/equipmentDeployment',     equipmentDeployment.updateEquipmentDeployment);
-    app.post('/api/v1/equipmentDeployment',    equipmentDeployment.addEquipmentDeployment);
-    app.delete('/api/v1/equipmentDeployment',  equipmentDeployment.deleteEquipmentDeployment);
     
     // Equipment
     app.get('/api/v1/equipmentList', equipment.getEquipmentList);

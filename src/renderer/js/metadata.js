@@ -4,7 +4,6 @@ import 'select2/dist/css/select2.min.css';
 
 let alqwuutils     = require('./utils.js');
 
-let datarecord     = require('./meta-datarecord.js');
 let users          = require('./meta-user.js');
 let sites          = require('./meta-site.js');
 let samplepoint    = require('./meta-sample-point.js');

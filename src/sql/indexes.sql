@@ -23,18 +23,6 @@ GO
 ALTER TABLE [dbo].[Equipment] CHECK CONSTRAINT [Equipment_EquipmentModel_fk]
 GO
 
-/* Equipment Deployment constraints */
-ALTER TABLE [dbo].[EquipmentDeployment]  WITH CHECK ADD  CONSTRAINT [EquipmentDeployment_Equipment_fk] FOREIGN KEY([EquipmentID])
-REFERENCES [dbo].[Equipment] ([EquipmentID])
-GO
-ALTER TABLE [dbo].[EquipmentDeployment] CHECK CONSTRAINT [EquipmentDeployment_Equipment_fk]
-GO
-ALTER TABLE [dbo].[EquipmentDeployment]  WITH CHECK ADD  CONSTRAINT [EquipmentDeployment_Metadata_fk] FOREIGN KEY([MetadataID])
-REFERENCES [dbo].[Metadata] ([MetadataID])
-GO
-ALTER TABLE [dbo].[EquipmentDeployment] CHECK CONSTRAINT [EquipmentDeployment_Metadata_fk]
-GO
-
 /* Measurement constraints */
 ALTER TABLE [dbo].[Measurement] ADD CONSTRAINT [PK_Measurement] PRIMARY KEY CLUSTERED (MeasurementID)
 GO
