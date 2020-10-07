@@ -143,3 +143,9 @@ GO
 
 DROP TABLE EquipmentDeployment
 GO
+
+DROP TABLE Workup
+GO
+
+DROP TABLE WorkupUserRole
+GO

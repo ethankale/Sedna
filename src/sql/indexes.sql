@@ -68,14 +68,6 @@ GO
 ALTER TABLE [dbo].[SamplePoint] CHECK CONSTRAINT [SamplePoint_Site_fk]
 GO
 
-/* Workup constraints */
-ALTER TABLE [dbo].[Workup]  WITH CHECK ADD  CONSTRAINT [User_Creates_Workup_fk] FOREIGN KEY([UserID])
-REFERENCES [dbo].[User] ([UserID])
-ON UPDATE CASCADE
-GO
-ALTER TABLE [dbo].[Workup] CHECK CONSTRAINT [User_Creates_Workup_fk]
-GO
-
 
 /****** Object:  Index [ConversionValue_idx]    Script Date: 2020-06-10 2:18:40 PM ******/
 CREATE NONCLUSTERED INDEX [ConversionValue_idx] ON [dbo].[ConversionValue]
@@ -122,13 +114,6 @@ CREATE UNIQUE NONCLUSTERED INDEX [measurement_unique_idx] ON [dbo].[Measurement]
 	[Depth_M] ASC,
   [Duplicate] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-GO
-
-/****** Object:  Index [WorkupLoadedBy_idx]    Script Date: 2020-06-10 2:18:40 PM ******/
-CREATE NONCLUSTERED INDEX [WorkupLoadedBy_idx] ON [dbo].[Workup]
-(
-	[UserID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
 
 /* Foreign key between GraphType and Method and GraphType and Metadata.*/
