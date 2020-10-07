@@ -37,6 +37,10 @@ export default {
       
       Metadatas:   [],
       metaIndex:   0,
+      // This is just a blank metadata record for the 
+      //   list of metadata that the user can choose.
+      //   It makes it easier to choose a blank screen 
+      //   to make a new metadata record.
       newMeta:     {
         Active:            true,
         CreatedOn:         null,
@@ -59,6 +63,7 @@ export default {
         EquipmentIDLogger: null
       },
       
+      //  This is the metadata record that will be created on data load.
       metaToCreate:     {
         Active:            true,
         CreatedOn:         null,
@@ -267,6 +272,18 @@ export default {
     
     modalWidth: function() {
       return this.$refs.wrapper.clientWidth;
+    },
+    
+    metaToCreateIncomplete: function() {
+      let incomplete = this.metaToCreate.MethodID == null | 
+        this.metaToCreate.ParameterID == null |
+        this.metaToCreate.UnitID == null;
+      return Boolean(incomplete);
+    },
+    
+    disableNextButton: function() {
+      return Boolean((this.screen == 'upload') | 
+        (this.screen == 'metadataForm' & this.metaToCreateIncomplete));
     }
     
   },
@@ -553,7 +570,7 @@ export default {
           type="button" 
           class="btn btn-light float-right"
           @click="nextScreen()"
-          :disabled="screen == 'upload'"
+          :disabled="disableNextButton"
         >&gt;</button>
       </div>
     </div>
@@ -649,7 +666,7 @@ export default {
       <form>
         <div class="row">
           <div class="form-group col-12">
-            <small><label for="parameter">Parameter</label></small>
+            <small><strong><label for="parameter">Parameter</label></strong></small>
             <v-select
               id="parameter"
               v-model="metaToCreate.ParameterID"
@@ -662,7 +679,7 @@ export default {
         
         <div class="row">
           <div class="form-group col-12">
-            <small><label for="method">Method</label></small>
+            <small><strong><label for="method">Method</label></strong></small>
             <v-select
               id="method"
               v-model="metaToCreate.MethodID"
@@ -675,7 +692,7 @@ export default {
         
         <div class="row">
           <div class="form-group col-6">
-            <small><label for="unit">Unit</label></small>
+            <small><strong><label for="unit">Unit</label></strong></small>
             <v-select
               id="unit"
               v-model="metaToCreate.UnitID"
