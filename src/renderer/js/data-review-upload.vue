@@ -153,7 +153,6 @@ export default {
     dataToLoad: function() {
       let dtl = _.cloneDeep(this.dataFromFile);
       
-      
       // Setup for offset and drift, if necessary
       // Works like this - the stepchange is the increment that the data change for
       //   every timestep.  Calculate that first, using the first & last values
@@ -176,6 +175,8 @@ export default {
         this.stepchange = this.drift/(totalTimesteps-1);
       };
       
+      // Major potential issues if anyone ever uses the same column names
+      //   that I'm using.  Should rewrite this to create a new array.
       let n = 0;
       dtl.forEach((d) => {
         d.dtm = lx.DateTime
@@ -189,7 +190,13 @@ export default {
         d.LabBatch   = this.LabBatch == 'None'  ? null : d[this.LabBatch];
         d.Note       = this.Note == 'None'      ? null : d[this.Note];
         d.Symbol     = this.Symbol == 'None'    ? null : d[this.Symbol];
-        d.Qualifier  = this.Qualifier == 'None' ? null : _.find(this.qualifiers, ['Code', d[this.Qualifier].trim()]).QualifierID;
+        
+        if (this.Qualifier == 'None' | this.Qualifier == null) {
+          d.Qualifier = null
+        } else {
+          let qualifierName = d[this.Qualifier].trim();
+          d.Qualifier = {..._.find(this.qualifiers, {'Code': qualifierName})}.QualifierID;
+        };
         
         d.ValueOriginal = +d[this.valueField];
         
