@@ -27,7 +27,8 @@
             </div>
             
             <div class="modal-body">
-              <data-csv-load SamplePointID=""></data-csv-load>
+              <data-csv-load 
+               :SamplePointID="siteID"></data-csv-load>
             </div>
           </div>
         </div>
@@ -105,17 +106,8 @@
               </div>
               
               <div class="modal-body">
-                <div class="row"
-                  v-for="workup in workups">
-                  <div class='col'>
-                    <h6> {{ workup.FileName }} </h6>
-                    <p> {{  
-                      `${workup.Name} - ${workup.DataStarts.toLocaleString()} to 
-                      ${workup.DataEnds.toLocaleString()}; loaded on 
-                      ${workup.LoadedOn.toLocaleString()}` }}
-                    </p>
-                  </div>
-                </div>
+                <data-metadata-modal 
+                  :sample-point-id="spID">
               </div>
               
               <div class="modal-footer">
@@ -138,16 +130,13 @@
                 <div class="col">
                 
                   <div class="form-group">
-                    <select class="form-control" id="spSelect"
-                      v-model="spID" 
-                      v-select="spID"
-                      v-on:change="changeSamplePoint()">
-                      <option 
-                        v-for="sp in samplePoints" 
-                        v-bind:key="sp.SamplePointID"
-                        v-bind:value="sp.SamplePointID">
-                        {{ sp.Name }}</option>
-                    </select>
+                    <v-select
+                      id="samplePointSelect"
+                      label="Name"
+                      v-model="spID"
+                      :options="samplePoints"
+                      :reduce="sp => sp.SamplePointID">
+                    </v-select>
                   </div>
                   
                   <div class="form-group form-check">
@@ -179,9 +168,11 @@
               
               <div class="col-2">
                 <label for="wylist">Water Year</label>
-                <select class="form-control" id="wylist">
-                  <option></option>
-                </select>
+                <v-select
+                  id="wylist"
+                  v-model="waterYear"
+                  :options="wylist">
+                </v-select>
               </div>
             </div>
             

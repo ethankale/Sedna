@@ -119,8 +119,9 @@ let controller = {
         } else {
           
           let statement = `
-            SELECT md.MetadataID, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
-              md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints
+            SELECT md.MetadataID, md.FileName, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
+              md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints,
+              md.DataStarts, md.DataEnds, md.CreatedOn
             FROM Metadata as md
             INNER JOIN SamplePoint as sp
               ON md.SamplePointID = sp.SamplePointID

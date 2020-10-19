@@ -1,7 +1,7 @@
 
 // CSS first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'select2/dist/css/select2.min.css';
+import "vue-select/dist/vue-select.css";
 
 // Then JS
 let lx         = require('luxon');
@@ -12,27 +12,19 @@ let dataload   = require('./dataload.js');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
 
+import vSelect from "vue-select";
+
 let $          = require('jquery');
-let select2    = require('select2');
 let bootstrap  = require('bootstrap');
 
 let _          = require('lodash');
 
+import DataMetadataModal from './data-metadata-modal.vue';
+
 let paramMarkup   = "";
 
-let wylist       = [];
 let wycurrent    = 0;
 let wymarkup     = "";
-
-// This directive makes Vue work with Select2
-Vue.directive('select', {
-  twoWay: true,
-  bind: function (el, binding, vnode) {
-    $(el).select2().on("select2:select", (e) => {
-      el.dispatchEvent(new Event('change', { target: e.target }));
-    });
-  },
-});
 
 // This directive makes Vue work with Bootstrap's tooltip functionality
 Vue.directive('tooltip', function(el, binding){
@@ -45,6 +37,11 @@ Vue.directive('tooltip', function(el, binding){
 
 var vm = new Vue({
   el: '#vueWrapper',
+  
+  components: {
+    'data-metadata-modal': DataMetadataModal,
+    'v-select':            vSelect,
+  },
   
   data: {
     samplePoints:  [],
@@ -67,12 +64,34 @@ var vm = new Vue({
     paramDetails:  [],
     methodDetails: [],
     
-    spID: null,
+    spID:          null,
+    waterYear:     null,
+    wylist:        [],
     
-    utcHours: alqwuutils.utcoffset,
+    utcHours:      alqwuutils.utcoffset,
     
     downloadStartDateString: lx.DateTime.fromJSDate(new Date()).toISODate(),
-    downloadEndDateString: lx.DateTime.fromJSDate(new Date()).minus({'days': 30}).toISODate()
+    downloadEndDateString:   lx.DateTime.fromJSDate(new Date()).minus({'days': 30}).toISODate()
+  },
+  
+  watch: {
+    spID: function(val) {
+      this.changeSamplePoint();
+    },
+    
+    waterYear: function(wy) {
+      
+      if (this.waterYear != undefined) {
+        var firstdtm  = new Date(`${wy-1}-10-01T00:00:00`);
+        var lastdtm   = new Date(`${wy}-09-30T00:00:00`);
+        
+        this.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
+        this.downloadEndDateString   = lx.DateTime.fromJSDate(lastdtm).toISODate();
+      };
+      
+      this.updateDates();
+    },
+    
   },
   
   computed: {
@@ -82,7 +101,11 @@ var vm = new Vue({
     },
     
     siteID: function() {
-      return this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
+      let siteid = null;
+      if (this.samplePoints.length > 0) {
+        siteid = this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
+      };
+      return siteid;
     },
     
     config: function() {
@@ -164,14 +187,14 @@ var vm = new Vue({
     
     downloadStartDate: function() {
       return lx.DateTime
-        .fromJSDate(new Date(this.downloadStartDateString + vm.utcstring))
-        .setZone(vm.utcstring);
+        .fromJSDate(new Date(this.downloadStartDateString + this.utcstring))
+        .setZone(this.utcstring);
     },
     
     downloadEndDate: function() {
       return lx.DateTime
-        .fromJSDate(new Date(this.downloadEndDateString + vm.utcstring))
-        .setZone(vm.utcstring);
+        .fromJSDate(new Date(this.downloadEndDateString + this.utcstring))
+        .setZone(this.utcstring);
     },
   },
   
@@ -195,7 +218,7 @@ var vm = new Vue({
         let table    = this.dailyFormatted;
         let siteName = $("#spSelect :selected").text();
         let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
-                       $("#wylist :selected").val();
+                       this.waterYear;
         let svg      = $("#chartContainer svg")[0];
         
         window.makePDF(siteName, subtitle, table, svg);
@@ -214,7 +237,7 @@ var vm = new Vue({
       var wateryear = alqwuutils.calcWaterYear(lastdtm);
       var firstdtm  = clickedParam.mindtm;
       
-      // Chart type 1 is the line & range chart; chart type 2 is the bar graph (precip).      
+      // Chart type 1 is the line & range chart; chart type 2 is the bar graph (precip).
       if ( (clickedParam.GraphTypeID == 1 | clickedParam.GraphTypeID == 2) & clickedParam.nmeasure > 1000) {
         firstdtm = new Date(`${wateryear-1}-10-01T00:00:00`);
       };
@@ -226,12 +249,12 @@ var vm = new Vue({
       this.methodcurrent = clickedParam.MethodID;
       this.unitcurrent   = clickedParam.Unit;
       
-      wymarkup = "";
-      wylist = alqwuutils.createWYList(clickedParam.mindtm, lastdtm);
-      wylist.forEach(wy => {
-          wymarkup += `<option value=${wy}>${wy}</option>\n`
-      });
-      $('#wylist').empty().append(wymarkup).val(wylist[wylist.length-1]);
+      let waterYearList = alqwuutils.createWYList(clickedParam.mindtm, lastdtm);
+      this.wylist = waterYearList;
+      this.waterYear = waterYearList[waterYearList-1];
+      
+      console.log(waterYearList);
+      console.log(this.waterYear);
       
       this.updateDates();
     },
@@ -339,11 +362,12 @@ var vm = new Vue({
     },
     
     getWorkups() {
+      console.log("getWorkups");
       let query = {
         spID: this.spID,
       };
       let request = $.ajax({
-        url: `http://localhost:3000/api/v1/workupList`,
+        url: `http://localhost:3000/api/v1/metadataBySamplePt`,
         method:'GET',
         timeout: 3000,
         data: query,
@@ -354,7 +378,7 @@ var vm = new Vue({
         wu.forEach((w) => {
           w.DataStarts = lx.DateTime.fromISO(w.DataStarts);
           w.DataEnds   = lx.DateTime.fromISO(w.DataEnds);
-          w.LoadedOn   = lx.DateTime.fromISO(w.LoadedOn);
+          w.LoadedOn   = lx.DateTime.fromISO(w.CreatedOn);
         })
         this.workups = wu;
       })
@@ -425,7 +449,7 @@ var vm = new Vue({
         let ordinal = d3.scaleOrdinal()
           .domain(["Non-Provisional", "Provisional"])
           .range(["steelblue", "firebrick"]);
-		
+        
         // Creating the charts, starting with line + range polygon
         if (this.chartType === 'lineRange') {
           let area = d3.area()
@@ -453,7 +477,7 @@ var vm = new Vue({
             
           // Add the line (all data)
           svg.append("path")
-          .datum(vm.dailyFormatted)
+          .datum(this.dailyFormatted)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
           .attr("stroke-width", 1.5)
@@ -544,7 +568,6 @@ var vm = new Vue({
     },
     
     updateDates() {
-      
       Promise.allSettled([
         this.getDailyMeasurements(), 
         this.getParameterDetails(),
@@ -553,6 +576,7 @@ var vm = new Vue({
         this.dailySummary  = data[0].value;
         this.paramDetails  = data[1].value;
         this.methodDetails = data[2].value;
+        
         this.graphMeasurements();
       })
       .catch(error => {
@@ -604,19 +628,9 @@ $(document).ready(function() {
     
     // These are the two date inputs - start and end date
     $("#date-select-row input").change(function() {
-        vm.updateDates();
+      vm.updateDates();
     });
     
-    $("#wylist").change(function() {
-        wycurrent = $("#wylist").val();
-        var firstdtm  = new Date(`${wycurrent-1}-10-01T00:00:00`);
-        var lastdtm   = new Date(`${wycurrent}-09-30T00:00:00`);
-        
-        vm.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-        vm.downloadEndDateString = lx.DateTime.fromJSDate(lastdtm).toISODate();
-        
-        vm.updateDates();
-    });
 });
 
 function loadParamList() {
@@ -645,8 +659,6 @@ function loadParamList() {
             </option>`
             
         });
-        
-        
         
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
     });

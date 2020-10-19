@@ -1,5 +1,4 @@
 <script>
-let Papa       = require('papaparse');
 let lx         = require('luxon');
 let alqwuutils = require('./utils.js');
 let $          = require('jquery');
