@@ -13,10 +13,13 @@ export default {
   components: {
     'data-review-upload': dataReviewUpload
   },
+    
+  props: {
+    SamplePointId: Number
+  },
 
   data: function() {
     return {
-      SamplePointID: null,
       
       utcHours: alqwuutils.utcoffset,
 
@@ -73,12 +76,11 @@ export default {
       //   that doesn't match, but replace with what?
 
       this.fileData      = Papa.parse(this.fileText, this.papaConfig);
-      this.SamplePointID = +$("#spSelect").val();  // seriously ugly - refactor to Vue-friendly
       
       if (this.fileData.data.length > 0) {
         this.setNotice('alert-success', 'File load complete!  Select the columns with data you wish to load.');
 
-        if (this.SamplePointID != null) {
+        if (this.SamplePointId != null) {
           this.showContainer = 'pickColumns';
         } else {
           this.setNotice('alert-danger', 'There was a problem finding this sample point.');
@@ -223,7 +225,7 @@ export default {
           
           <data-review-upload 
             :fields="fileData.meta.fields"
-            :SamplePointID="SamplePointID"
+            :sample-point-id="SamplePointId"
             :datetimeField="datetimeCol"
             :valueField="column"
             :dataFromFile="fileData.data"

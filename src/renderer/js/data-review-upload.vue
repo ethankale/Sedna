@@ -17,7 +17,7 @@ export default {
   
   props: {
     fields:        Array,
-    SamplePointID: Number,
+    SamplePointId: Number,
     datetimeField: String,
     valueField:    String,
     dataFromFile:  Array,
@@ -345,7 +345,7 @@ export default {
     
     getMatchingDataRecords() {
       let request = {
-        spID:         this.SamplePointID,
+        spID:         this.SamplePointId,
         ParameterID:  this.metaToCreate.ParameterID,
         MethodID:     this.metaToCreate.MethodID,
         MinDate:      this.dataToLoad[0].CollectedDTM,
@@ -425,7 +425,7 @@ export default {
       this.metaToCreate.FileName      = this.filePath;
       this.metaToCreate.DataStarts    = this.dataToLoadSummary.mindate.toISO();
       this.metaToCreate.DataEnds      = this.dataToLoadSummary.maxdate.toISO();
-      this.metaToCreate.SamplePointID = +this.SamplePointID;
+      this.metaToCreate.SamplePointID = +this.SamplePointId;
       this.metaToCreate.UserID        = window.getConfig().userid;
       this.metaToCreate.UTCOffset     = alqwuutils.utcoffset*60;
       
@@ -507,7 +507,7 @@ export default {
   },
   
   created() {
-    this.getLatestMetas(this.SamplePointID).done((metas) => {
+    this.getLatestMetas(this.SamplePointId).done((metas) => {
       this.Metadatas = metas;
     });
     

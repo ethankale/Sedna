@@ -17,21 +17,9 @@
     
       <!-- Data upload modal -->
       <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Upload Data</h5>
-              <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            
-            <div class="modal-body">
-              <data-csv-load 
-               :SamplePointID="siteID"></data-csv-load>
-            </div>
-          </div>
-        </div>
+        <data-load
+          :sample-point-id="spID">
+        </data-load>
       </div>
       
       <div id="vueWrapper">
