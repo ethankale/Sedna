@@ -152,16 +152,28 @@
               <div id="date-select-row" class="form-group row">
                 <div class="col-5">
                   <label for="startDate">Start Date</label>
-                  <input class="form-control" type="date" id="startDate"
+                  <flat-pickr
+                    v-model="downloadStartDateString"
+                    class="form-control"
+                    :class="{ 'is-invalid': !downloadStartDateString }"
+                    name="startDate">
+                  </flat-pickr>
+                  <!-- <input class="form-control" type="date" id="startDate"
                     v-bind:class="{ 'is-invalid': !downloadStartDateString }"
-                    v-model="downloadStartDateString"></input>
+                    v-model="downloadStartDateString"></input> -->
                 </div>
                 
                 <div class="col-5">
                   <label for="endDate">End Date</label>
-                  <input class="form-control" type="date" id="endDate"
+                  <flat-pickr
+                    v-model="downloadEndDateString"
+                    class="form-control"
+                    :class="{ 'is-invalid': !downloadEndDateString }"
+                    name="endDate">
+                  </flat-pickr>
+                  <!-- <input class="form-control" type="date" id="endDate"
                     v-bind:class="{ 'is-invalid': !downloadEndDateString }"
-                    v-model="downloadEndDateString"></input>
+                    v-model="downloadEndDateString"></input> -->
                 </div>
               
               </form>

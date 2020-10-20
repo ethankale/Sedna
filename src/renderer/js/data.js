@@ -2,6 +2,7 @@
 // CSS first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "vue-select/dist/vue-select.css";
+import 'flatpickr/dist/flatpickr.css';
 
 // Then JS
 let lx         = require('luxon');
@@ -12,7 +13,8 @@ let dataload   = require('./dataload.js');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
 
-import vSelect from "vue-select";
+import vSelect   from "vue-select";
+import flatPickr from "vue-flatpickr-component";
 
 let $          = require('jquery');
 let bootstrap  = require('bootstrap');
@@ -31,7 +33,7 @@ Vue.directive('tooltip', function(el, binding){
   $(el).tooltip({
     title: binding.value,
     placement: binding.arg,
-    trigger: 'hover'             
+    trigger: 'hover'
   });
 });
 
@@ -41,6 +43,7 @@ var vm = new Vue({
   components: {
     'data-metadata-modal': DataMetadataModal,
     'v-select':            vSelect,
+    'flatPickr':           flatPickr
   },
   
   data: {
