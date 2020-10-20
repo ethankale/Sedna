@@ -1,79 +1,140 @@
-
+<script>
 let Papa       = require('papaparse');
-let d3         = require('d3');
 let lx         = require('luxon');
 let alqwuutils = require('./utils.js');
-let Vue        = require('vue');
 
 let $          = require('jquery');
-let select2    = require('select2');
-let bootstrap  = require('bootstrap');
 
 import DataCSVLoad from './data-csv-load.vue';
 
-var vm = new Vue({
-  el: '#uploadModal',
+// Generic functions
 
+// From column selection back to CSV upload
+var showUpload = function() {
+    $("#uploadCSVContainer").removeClass("d-none");
+    $("#uploadColumnSelectContainer").addClass("d-none");
+    $("#uploadReviewContainer").addClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
+    $("#uploadFileName").text("Select a File...");
+
+    $("#uploadBackButton")
+      .addClass("d-none")
+      .off("click");
+
+    $("#uploadNextButton")
+      .removeClass("d-none")
+      .addClass("disabled")
+      .off("click");
+
+    vm.setNotice('alert-info', 'Select a file...');
+};
+
+var showColumnSelect = function() {
+    $("#uploadCSVContainer").addClass("d-none");
+    $("#uploadColumnSelectContainer").removeClass("d-none");
+    $("#uploadReviewContainer").addClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
+    $("#uploadBackButton")
+      .removeClass("d-none")
+      .off("click")
+      .click(() => { showUpload(); });
+
+    vm.setNotice('alert-info', 'Match the CSV headers with the correct metadata.');
+};
+
+// From column selection to data review
+var showReview = function() {
+    $("#uploadColumnSelectContainer").addClass("d-none");
+    $("#uploadCSVContainer").addClass("d-none");
+    $("#uploadReviewContainer").removeClass("d-none");
+    $("#addSingleMeasurement").addClass("d-none");
+
+    $("#uploadBackButton")
+      .removeClass("d-none")
+      .off("click")
+      .click(() => { showUpload(); });
+
+    $("#uploadNextButton")
+      .addClass("d-none");
+
+    vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
+};
+
+var reviewData = function() {
+
+  showReview();
+
+  $('#uploadReviewTab a:first').tab('show')
+
+};
+
+export default {
   components: {
     'data-csv-load': DataCSVLoad
   },
+  
+  props: {
+    SamplePointId: Number
+  },
+  
+  data: function() {
+    return {
+      utcHours: alqwuutils.utcoffset,
 
-  data: {
-    utcHours: alqwuutils.utcoffset,
+      qualifiers: [],
 
-    qualifiers: [],
-
-    filePath: 'Select a File...',
-    fileText: '',
-    fileData: {
-      meta: {
-        fields: []
-      }
-    },
-    metasFromSite:     [],
-    uploadProgress:    0,
-
-    singleMeasureData: {
-      'metaid':  null,
-      'offset':  null,
-      'datestr': '',
-      'measurements': [
-        {
-          'Value':                null,
-          'CollectedDTM':         null,
-          'QualifierID':          null,
-          'Depth_M':              null,
-          'Duplicate':            false,
-          'LabBatch':             null,
-          'Symbol':               '=',
-          'Note':                 ''
+      filePath: 'Select a File...',
+      fileText: '',
+      fileData: {
+        meta: {
+          fields: []
         }
-      ]
-    },
+      },
+      metasFromSite:     [],
+      uploadProgress:    0,
 
-    singleMeasureExists: false,
+      singleMeasureData: {
+        'metaid':  null,
+        'offset':  null,
+        'datestr': '',
+        'measurements': [
+          {
+            'Value':                null,
+            'CollectedDTM':         null,
+            'QualifierID':          null,
+            'Depth_M':              null,
+            'Duplicate':            false,
+            'LabBatch':             null,
+            'Symbol':               '=',
+            'Note':                 ''
+          }
+        ]
+      },
 
-    // Using negative numbers because metadata ids will always be >= zero.
-    emptyID:     -1,
-    datetimeID:  -2,
-    qualifierID: -3,
-    depthID:     -4,
-    dupID:       -5,
-    labBatchID:  -6,
-    symbolID:    -7,
-    noteID:      -8,
+      singleMeasureExists: false,
 
-    headerMetadataMap: {},
-    headerNotices:     {},
-    measurements:      [],
+      // Using negative numbers because metadata ids will always be >= zero.
+      emptyID:     -1,
+      datetimeID:  -2,
+      qualifierID: -3,
+      depthID:     -4,
+      dupID:       -5,
+      labBatchID:  -6,
+      symbolID:    -7,
+      noteID:      -8,
 
-    papaConfig:     {
-      quoteChar: '"',
-      header: true,
-      skipEmptyLines: true,
-      fastMode: false,
-      transformHeader: function(h) {
-        return h.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_ -]/g, '');
+      headerMetadataMap: {},
+      headerNotices:     {},
+      measurements:      [],
+
+      papaConfig:     {
+        quoteChar: '"',
+        header: true,
+        skipEmptyLines: true,
+        fastMode: false,
+        transformHeader: function(h) {
+          return h.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_ -]/g, '');
+        }
       }
     }
   },
@@ -153,9 +214,6 @@ var vm = new Vue({
         timeout:     3000
       });
     },
-
-
-
 
     showSingleMeasurement() {
       let spID = $("#spSelect").val();
@@ -275,82 +333,23 @@ var vm = new Vue({
       return Math.round(number*Math.pow(10, decimal))/Math.pow(10, decimal);
     }
   }
-});
+}
+</script>
 
-// Generic functions
-
-// From column selection back to CSV upload
-var showUpload = function() {
-    $("#uploadCSVContainer").removeClass("d-none");
-    $("#uploadColumnSelectContainer").addClass("d-none");
-    $("#uploadReviewContainer").addClass("d-none");
-    $("#addSingleMeasurement").addClass("d-none");
-    $("#uploadFileName").text("Select a File...");
-
-    $("#uploadBackButton")
-      .addClass("d-none")
-      .off("click");
-
-    $("#uploadNextButton")
-      .removeClass("d-none")
-      .addClass("disabled")
-      .off("click");
-
-    vm.setNotice('alert-info', 'Select a file...');
-};
-
-var showColumnSelect = function() {
-    $("#uploadCSVContainer").addClass("d-none");
-    $("#uploadColumnSelectContainer").removeClass("d-none");
-    $("#uploadReviewContainer").addClass("d-none");
-    $("#addSingleMeasurement").addClass("d-none");
-    $("#uploadBackButton")
-      .removeClass("d-none")
-      .off("click")
-      .click(() => { showUpload(); });
-
-    vm.setNotice('alert-info', 'Match the CSV headers with the correct metadata.');
-};
-
-// From column selection to data review
-var showReview = function() {
-    $("#uploadColumnSelectContainer").addClass("d-none");
-    $("#uploadCSVContainer").addClass("d-none");
-    $("#uploadReviewContainer").removeClass("d-none");
-    $("#addSingleMeasurement").addClass("d-none");
-
-    $("#uploadBackButton")
-      .removeClass("d-none")
-      .off("click")
-      .click(() => { showUpload(); });
-
-    $("#uploadNextButton")
-      .addClass("d-none");
-
-    vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
-};
-
-// $(document).ready(function() {
-    // vm.getQualifiers();
-    // $("#siteSelect").change(function() {
-      // $("#uploadCSVContainer").removeClass("d-none");
-      // $("#uploadColumnSelectContainer").addClass("d-none");
-      // $("#uploadReviewContainer").addClass("d-none");
-      // $("#uploadBackButton").addClass("d-none");
-      // $("#uploadNextButton").addClass("d-none");
-    // });
-
-    // $("#openCSVFileButton").click(() => {
-      // vm.openCSV();
-    // });
-// });
-
-var reviewData = function() {
-
-  showReview();
-
-  $('#uploadReviewTab a:first').tab('show')
-
-};
-
-
+<template>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload Data</h5>
+        <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <data-csv-load 
+         :sample-point-id="SamplePointId"></data-csv-load>
+      </div>
+    </div>
+  </div>
+</template>

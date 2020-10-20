@@ -1,28 +1,29 @@
 
-// CSS first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
+// CSS imports first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "vue-select/dist/vue-select.css";
 import 'flatpickr/dist/flatpickr.css';
 
-// Then JS
+// Then JS imports
 let lx         = require('luxon');
 let Papa       = require('papaparse');
 let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
-let dataload   = require('./dataload.js');
+// let dataload   = require('./dataload.js');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
 
-import vSelect   from "vue-select";
-import flatPickr from "vue-flatpickr-component";
+import vSelect           from "vue-select";
+import flatPickr         from "vue-flatpickr-component";
+import DataLoad          from "./data-load.vue";
+import DataMetadataModal from './data-metadata-modal.vue';
 
 let $          = require('jquery');
 let bootstrap  = require('bootstrap');
 
 let _          = require('lodash');
 
-import DataMetadataModal from './data-metadata-modal.vue';
-
+// Now JS variables, which ought to be in Vue
 let paramMarkup   = "";
 
 let wycurrent    = 0;
@@ -38,10 +39,11 @@ Vue.directive('tooltip', function(el, binding){
 });
 
 var vm = new Vue({
-  el: '#vueWrapper',
+  el: '#everythingContainer',
   
   components: {
     'data-metadata-modal': DataMetadataModal,
+    'data-load':           DataLoad,
     'v-select':            vSelect,
     'flatPickr':           flatPickr
   },
