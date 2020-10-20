@@ -36,6 +36,12 @@ export default {
   watch: {
     SamplePointId: function(val) {
       this.getLatestMetas(val).done((metas) => {
+        metas.forEach((d) => {
+          d.dtstarts = d.DataStarts == null  ? "No Start Date"     : new Date(d.DataStarts).toLocaleDateString();
+          d.dtends   = d.DataEnds == null    ? "No End Date"       : new Date(d.DataEnds).toLocaleDateString();
+          d.dtloaded = d.CreatedOn == null   ? "No Loaded On Date" : new Date(d.CreatedOn).toLocaleDateString();
+          d.User     = d.UserName == null    ? "Unknown"           : d.UserName;
+        });
         this.metas = metas;
       });
     }
@@ -50,9 +56,10 @@ export default {
       <div class='col'>
         <h6> {{ meta.FileName }} </h6>
         <p> {{  
-          `${meta.DataStarts} to 
-          ${meta.DataEnds}; loaded on 
-          ${meta.LoadedOn}` }}
+          `${meta.dtstarts} to 
+          ${meta.dtends}; loaded on 
+          ${meta.dtloaded} by 
+          ${meta.User}` }}
         </p>
       </div>
     </div>

@@ -121,7 +121,7 @@ let controller = {
           let statement = `
             SELECT md.MetadataID, md.FileName, sp.SiteID, md.ParameterID, pm.Name as Parameter, 
               md.MethodID, mt.Code as Method, md.UnitID, un.Symbol as Unit, FrequencyMinutes, DecimalPoints,
-              md.DataStarts, md.DataEnds, md.CreatedOn
+              md.DataStarts, md.DataEnds, md.CreatedOn, usr.Name as UserName
             FROM Metadata as md
             INNER JOIN SamplePoint as sp
               ON md.SamplePointID = sp.SamplePointID
@@ -131,8 +131,11 @@ let controller = {
               ON mt.MethodID = md.MethodID
             INNER JOIN Unit as un
               ON un.UnitID = md.UnitID
+            LEFT JOIN [User] as usr
+              ON usr.UserID = md.UserID 
             WHERE sp.SamplePointID = @spID
               AND md.Active = 1
+            ORDER BY md.CreatedOn DESC
           `
           
           let returndata = [];
