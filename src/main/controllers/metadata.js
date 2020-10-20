@@ -49,9 +49,11 @@ let controller = {
       var ParameterID = req.query.ParameterID;
       var MethodID    = req.query.MethodID;
       
+      var hasDates = req.query.hasOwnProperty('MinDate') && req.query.hasOwnProperty('MaxDate');
+      
       // Dates expected in ISO format with time zone
-      var MinDate     = req.query.MinDate;
-      var MaxDate     = req.query.MaxDate;
+      var MinDate     = "";
+      var MaxDate     = "";
       
       connection.on('connect', function(err) {
         if(err) {
@@ -70,10 +72,15 @@ let controller = {
               AND MethodID = @MethodID
             GROUP BY md.MetadataID, md.ParameterID, md.MethodID, md.DataStarts, md.DataEnds, md.SamplePointID,
               md.CreatedOn, md.FileName
-            HAVING MIN(mt.CollectedDateTime) <= @MaxDate 
-              AND MAX(mt.CollectedDateTime) >= @MinDate
-            ORDER BY md.MetadataID
           `
+          if (hasDates) {
+            statement += `
+              HAVING MIN(mt.CollectedDateTime) <= @MaxDate 
+              AND MAX(mt.CollectedDateTime) >= @MinDate
+            `
+          }
+          
+          statement += `ORDER BY md.MetadataID`;
           
           let returndata = [];
           
@@ -98,8 +105,60 @@ let controller = {
           request.addParameter('spID',        TYPES.Int, spID)
           request.addParameter('ParameterID', TYPES.Int, ParameterID)
           request.addParameter('MethodID',    TYPES.Int, MethodID)
-          request.addParameter('MinDate',     TYPES.VarChar, MinDate)
-          request.addParameter('MaxDate',     TYPES.VarChar, MaxDate)
+          
+          if (hasDates) {
+            request.addParameter('MinDate',     TYPES.VarChar, MinDate)
+            request.addParameter('MaxDate',     TYPES.VarChar, MaxDate)
+          };
+          
+          connection.execSql(request);
+          
+        }
+      });
+    },
+    
+    getUniqueParamAndMethod: function(req, res) {
+      let mssql_config = cfg.getConfig().mssql;
+      var connection = new Connection(mssql_config);
+      
+      var spID        = req.query.spID;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err)
+        } else {
+          
+          let statement = `
+            SELECT DISTINCT md.ParameterID, md.MethodID, pm.Name + ' (' + mt.Description + ')' as Name
+            FROM Metadata as md
+            LEFT JOIN Parameter as pm
+              on md.ParameterID = pm.ParameterID
+            LEFT JOIN Method as mt
+              on md.MethodID = mt.MethodID
+            WHERE md.SamplePointID = @spID
+          `
+          
+          let returndata = [];
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              res.status(400).end();
+              console.log(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+            connection.close();
+          });
+          
+          request.on('row', function(columns) {
+            let thisrow = {}
+            columns.forEach(function(column) {
+                thisrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(thisrow);
+          });
+          
+          request.addParameter('spID', TYPES.Int, spID)
           
           connection.execSql(request);
           

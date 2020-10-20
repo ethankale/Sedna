@@ -6,30 +6,37 @@ let d3       = require('d3');
 let utils    = require('./utils.js');
 
 let $          = require('jquery');
-let select2    = require('select2');
 let bootstrap  = require('bootstrap');
 
-Vue.directive('select', {
-  twoWay: true,
-  bind: function (el, binding, vnode) {
-    $(el).select2().on("select2:select", (e) => {
-      el.dispatchEvent(new Event('change', { target: e.target }));
-    });
-  },
-});
-
-$(document).ready(function() {
-  $("#oldDRSelect").select2({ width: '100%' });
-  $("#newDRSelect").select2({ width: '100%' });
-  $("#conversionTableSelect").select2({ width: '100%' });
-});
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
 
 var vm = new Vue({
   el: '#v-pills-conversion',
   
+  components: {
+    'v-select': vSelect,
+    datetime:   Datetime.Datetime
+  },
+  
   data: {
-    oldDRID: null,
-    newDRID: null,
+    oldDR: {
+      spid:               null,
+      paramAndMethod:     {},
+      paramAndMethodList: [],
+      drid:               null,
+      drlist:             []
+    },
+    newDR: {
+      spid:               null,
+      paramAndMethod:     {},
+      paramAndMethodList: [],
+      drid:               null,
+      drlist:             []
+    },
+    samplePointList: [],
+    // oldDRID: null,
+    //newDRID: null,
     ConversionID: null,
     
     fromDate: '',
@@ -40,7 +47,6 @@ var vm = new Vue({
     drift:  0,
     
     conversions: [],
-    drs: [],
     measurements: [],
     
     nulls: 0,
@@ -68,8 +74,9 @@ var vm = new Vue({
   },
   
   mounted: function () {
-    this.loadDRs();
-    this.loadConversions();
+    this.loadSamplePoints();
+    // this.loadDRs();
+    // this.loadConversions();
     this.addResizeListener();
   },
   
@@ -78,10 +85,74 @@ var vm = new Vue({
       this.setSVGWidth();
       this.calculatePathOldVals();
       this.calculatePathNewVals();
-    }
+    },
+    
+    oldDRspid: function(val) {
+      this.oldDR.paramAndMethodList = [];
+      this.oldDR.paramAndMethod     = {};
+      
+      this.oldDR.drlist = [];
+      this.oldDR.drid   = null;
+      
+      this.loadParamsAndMethods(val)
+        .done((data) => {
+          this.oldDR.paramAndMethodList = data;
+        });
+    },
+    
+    newDRspid: function(val) {
+      this.newDR.paramAndMethodList = [];
+      this.newDR.paramAndMethod     = {};
+      
+      this.newDR.drlist = [];
+      this.newDR.drid   = null;
+      
+      this.loadParamsAndMethods(val)
+        .done((data) => {
+          this.newDR.paramAndMethodList = data;
+        });
+    },
+    
+    oldParamAndMethod: function(val) {
+      this.oldDR.drlist = [];
+      this.oldDR.drid   = null;
+      
+      this.loadMetas(this.oldDR)
+        .done((data) => {
+          data.forEach((d) => {
+            let mindt = new Date(d.mindt).toLocaleString();
+            let maxdt = new Date(d.maxdt).toLocaleString();
+            d.name = d.FileName + "; " + mindt + " to " + maxdt;
+          });
+          this.oldDR.drlist = data;
+        });
+    },
+    
+    newParamAndMethod: function(val) {
+      this.newDR.drlist = [];
+      this.newDR.drid   = null;
+      
+      this.loadMetas(this.newDR)
+        .done((data) => {
+          data.forEach((d) => {
+            let mindt = new Date(d.mindt).toLocaleString();
+            let maxdt = new Date(d.maxdt).toLocaleString();
+            d.name = d.FileName + "; " + mindt + " to " + maxdt;
+          });
+          this.newDR.drlist = data;
+        })
+        
+    },
+    
   },
   
   computed: {
+    
+    oldDRspid: function() { return this.oldDR.spid },
+    newDRspid: function() { return this.newDR.spid },
+    
+    oldParamAndMethod: function() { return this.oldDR.paramAndMethod },
+    newParamAndMethod: function() { return this.newDR.paramAndMethod },
     
     stepChangePerMinute: function() {
       if (this.drift == 0) {
@@ -187,6 +258,44 @@ var vm = new Vue({
   },
   
   methods: {
+    loadSamplePoints: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/samplePointList?active=1`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.samplePointList = data;
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    loadParamsAndMethods: function(spID) {
+      let request = {
+        spID: spID
+      };
+      return $.ajax({
+        url:     `http://localhost:3000/api/v1/getUniqueParamAndMethod`,
+        method:  'GET',
+        timeout: 3000,
+        data:    request
+      })
+    },
+    
+    loadMetas: function(dr) {
+      let request = {
+        spID:        dr.spid,
+        ParameterID: dr.paramAndMethod.ParameterID,
+        MethodID:    dr.paramAndMethod.MethodID
+      };
+      return $.ajax({
+        url:     `http://localhost:3000/api/v1/metadataBySPParamMethodDate`,
+        method:  'GET',
+        timeout: 3000,
+        data:    request
+      })
+    },
+    
     loadDRs: function() {
       $.ajax({
         url: `http://localhost:3000/api/v1/metadataList?active=1`,
@@ -485,9 +594,5 @@ var vm = new Vue({
       });
     },
   },
-  
-  components: {
-    datetime: Datetime.Datetime
-  }
   
 });

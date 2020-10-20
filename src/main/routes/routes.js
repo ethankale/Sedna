@@ -56,6 +56,7 @@ module.exports = function (app) {
     
     // Metadata (or Data Record)
     app.get('/api/v1/getMetadatasBySite',          sites.getMetadatasBySite);
+    app.get('/api/v1/getUniqueParamAndMethod',     metadata.getUniqueParamAndMethod);
     app.get('/api/v1/metadataBySamplePt',          metadata.getMetadatasBySamplePoint);
     app.get('/api/v1/metadataBySPParamMethodDate', metadata.getMetadatasBySPParamMethodDate);
     app.get('/api/v1/metadataLatestBySamplePt',    metadata.getLatestMetadatasBySamplePoint);

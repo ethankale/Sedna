@@ -66,57 +66,119 @@
               
               <form id="eq-selectHeader">
                 <fieldset id="conversionFieldset" :disabled="formDisable">
+                
+                  <h3>Source Data Record</h3>
+                  
                   <div class="form-group row">
-                    <label for="oldDRSelect" class="col-sm-2 col-form-label">Source Data Record</label>
+                    <label for="oldDRSamplePtSelect" class="col-sm-2 col-form-label">Site</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="oldDRSelect" 
+                      <v-select
+                        id="oldDRSamplePtSelect" 
                         :disabled="formDisable"
-                        v-model="oldDRID" 
-                        v-select="oldDRID">
-                        <option 
-                          v-for="dr in drs" 
-                          v-bind:value="dr.MetadataID" 
-                          v-bind:key="dr.MetadataID">
-                          {{ dr.Metaname }}
-                        </option>
-                      </select>
+                        v-model="oldDR.spid" 
+                        :options="samplePointList"
+                        label="Name"
+                        :reduce="sp => sp.SamplePointID"
+                        >
+                      </v-select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="oldDRParamMetaSelect" class="col-sm-2 col-form-label">Parameter and Method</label>
+                    <div class="col-sm-10">
+                      <v-select
+                        id="oldDRParamMetaSelect" 
+                        :disabled="formDisable"
+                        v-model="oldDR.paramAndMethod" 
+                        :options="oldDR.paramAndMethodList"
+                        label="Name"
+                        >
+                      </v-select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="oldDRSelect" class="col-sm-2 col-form-label">Data Record</label>
+                    <div class="col-sm-10">
+                      <v-select
+                        id="oldDRSelect" 
+                        :disabled="formDisable"
+                        v-model="oldDR.drid" 
+                        :options="oldDR.drlist"
+                        label="name"
+                        :reduce="dr => dr.MetadataID"
+                        >
+                      </v-select>
+                    </div>
+                  </div>
+                  
+                  <h3>Destination Data Record</h3>
+                  
+                  <div class="form-group row">
+                    <label for="newDRSamplePtSelect" class="col-sm-2 col-form-label">Site</label>
+                    <div class="col-sm-10">
+                      <v-select
+                        id="newDRSamplePtSelect" 
+                        :disabled="formDisable"
+                        v-model="newDR.spid" 
+                        :options="samplePointList"
+                        label="Name"
+                        :reduce="sp => sp.SamplePointID"
+                        >
+                      </v-select>
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="newDRParamMetaSelect" class="col-sm-2 col-form-label">Parameter and Method</label>
+                    <div class="col-sm-10">
+                      <v-select
+                        id="newDRParamMetaSelect" 
+                        :disabled="formDisable"
+                        v-model="newDR.paramAndMethod" 
+                        :options="newDR.paramAndMethodList"
+                        label="Name"
+                        >
+                      </v-select>
                     </div>
                   </div>
                   
                   <div class="form-group row">
                     <label for="newDRSelect" class="col-sm-2 col-form-label">Destination Data Record</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="newDRSelect" 
+                    
+                      <v-select
+                        id="newDRSelect" 
                         :disabled="formDisable"
-                        v-model="newDRID" 
-                        v-select="newDRID">
-                        <option 
-                          v-for="dr in drs" 
-                          v-bind:value="dr.MetadataID" 
-                          v-bind:key="dr.MetadataID">
-                          {{ dr.Metaname }}
-                        </option>
-                      </select>
+                        v-model="newDR.drid" 
+                        :options="newDR.drlist"
+                        label="name"
+                        :reduce="dr => dr.MetadataID"
+                        >
+                      </v-select>
                     </div>
                   </div>
+                  
+                  <h3>Conversion Table</h3>
                   
                   <div class="form-group row">
                     <label for="conversionTableSelect" class="col-sm-2 col-form-label">Conversion Table</label>
                     <div class="col-sm-10">
-                      <select class="form-control" id="conversionTableSelect" 
+                      
+                      <v-select
+                        id="conversionTableSelect" 
                         :disabled="formDisable"
                         v-model="ConversionID" 
-                        v-select="ConversionID">
-                        <option 
-                          v-for="conversion in conversions" 
-                          v-bind:value="conversion.ConversionID" 
-                          v-bind:key="conversion.ConversionID">
-                          {{ conversion.ConversionName }}
-                        </option>
-                      </select>
+                        :options="conversions"
+                        label="ConversionName"
+                        :reduce="con => con.ConversionID"
+                        >
+                      </v-select>
                     </div>
                   </div>
                   
+                  <!-- 
                   <div class="form-group row">
                     <label for="fromDate" class="col-sm-2 col-form-label">From</label>
                     <div class="col-sm-10">
@@ -133,6 +195,8 @@
                     </div>
                   </div>
                   
+                  -->
+                  
                   <div class="form-group row">
                     <label for="offset" class="col-sm-2 col-form-label">Offset</label>
                     <div class="col-sm-3">
@@ -141,7 +205,7 @@
                         id="offset"
                         v-model="offset"></input>
                     </div>
-                    <div class="col-sm-2">&nbsp;</div>                    
+                    <div class="col-sm-2">&nbsp;</div>
                     <label for="drift" class="col-sm-2 col-form-label">Drift</label>
                     <div class="col-sm-3">
                       <input type='number' 
