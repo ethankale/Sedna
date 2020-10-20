@@ -154,9 +154,6 @@ var vm = new Vue({
       });
     },
 
-
-
-
     showSingleMeasurement() {
       let spID = $("#spSelect").val();
       if (spID != null) {
@@ -329,21 +326,6 @@ var showReview = function() {
 
     vm.setNotice('alert-info', 'Review uploaded data for accuracy.');
 };
-
-// $(document).ready(function() {
-    // vm.getQualifiers();
-    // $("#siteSelect").change(function() {
-      // $("#uploadCSVContainer").removeClass("d-none");
-      // $("#uploadColumnSelectContainer").addClass("d-none");
-      // $("#uploadReviewContainer").addClass("d-none");
-      // $("#uploadBackButton").addClass("d-none");
-      // $("#uploadNextButton").addClass("d-none");
-    // });
-
-    // $("#openCSVFileButton").click(() => {
-      // vm.openCSV();
-    // });
-// });
 
 var reviewData = function() {
 

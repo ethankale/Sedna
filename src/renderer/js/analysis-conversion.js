@@ -34,22 +34,21 @@ var vm = new Vue({
       drid:               null,
       drlist:             []
     },
-    samplePointList: [],
-    // oldDRID: null,
-    //newDRID: null,
-    ConversionID: null,
     
-    fromDate: '',
-    toDate: '',
+    samplePointList: [],
+    ConversionID:    null,
+    
+    fromDate:  '',
+    toDate:    '',
     utcoffset: Math.floor(utils.utcoffset*60),
     
     offset: 0,
     drift:  0,
     
-    conversions: [],
+    conversions:  [],
     measurements: [],
     
-    nulls: 0,
+    nulls:  0,
     valids: 0,
     recordsToOverwrite: 0,
     
@@ -58,8 +57,7 @@ var vm = new Vue({
     conversionState: 'initial',
     error: false,
     loadErrorCount: 0,
-    notificationText: `Select a data record to calculate 
-      from, one to save new data to, a conversion table, and a timeframe.`,
+    notificationText: `Select source and destination data records, and a conversion table.`,
     
     // D3 stuff.
     oldLine: '',
@@ -75,8 +73,7 @@ var vm = new Vue({
   
   mounted: function () {
     this.loadSamplePoints();
-    // this.loadDRs();
-    // this.loadConversions();
+    this.loadConversions();
     this.addResizeListener();
   },
   
@@ -173,32 +170,11 @@ var vm = new Vue({
       return this.conversionState == 'calculated' ? 'Save' : 'Start';
     },
     
-    convertButtonDisable: function() {
-      let disable = false;
-      if (this.conversionState == 'loading') {
-        disable = true;
-      } else if (this.fromDate.length == 0 | this.toDate.length == 0) {
-        disable = true;
-      }
-      return disable;
-    },
-    
-    formDisable: function() {
-      return this.conversionState == 'calculated';
-    },
+    convertButtonDisable: function() { return this.conversionState == 'loading'; },
+    formDisable:          function() { return this.conversionState == 'calculated'; },
     
     utcZoneString: function() {
       return utils.utcOffsetString(this.utcoffset)
-    },
-    
-    minMeasurementDate: function() {
-      let min = this.measurements.reduce((prev, curr) => prev.jsdate < curr.jsdate ? prev : curr);
-      return min.jsdate;
-    },
-    
-    maxMeasurementDate: function() {
-      let max = this.measurements.reduce((prev, curr) => prev.jsdate > curr.jsdate ? prev : curr);
-      return max.jsdate;
     },
     
     narrativeClass: function() {
@@ -294,24 +270,6 @@ var vm = new Vue({
         timeout: 3000,
         data:    request
       })
-    },
-    
-    loadDRs: function() {
-      $.ajax({
-        url: `http://localhost:3000/api/v1/metadataList?active=1`,
-        method:'GET',
-        timeout: 3000
-      }).done((data) => {
-        this.drs = data;
-        if (this.oldDRID == null) {
-          this.oldDRID = data[0].MetadataID;
-        };
-        if (this.newDRID == null) {
-          this.newDRID = data[0].MetadataID;
-        };
-      }).fail((err) => {
-        console.log(err);
-      });
     },
     
     loadConversions: function() {
