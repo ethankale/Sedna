@@ -41,164 +41,194 @@
               <h2>Conversion Tables</h2>
               <p>Create a new data record from an existing one, using a conversion table.</p>
               
-              <div id="conversion-narrative" class="alert"
-                v-bind:class="narrativeClass"> 
-                {{ notificationText }}
-              </div>
-              
-              <div class="form-group row">
-                <div id="conversionChartContainer" class="col-12"
-                  v-show="showGraph">
-                  <svg :width="outsideWidth" :height="outsideHeight">
-                    <g :transform="`translate(${margin.left},${margin.top})`">
-                      <g v-axis:x="scale" :transform="`translate(0,${svgHeight})`">
-                      </g>
-                      <g v-axis:y="scale">
-                      </g>
-                      <path fill="none" stroke="steelblue" stroke-width="1.5" 
-                        :d="oldLine" />
-                      <path fill="none" stroke="orange" stroke-width="1.5" 
-                        :d="newLine" />
-                    </g>
-                  </svg>
-                </div>
-              </div>
-              
-              <form id="eq-selectHeader">
-                <fieldset id="conversionFieldset" :disabled="formDisable">
+              <div id="convert-dr">
+                <div class="row">
                 
-                  <h3>Source Data Record</h3>
-                  
-                  <div class="form-group row">
-                    <label for="oldDRSamplePtSelect" class="col-sm-2 col-form-label">Site</label>
-                    <div class="col-sm-10">
-                      <v-select
-                        id="oldDRSamplePtSelect" 
-                        :disabled="formDisable"
-                        v-model="oldDR.spid" 
-                        :options="samplePointList"
-                        label="Name"
-                        :reduce="sp => sp.SamplePointID"
-                        >
-                      </v-select>
-                    </div>
+                  <div class="col-1">
+                    <button 
+                      id="backScreenButton" 
+                      type="button" 
+                      class="btn btn-light"
+                      @click="lastScreen()"
+                      :disabled="pane == 'dr'"
+                    >&lt;</button>
                   </div>
                   
-                  <div class="form-group row">
-                    <label for="oldDRParamMetaSelect" class="col-sm-2 col-form-label">Parameter and Method</label>
-                    <div class="col-sm-10">
-                      <v-select
-                        id="oldDRParamMetaSelect" 
-                        :disabled="formDisable"
-                        v-model="oldDR.paramAndMethod" 
-                        :options="oldDR.paramAndMethodList"
-                        label="Name"
-                        >
-                      </v-select>
-                    </div>
+                  <div 
+                    id="conversion-narrative" 
+                    class="alert col-10"
+                    :class="narrativeClass"> 
+                    {{ notificationText }}
                   </div>
                   
-                  <div class="form-group row">
-                    <label for="oldDRSelect" class="col-sm-2 col-form-label">Data Record</label>
-                    <div class="col-sm-10">
-                      <v-select
-                        id="oldDRSelect" 
-                        :disabled="formDisable"
-                        v-model="oldDR.drid" 
-                        :options="oldDR.drlist"
-                        label="name"
-                        :reduce="dr => dr.MetadataID"
-                        >
-                      </v-select>
-                    </div>
+                  <div class="col-1">
+                    <button 
+                      id="forwardScreenButton" 
+                      type="button" 
+                      class="btn btn-light float-right"
+                      @click="nextScreen()"
+                      :disabled="disableNextButton"
+                    >&gt;</button>
                   </div>
                   
-                  <!--
-                  <h3>Destination Data Record</h3>
-                  
-                  <div class="form-group row">
-                    <label for="newDRSamplePtSelect" class="col-sm-2 col-form-label">Site</label>
-                    <div class="col-sm-10">
-                      <v-select
-                        id="newDRSamplePtSelect" 
-                        :disabled="formDisable"
-                        v-model="newDR.spid" 
-                        :options="samplePointList"
-                        label="Name"
-                        :reduce="sp => sp.SamplePointID"
-                        >
-                      </v-select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="newDRParamMetaSelect" class="col-sm-2 col-form-label">Parameter and Method</label>
-                    <div class="col-sm-10">
-                      <v-select
-                        id="newDRParamMetaSelect" 
-                        :disabled="formDisable"
-                        v-model="newDR.paramAndMethod" 
-                        :options="newDR.paramAndMethodList"
-                        label="Name"
-                        >
-                      </v-select>
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="newDRSelect" class="col-sm-2 col-form-label">Destination Data Record</label>
-                    <div class="col-sm-10">
+                </div>
+                
+                <div 
+                  id="convert-dr-pane"
+                  v-if="pane == 'dr'">
+                  <form id="eq-selectHeader">
+                    <fieldset id="conversionFieldset" :disabled="formDisable">
                     
-                      <v-select
-                        id="newDRSelect" 
-                        :disabled="formDisable"
-                        v-model="newDR.drid" 
-                        :options="newDR.drlist"
-                        label="name"
-                        :reduce="dr => dr.MetadataID"
-                        >
-                      </v-select>
-                    </div>
-                  </div>
-                  -->
-                  
-                  <h3>Conversion Table</h3>
-                  
-                  <div class="form-group row">
-                    <label for="conversionTableSelect" class="col-sm-2 col-form-label">Conversion Table</label>
-                    <div class="col-sm-10">
+                      <h3>Source Data Record</h3>
                       
-                      <v-select
-                        id="conversionTableSelect" 
-                        :disabled="formDisable"
-                        v-model="ConversionID" 
-                        :options="conversions"
-                        label="ConversionName"
-                        :reduce="con => con.ConversionID"
-                        >
-                      </v-select>
-                    </div>
-                  </div>
-                  
-                  <!-- 
+                      <div class="form-group row">
+                        <label for="oldDRSamplePtSelect" class="col-sm-2 col-form-label">Site</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="oldDRSamplePtSelect" 
+                            :disabled="formDisable"
+                            v-model="oldDR.spid" 
+                            :options="samplePointList"
+                            label="Name"
+                            :reduce="sp => sp.SamplePointID"
+                            >
+                          </v-select>
+                        </div>
+                      </div>
+                      
+                      <div class="form-group row">
+                        <label for="oldDRParamMetaSelect" class="col-sm-2 col-form-label">Parameter and Method</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="oldDRParamMetaSelect" 
+                            :disabled="formDisable"
+                            v-model="oldDR.paramAndMethod" 
+                            :options="oldDR.paramAndMethodList"
+                            label="Name"
+                            >
+                          </v-select>
+                        </div>
+                      </div>
+                      
+                      <div class="form-group row">
+                        <label for="oldDRSelect" class="col-sm-2 col-form-label">Data Record</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="oldDRSelect" 
+                            :disabled="formDisable"
+                            v-model="oldDR.drid" 
+                            :options="oldDR.drlist"
+                            label="name"
+                            :reduce="dr => dr.MetadataID"
+                            >
+                          </v-select>
+                        </div>
+                      </div>
+                    </fieldset>
+                  </form>
+                </div>
+                
+                <div 
+                  id="convert-dr-newdr-pane"
+                  v-if="pane == 'newdr'">
+                  <form id="newdr">
+                      <h3>New Data Set</h3>
+                      <p>Converting data will create a new data record.  Fill in the parameter, method,
+                        and notes you want associated with this new record.</p>
+                      
+                      <div class="form-group row">
+                      
+                        <label for="newdrparameter" class="col-sm-2 col-form-label">Parameter</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="newdrparameter" 
+                            v-model="newDR.ParameterID" 
+                            :options="parameters"
+                            label="Name"
+                            :reduce="pr => pr.ParameterID"
+                            >
+                          </v-select>
+                        </div>
+                      
+                        <label for="newdrmethod" class="col-sm-2 col-form-label">Method</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="newdrmethod" 
+                            v-model="newDR.MethodID" 
+                            :options="methods"
+                            label="Name"
+                            :reduce="md => md.MethodID"
+                            >
+                          </v-select>
+                        </div>
+                        
+                        <label for="newdrnotes" class="col-sm-2 col-form-label">Notes</label>
+                        <div class="col-sm-10">
+                          <textarea
+                            id="newdrnotes"
+                            class="form-control"
+                            rows="3"
+                            v-model="newDR.Notes">
+                          </textarea>
+                        </div>
+                        
+                        
+                      </div>
+                      
+                      <h3>Conversion Table</h3>
+                      <p>This is the conversion table to use to convert between the old and the new data sets.</p>
+                      <div class="form-group row">
+                        <label for="conversionTableSelect" class="col-sm-2 col-form-label">Conversion Table</label>
+                        <div class="col-sm-10">
+                          
+                          <v-select
+                            id="conversionTableSelect" 
+                            :disabled="formDisable"
+                            v-model="ConversionID" 
+                            :options="conversions"
+                            label="ConversionName"
+                            :reduce="con => con.ConversionID"
+                            >
+                          </v-select>
+                        </div>
+                      </div>
+                    
+                  </form>
+                
+                </div>
+                
+                <div 
+                  id="convert-dr-graph-pane"
+                  v-if="pane == 'graph'">
+                
                   <div class="form-group row">
-                    <label for="fromDate" class="col-sm-2 col-form-label">From</label>
-                    <div class="col-sm-10">
-                      <datetime type='datetime' input-class="form-control" input-id="fromDate"
-                        v-model="fromDate" :value-zone="utcZoneString" :zone="utcZoneString"></datetime>
+                    <div id="conversionChartContainer" class="col-12">
+                      <svg 
+                        :width="outsideWidth" 
+                        :height="outsideHeight">
+                        <g :transform="`translate(${margin.left},${margin.top})`">
+                          <g 
+                            v-axis:x="scale" 
+                            :transform="`translate(0,${svgHeight})`">
+                            </g>
+                          <g 
+                            v-axis:y="scale">
+                            </g>
+                          <path 
+                            fill="none" 
+                            stroke="steelblue" 
+                            stroke-width="1.5" 
+                            :d="oldLine" />
+                          <path 
+                            fill="none" 
+                            stroke="orange" 
+                            stroke-width="1.5" 
+                            :d="newLine" />
+                        </g>
+                      </svg>
                     </div>
                   </div>
-                  
-                  <div class="form-group row">
-                    <label for="toDate" class="col-sm-2 col-form-label">To</label>
-                    <div class="col-sm-10">
-                      <datetime type='datetime' input-class="form-control" input-id="toDate"
-                        v-model="toDate" :value-zone="utcZoneString" :zone="utcZoneString"></datetime>
-                    </div>
-                  </div>
-                  
-                  -->
-                  
+                
                   <div class="form-group row">
                     <label for="offset" class="col-sm-2 col-form-label">Offset</label>
                     <div class="col-sm-3">
@@ -207,7 +237,9 @@
                         id="offset"
                         v-model="offset"></input>
                     </div>
+
                     <div class="col-sm-2">&nbsp;</div>
+
                     <label for="drift" class="col-sm-2 col-form-label">Drift</label>
                     <div class="col-sm-3">
                       <input type='number' 
@@ -216,22 +248,30 @@
                         v-model="drift"></input>
                     </div>
                   </div>
-                  
-                  <hr>
-                </fieldset>
-              </form>
-              
-              <div class="form-row">
-                <div class="col-md-6">
-                  <button id="conversion-convert" type="button" class="btn btn-primary"
-                    @click="clickConvert()" :disabled='convertButtonDisable'> {{ convertButtonText }}</button>
+                
                 </div>
                 
-                <div class="col-md-6">
-                  <button id="conversion-cancel" type="button" class="btn btn-secondary float-right" 
-                    @click="cancelConversion()" :disabled="!converting">Cancel</button>
+                <div class="form-row">
+                  <div class="col-md-6">
+                    <button 
+                      id="conversion-convert" 
+                      type="button" 
+                      class="btn btn-primary"
+                      @click="clickConvert()" 
+                      :disabled='convertButtonDisable'> {{ convertButtonText }}
+                    </button>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <button 
+                      id="conversion-cancel" 
+                      type="button" 
+                      class="btn btn-secondary float-right" 
+                      @click="cancelConversion()" 
+                      :disabled="!converting">Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
               
             </div>
 
@@ -244,11 +284,10 @@
                 @click="clickCreate()">Create</button>
               
             </div>
-
           </div>
         </div>
+      </div>
     </div>
-    
     <footer class="footer fixed-bottom">
       <div class="container-fluid">
         <div class="row">

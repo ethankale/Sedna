@@ -27,12 +27,27 @@ var vm = new Vue({
       drid:               null,
       drlist:             []
     },
+    
     newDR: {
-      spid:               null,
-      paramAndMethod:     {},
-      paramAndMethodList: [],
-      drid:               null,
-      drlist:             []
+      MeasurementCount: null,
+      MinDate: null,
+      MaxDate: null,
+      MetadataID: null,
+      ParameterID: null,
+      UnitID: null,
+      SamplePointID: null,
+      Notes: null,
+      MethodID: null,
+      Active: null,
+      FrequencyMinutes: null,
+      DecimalPoints: null,
+      FileName: null,
+      DataStarts: null,
+      DataEnds: null,
+      UserID: null,
+      CreatedOn: null,
+      EquipmentIDSensor: null,
+      EquipmentIDLogger: null,
     },
     
     samplePointList: [],
@@ -47,6 +62,8 @@ var vm = new Vue({
     
     conversions:  [],
     measurements: [],
+    parameters:   [],
+    methods:      [],
     
     nulls:  0,
     valids: 0,
@@ -69,11 +86,15 @@ var vm = new Vue({
       bottom: 30, 
       left: 40
     },
+    
+    pane: 'dr',
   },
   
   mounted: function () {
     this.loadSamplePoints();
     this.loadConversions();
+    this.loadMethods();
+    this.loadParameters();
     this.addResizeListener();
   },
   
@@ -97,19 +118,6 @@ var vm = new Vue({
         });
     },
     
-    newDRspid: function(val) {
-      this.newDR.paramAndMethodList = [];
-      this.newDR.paramAndMethod     = {};
-      
-      this.newDR.drlist = [];
-      this.newDR.drid   = null;
-      
-      this.loadParamsAndMethods(val)
-        .done((data) => {
-          this.newDR.paramAndMethodList = data;
-        });
-    },
-    
     oldParamAndMethod: function(val) {
       this.oldDR.drlist = [];
       this.oldDR.drid   = null;
@@ -125,31 +133,35 @@ var vm = new Vue({
         });
     },
     
-    newParamAndMethod: function(val) {
-      this.newDR.drlist = [];
-      this.newDR.drid   = null;
+    oldDRID: function(val) {
       
-      this.loadMetas(this.newDR)
-        .done((data) => {
-          data.forEach((d) => {
-            let mindt = new Date(d.mindt).toLocaleString();
-            let maxdt = new Date(d.maxdt).toLocaleString();
-            d.name = d.FileName + "; " + mindt + " to " + maxdt;
+      if (val != null) {
+        this.loadDR(val)
+          .done((data) => {
+            this.newDR = data[0];
           });
-          this.newDR.drlist = data;
-        })
-        
+      };
     },
-    
   },
   
   computed: {
     
-    oldDRspid: function() { return this.oldDR.spid },
-    newDRspid: function() { return this.newDR.spid },
+    disableNextButton: function() { 
+      let status = true;
+      if (this.pane === 'dr' && this.oldDR.drid != null) {
+        status = false;
+      } else if (this.pane === 'newdr' && 
+        this.ConversionID != null && 
+        this.newDR.ParameterID != null && 
+        this.newDR.MethodID != null) {
+        status = false;
+      };
+      return status;
+    },
     
+    oldDRspid:         function() { return this.oldDR.spid },
     oldParamAndMethod: function() { return this.oldDR.paramAndMethod },
-    newParamAndMethod: function() { return this.newDR.paramAndMethod },
+    oldDRID:           function() { return this.oldDR.drid },
     
     stepChangePerMinute: function() {
       if (this.drift == 0) {
@@ -272,6 +284,19 @@ var vm = new Vue({
       })
     },
     
+    loadDR: function(drid) {
+      let request = {
+        metadataid: drid,
+        utcoffset: this.utcoffset/60
+      };
+      return $.ajax({
+        url:     `http://localhost:3000/api/v1/metadataDetails`,
+        method:  'GET',
+        timeout: 3000,
+        data:    request
+      })
+    },
+    
     loadConversions: function() {
       $.ajax({
         url: `http://localhost:3000/api/v1/conversionList?active=1`,
@@ -284,6 +309,30 @@ var vm = new Vue({
           this.ConversionID = data[0].ConversionID;
         // Subsequent updates
         }
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    loadParameters: function() {
+      return $.ajax({
+        url: `http://localhost:3000/api/v1/parameterList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.parameters = data;
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    loadMethods: function() {
+      return $.ajax({
+        url: `http://localhost:3000/api/v1/methodList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.methods = data;
       }).fail((err) => {
         console.log(err);
       });
@@ -516,6 +565,23 @@ var vm = new Vue({
       this.nulls = 0;
       this.recordsToOverwrite = 0;
       this.loadErrorCount = 0;
+    },
+    
+    // Navigation methods
+    nextScreen() {
+      if (this.pane === 'dr') {
+        this.pane = 'newdr';
+      } else if (this.pane === 'newdr') {
+        this.pane = 'graph';
+      }
+    },
+    
+    lastScreen() {
+      if (this.pane === 'newdr') {
+        this.pane = 'dr';
+      } else if (this.pane === 'graph') {
+        this.pane = 'newdr';
+      }
     },
     
     // D3 methods
