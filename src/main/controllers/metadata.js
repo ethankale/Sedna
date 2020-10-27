@@ -52,6 +52,7 @@ let controller = {
       var hasDates = req.query.hasOwnProperty('MinDate') && req.query.hasOwnProperty('MaxDate');
       
       // Dates expected in ISO format with time zone
+      // These aren't doing anything right now; need to actually parse the dates.
       var MinDate     = "";
       var MaxDate     = "";
       
@@ -471,7 +472,40 @@ let controller = {
         connection.execSql(request);
         
       });
+    },
+    
+    deleteMetadata: function(req, res) {
+      
+      if (typeof req.query.MetadataID == 'undefined') {
+        res.status(400).json('Must provide a MetadataID to delete measurements.');
+      } else {
+        let mssql_config = cfg.getConfig().mssql;
+        let connection = new Connection(mssql_config);
+        
+        let MetadataID = req.query.MetadataID;
+        
+        connection.on('connect', function(err) {
+          
+          let statement = `DELETE Metadata 
+           WHERE MetadataID = @MetadataID`
+          
+           var request = new Request(statement, function(err, rowCount) {
+             if (err) {
+               res.status(400).json(err);
+               console.log(err);
+             } else {
+               res.status(200).json(MetadataID);
+             }
+             connection.close();
+           });
+          
+          request.addParameter('MetadataID', TYPES.Int, MetadataID);
+          
+          connection.execSql(request);
+        });
+      };
     }
+    
 };
 
 module.exports = controller;

@@ -4,6 +4,7 @@ let Datetime = require('vue-datetime');
 let lx       = require('luxon');
 let d3       = require('d3');
 let utils    = require('./utils.js');
+let _        = require('lodash');
 
 let $          = require('jquery');
 let bootstrap  = require('bootstrap');
@@ -65,6 +66,11 @@ var vm = new Vue({
     parameters:   [],
     methods:      [],
     
+    conflictingMetas: [],
+    
+    minMeasurementDate: lx.DateTime.fromISO('3000-01-01'),
+    maxMeasurementDate: lx.DateTime.fromISO('1000-01-01'),
+    
     nulls:  0,
     valids: 0,
     recordsToOverwrite: 0,
@@ -84,7 +90,7 @@ var vm = new Vue({
       top: 10, 
       right: 30, 
       bottom: 30, 
-      left: 40
+      left: 60
     },
     
     pane: 'dr',
@@ -99,6 +105,21 @@ var vm = new Vue({
   },
   
   watch: {
+    
+    offset: function(val) {
+      if (!isNaN(+val) && isFinite(val) && val !== '') { 
+        this.notificationText = "Working on it...";
+        this.getConvertRecordStats();
+      };
+    },
+    
+    drift: function(val) {
+      if (!isNaN(+val && isFinite(val) && val !== '')) { 
+        this.notificationText = "Working on it...";
+        this.getConvertRecordStats();
+      };
+    },
+    
     measurements: function() {
       this.setSVGWidth();
       this.calculatePathOldVals();
@@ -163,12 +184,22 @@ var vm = new Vue({
     oldParamAndMethod: function() { return this.oldDR.paramAndMethod },
     oldDRID:           function() { return this.oldDR.drid },
     
+  newParamAndMethod: function() {
+    let str = '';
+    if (this.newDR.ParameterID != null && this.newDR.MethodID != null) {
+      let param  = _.find(this.parameters, ['ParameterID', this.newDR.ParameterID]).Name;
+      let method = _.find(this.methods,    ['MethodID',    this.newDR.MethodID]).Name;
+      str = param + " (" + method + ")";
+    }
+    return str;
+  },
+    
     stepChangePerMinute: function() {
       if (this.drift == 0) {
         return 0;
       } else {
-        let luxonFromDate = lx.DateTime.fromISO(this.fromDate);
-        let luxonToDate   = lx.DateTime.fromISO(this.toDate);
+        let luxonFromDate = this.measurements[0].CollectedDTM;
+        let luxonToDate   = this.measurements[this.measurements.length-1].CollectedDTM;
         let m = lx
           .Interval
           .fromDateTimes(luxonFromDate, luxonToDate)
@@ -179,11 +210,8 @@ var vm = new Vue({
     },
     
     convertButtonText: function() {
-      return this.conversionState == 'calculated' ? 'Save' : 'Start';
+      return this.recordsToOverwrite > 0 ? 'Delete' : 'Save';
     },
-    
-    convertButtonDisable: function() { return this.conversionState == 'loading'; },
-    formDisable:          function() { return this.conversionState == 'calculated'; },
     
     utcZoneString: function() {
       return utils.utcOffsetString(this.utcoffset)
@@ -199,13 +227,9 @@ var vm = new Vue({
       return nclass;
     },
     
-    showGraph: function() {
-      return this.measurements.length > 0;
-    },
-    
     // D3 computed elements for the graph
     svgHeight: function() {
-      return Math.floor(this.svgWidth / 2.2);
+      return Math.floor(this.svgWidth / 5);
     },
     
     outsideWidth() {
@@ -216,16 +240,28 @@ var vm = new Vue({
       return this.svgHeight + this.margin.top + this.margin.bottom;
     },
     
-    scale() {
+    scaleNew() {
       const x = d3
         .scaleTime()
         .domain(d3.extent(this.measurements, d => d.jsdate))
         .rangeRound([0, this.svgWidth]);
       
       let extent    = d3.extent(this.measurements, d => d.Value);
-      let extentOld = d3.extent(this.measurements, d => d.FromValue);
-      extent[0] = extentOld[0] < extent[0] ? extentOld[0] : extent[0];
-      extent[1] = extentOld[1] > extent[1] ? extentOld[1] : extent[1];
+      
+      const y = d3
+        .scaleLinear()
+        .domain(extent)
+        .rangeRound([this.svgHeight, 0]);
+      return { x, y };
+    },
+    
+    scaleOld() {
+      const x = d3
+        .scaleTime()
+        .domain(d3.extent(this.measurements, d => d.jsdate))
+        .rangeRound([0, this.svgWidth]);
+      
+      let extent = d3.extent(this.measurements, d => d.OriginalValue);
       
       const y = d3
         .scaleLinear()
@@ -338,13 +374,11 @@ var vm = new Vue({
       });
     },
     
-    getConvertRecordStats: function() {
+    getConvertRecordStats: _.debounce(function() {
       this.conversionState = 'loading';
       let query = {
         'ConversionID': this.ConversionID,
-        'MetadataID':   this.oldDRID,
-        'FromDate':     this.fromDate,
-        'ToDate':       this.toDate
+        'MetadataID':   this.oldDRID
       }
       $.ajax({
         url: `http://localhost:3000/api/v1/conversionStats`,
@@ -366,7 +400,7 @@ var vm = new Vue({
         this.error = true;
         this.notificationText = "Failed to retrieve stats for this data record."
       });
-    },
+    }, 400),
     
     getConvertedMeasurements: function() {
       this.conversionState = 'loading';
@@ -396,13 +430,17 @@ var vm = new Vue({
             .setZone(this.utcZoneString)  // Not strictly necessary, but handy
           d.CollectedDTM = d.jsdate;
           d.DateString = d.CollectedDTM.toString();
-          // d.CollectedDTM = lx.DateTime
-            // .fromJSDate(d.jsdate)
-            // .setZone(utcZS, { keepLocalTime: true });
+          
+          if (d.CollectedDTM < this.minMeasurementDate) {
+            this.minMeasurementDate = d.CollectedDTM;
+          } else if (d.CollectedDTM > this.maxMeasurementDate) {
+            this.maxMeasurementDate = d.CollectedDTM;
+          };
+          
         });
         this.measurements = data;
         this.conversionState = 'calculated';
-        this.getExistingMeasurements();
+        this.getExistingMetadatas();
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -411,20 +449,30 @@ var vm = new Vue({
       });
     },
     
-    getExistingMeasurements: function() {
+    getExistingMetadatas: function() {
       this.conversionState = 'loading';
       let query = {
-        'metaid':   this.newDRID,
-        'startdtm': this.minMeasurementDate.toString(),
-        'enddtm':   this.maxMeasurementDate.toString()
+        spID:        this.newDR.SamplePointID,
+        ParameterID: this.newDR.ParameterID,
+        MethodID:    this.newDR.MethodID,
+        startdtm:    this.minMeasurementDate.toISO(),
+        enddtm:      this.maxMeasurementDate.toISO()
       };
       $.ajax({
-        url: `http://localhost:3000/api/v1/getMeasurementCount`,
+        url: `http://localhost:3000/api/v1/metadataBySPParamMethodDate`,
         data: query,
         method:'GET',
         timeout: 3000
       }).done((data) => {
-        this.recordsToOverwrite = data.measurementCount;
+        
+        this.conflictingMetas = data;
+        
+        let rto = 0;
+        data.forEach((d) => {
+          rto += +d.nmeasures;
+        });
+        
+        this.recordsToOverwrite = rto;
         this.conversionState = 'calculated';
         this.notificationText = `
           ${this.valids} valid measurements to convert; 
@@ -440,25 +488,39 @@ var vm = new Vue({
     
     deleteExistingMeasurements: function() {
       this.notificationText = `Deleting ${this.recordsToOverwrite} measurements...`;
+      
       let query = {
-        'MetadataID': this.newDRID,
-        'MinDtm':     this.fromDate,
-        'MaxDtm':     this.toDate
+        'MetadataID': this.conflictingMetas[0].MetadataID
       };
-      $.ajax({
+      
+      let deleteMeasures = $.ajax({
         url: `http://localhost:3000/api/v1/measurements`,
         contentType: 'application/json',
-        data: JSON.stringify(query),
+        data: query,
         method:'DELETE',
         timeout: 3000
-      }).done((data) => {
-        this.uploadCalculatedMeasurements();
+      })
+      
+      let deleteMetadata = deleteMeasures.then((data) => {
+        return $.ajax({
+          url: `http://localhost:3000/api/v1/metadata`,
+          contentType: 'application/json',
+          data: query,
+          method:'DELETE',
+          timeout: 3000
+        })
+      });
+      
+      deleteMetadata.done((data) => {
+        this.notificationText = `Deleted ${this.recordsToOverwrite} measurements.`;
+        this.getConvertRecordStats();
       }).fail((err) => {
         console.log(err);
         this.error = true;
         this.conversionState = 'initial';
-        this.notificationText = "Error overwriting existing measurements."
+        this.notificationText = "Error deleting existing measurements."
       });
+      
     },
     
     uploadCalculatedMeasurements: function() {
@@ -540,31 +602,13 @@ var vm = new Vue({
     },
     
     clickConvert: function() {
-      if (this.conversionState == 'initial') {
-        this.notificationText = "Starting conversion.";
-        this.converting = true;
-        this.getConvertRecordStats();
-      } else if(this.recordsToOverwrite > 0) {
-        this.converting = false;
-        this.deleteExistingMeasurements();
+      if (this.recordsToOverwrite > 0) {
+        this.notificationText = "Deleting measurements...";
+        $("#deleteModal").modal("show");
+        // this.deleteExistingMeasurements();
       } else {
         this.uploadCalculatedMeasurements();
       }
-    },
-    
-    cancelConversion: function() {
-      this.notificationText = "Cancelled conversion.";
-      this.converting = false;
-      this.conversionState = 'initial';
-      
-      this.measurements = [];
-      this.newLine = '';
-      this.oldLine = '';
-      
-      this.valids = 0;
-      this.nulls = 0;
-      this.recordsToOverwrite = 0;
-      this.loadErrorCount = 0;
     },
     
     // Navigation methods
@@ -573,6 +617,7 @@ var vm = new Vue({
         this.pane = 'newdr';
       } else if (this.pane === 'newdr') {
         this.pane = 'graph';
+        this.getConvertRecordStats();
       }
     },
     
@@ -587,15 +632,15 @@ var vm = new Vue({
     // D3 methods
     
     calculatePathOldVals() {
-      const scale = this.scale;
+      const scale = this.scaleOld;
       const path = d3.line()
         .x(d => scale.x(d.jsdate))
-        .y(d => scale.y(d.FromValue));
+        .y(d => scale.y(d.OriginalValue));
       this.oldLine = path(this.measurements);
     },
     
     calculatePathNewVals() {
-      const scale = this.scale;
+      const scale = this.scaleNew;
       const path = d3.line()
         .x(d => scale.x(d.jsdate))
         .y(d => scale.y(d.Value));

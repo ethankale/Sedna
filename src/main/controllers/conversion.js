@@ -254,8 +254,6 @@ let controller = {
     
     let MetadataID   = req.query.MetadataID;
     let ConversionID = req.query.ConversionID;
-    let FromDate     = new Date(req.query.FromDate);
-    let ToDate       = new Date(req.query.ToDate);
     
     let returndata = {};
     
@@ -269,9 +267,7 @@ let controller = {
         LEFT JOIN ConversionValue as cv
         ON ms.Value = cv.FromValue
         AND cv.ConversionID = @ConversionID
-        WHERE md.MetadataID = @MetadataID
-        AND ms.CollectedDateTime >= @FromDate
-        AND ms.CollectedDateTime <= @ToDate;`;
+        WHERE md.MetadataID = @MetadataID;`;
       
       let request = new Request(statement, function(err, rowCount) {
         if (err) {
@@ -284,8 +280,6 @@ let controller = {
       
       request.addParameter('ConversionID', TYPES.Int, ConversionID);
       request.addParameter('MetadataID',   TYPES.Int, MetadataID);
-      request.addParameter('FromDate',     TYPES.DateTime2, FromDate);
-      request.addParameter('ToDate',       TYPES.DateTime2, ToDate);
       
       request.on('row', function(columns) {
         columns.forEach((column) => {
@@ -303,8 +297,6 @@ let controller = {
     
     let MetadataID   = req.query.MetadataID;
     let ConversionID = req.query.ConversionID;
-    let FromDate     = req.query.FromDate;
-    let ToDate       = req.query.ToDate;
     let Offset       = req.query.Offset;
     let StepChange   = req.query.StepChange;
     
@@ -313,9 +305,16 @@ let controller = {
     connection.on('connect', function(err) {
       
       let statement = `
-        SELECT 
+        DECLARE @StartDate DateTime2;
+        
+        SELECT @StartDate = MIN(CollectedDateTime)
+        FROM Alqwu.dbo.Measurement
+        WHERE Measurement.MetadataID = @MetadataID;
+        
+        SELECT
           cv.ToValue as Value
           ,cv.FromValue as FromValue
+          ,ms.[Value] as OriginalValue
           ,md.[MetadataID]
           ,ms.[QualifierID]
           ,ms.[AddedDate]
@@ -333,12 +332,10 @@ let controller = {
           LEFT JOIN Measurement as ms
           ON md.MetadataID = ms.MetadataID
         LEFT JOIN ConversionValue as cv
-          ON ROUND(ms.Value + @Offset + (DATEDIFF(minute, @FromDate, ms.CollectedDateTime)*@StepChange), 
+          ON ROUND(ms.Value + @Offset + (DATEDIFF(minute, @StartDate, ms.CollectedDateTime)*@StepChange), 
             md.DecimalPoints) = cv.FromValue
           AND cv.ConversionID = @ConversionID
         WHERE md.MetadataID = @MetadataID
-          AND ms.CollectedDateTime >= @FromDate
-          AND ms.CollectedDateTime <= @ToDate
         ORDER BY ms.CollectedDateTime ASC;
       `;
       
@@ -353,8 +350,6 @@ let controller = {
       
       request.addParameter('ConversionID', TYPES.Int, ConversionID);
       request.addParameter('MetadataID',   TYPES.Int, MetadataID);
-      request.addParameter('FromDate',     TYPES.DateTime2, FromDate);
-      request.addParameter('ToDate',       TYPES.DateTime2, ToDate);
       request.addParameter('Offset',       TYPES.Numeric, Offset,     { nullable: false, precision: 18, scale: 6 });
       request.addParameter('StepChange',   TYPES.Numeric, StepChange, { nullable: false, precision: 18, scale: 16 });
       

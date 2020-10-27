@@ -64,6 +64,7 @@ module.exports = function (app) {
     app.get('/api/v1/metadataDetails',             metadata.getMetadataDetails);
     app.put('/api/v1/metadata',                    metadata.updateMetadata);
     app.post('/api/v1/metadata',                   metadata.addMetadata);
+    app.delete('/api/v1/metadata',                 metadata.deleteMetadata);
     
     // Methods
     app.get('/api/v1/methodList',   method.getMethodList);

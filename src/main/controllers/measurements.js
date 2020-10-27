@@ -426,7 +426,7 @@ let controller = {
           
            var request = new Request(statement, function(err, rowCount) {
              if (err) {
-               res.status(400).end();
+               res.status(400).json(err);
                console.log(err);
              } else {
                res.status(200).json("Successfully deleted " + rowCount + " rows.");
