@@ -157,18 +157,18 @@
                     name="endDate">
                   </flat-pickr>
                 </div>
+                
+                <div class="col-2">
+                  <label for="wylist">Water Year</label>
+                  <v-select
+                    id="wylist"
+                    v-model="waterYear"
+                    :options="wylist">
+                  </v-select>
+                </div>
               
-              </form>
-              
-              <div class="col-2">
-                <label for="wylist">Water Year</label>
-                <v-select
-                  id="wylist"
-                  v-model="waterYear"
-                  :options="wylist">
-                </v-select>
               </div>
-            </div>
+            </form>
             
             <div class="row border-top">
               <div id="paramList" class="col-3">
