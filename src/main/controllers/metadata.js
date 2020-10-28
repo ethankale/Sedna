@@ -52,9 +52,6 @@ let controller = {
       var hasDates = typeof req.query.MinDate !== "undefined" && 
                      typeof req.query.MaxDate !== "undefined";
       
-      // console.log(req.query);
-      // console.log(typeof req.query.MinDate);
-      
       // Dates expected in ISO format with time zone
       var MinDate     = "";
       var MaxDate     = "";
@@ -442,22 +439,6 @@ let controller = {
         request.on('row', function(columns) {
           lastid = columns[0].value;
         });
-        
-        // Calculate some values that can't be inserted directly from JSON
-        // let offset       = req.body.UTCOffset;
-        // let offsetstring = offset < 0 ? 'UTC' + offset/60 : 'UTC+' + (offset/60);
-        
-        // let dataStarts = lx.DateTime
-              // .fromISO(req.body.DataStarts)
-              // .setZone(offsetstring)
-              // .setZone('UTC', {keepLocalTime: true })
-              // .toJSDate();
-        
-        // let dataEnds = lx.DateTime
-              // .fromISO(req.body.DataEnds)
-              // .setZone(offsetstring)
-              // .setZone('UTC', {keepLocalTime: true })
-              // .toJSDate();
         
         // NEW APPROACH
         //   Assume all date values are valid ISO strings, including the UTC offset string.

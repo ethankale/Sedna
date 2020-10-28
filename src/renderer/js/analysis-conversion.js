@@ -495,9 +495,6 @@ var vm = new Vue({
       //   to use an object with multiple ajax calls, like for loading measurements.
       
       let metaid = this.conflictingMetas[0].MetadataID;
-      // let query = {
-        // 'MetadataID': this.conflictingMetas[0].MetadataID
-      // };
       
       let deleteMeasures = $.ajax({
         url: `http://localhost:3000/api/v1/measurements?` + $.param({MetadataID: metaid }),
@@ -543,7 +540,6 @@ var vm = new Vue({
         method:      'POST',
         timeout:     3000
       }).done((metadataID) => {
-        // console.log("Loaded " + metadataID + " successfully.");
         
         // Once we have the ID of the new metadata, we load the data
         //   to the database in chunks of 30 at a time.  This keeps us
@@ -564,7 +560,6 @@ var vm = new Vue({
                             'offset': utcoffset,
                             'loadnumber': i/stepSize,
                             'measurements': this.measurements.slice(i, i+stepSize)};
-          //console.log("Starting Post #" + i/stepSize);
           
           calls.push(
             $.ajax({
@@ -575,13 +570,11 @@ var vm = new Vue({
               dataType: 'json',
               timeout: 5000
             }).done((data) => {
-              // console.log("Server says: " + data);
               if (data != 'Success') {
                 errors += dataToLoad.measurements.length;
               } else {
                 successes += dataToLoad.measurements.length;
               }
-              //console.log("Loaded Post #" + i/stepSize);
             }).fail((err) => {
               console.log("Upload failed for Post #" + i/stepSize);
               console.log(err);
@@ -617,10 +610,8 @@ var vm = new Vue({
           };
           this.notificationText = msg;
         });
-        
       });
     },
-    
     
     clickConvert: function() {
       if (this.recordsToOverwrite > 0) {
