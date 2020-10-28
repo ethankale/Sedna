@@ -455,8 +455,8 @@ var vm = new Vue({
         spID:        this.newDR.SamplePointID,
         ParameterID: this.newDR.ParameterID,
         MethodID:    this.newDR.MethodID,
-        startdtm:    this.minMeasurementDate.toISO(),
-        enddtm:      this.maxMeasurementDate.toISO()
+        MinDate:     this.minMeasurementDate.toISO(),
+        MaxDate:     this.maxMeasurementDate.toISO()
       };
       $.ajax({
         url: `http://localhost:3000/api/v1/metadataBySPParamMethodDate`,

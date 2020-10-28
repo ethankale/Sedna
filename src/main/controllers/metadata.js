@@ -49,10 +49,13 @@ let controller = {
       var ParameterID = req.query.ParameterID;
       var MethodID    = req.query.MethodID;
       
-      var hasDates = req.query.hasOwnProperty('MinDate') && req.query.hasOwnProperty('MaxDate');
+      var hasDates = typeof req.query.MinDate !== "undefined" && 
+                     typeof req.query.MaxDate !== "undefined";
+      
+      // console.log(req.query);
+      // console.log(typeof req.query.MinDate);
       
       // Dates expected in ISO format with time zone
-      // These aren't doing anything right now; need to actually parse the dates.
       var MinDate     = "";
       var MaxDate     = "";
       
@@ -75,9 +78,11 @@ let controller = {
               md.CreatedOn, md.FileName
           `
           if (hasDates) {
+            MinDate = req.query.MinDate;
+            MaxDate = req.query.MaxDate;
             statement += `
-              HAVING MIN(mt.CollectedDateTime) <= @MaxDate 
-              AND MAX(mt.CollectedDateTime) >= @MinDate
+              HAVING NOT (@MinDate > MAX(mt.CollectedDateTime)
+                OR @MaxDate < MIN(mt.CollectedDateTime))
             `
           }
           
