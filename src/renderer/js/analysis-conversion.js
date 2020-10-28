@@ -534,6 +534,8 @@ var vm = new Vue({
         this.error = true;
         this.conversionState = 'initial';
         this.notificationText = "Error deleting existing measurements."
+      }).always(() => {
+        $("#deleteModal").modal('hide');
       });
       
     },
