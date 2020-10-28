@@ -489,23 +489,27 @@ var vm = new Vue({
     deleteExistingMeasurements: function() {
       this.notificationText = `Deleting ${this.recordsToOverwrite} measurements...`;
       
-      let query = {
-        'MetadataID': this.conflictingMetas[0].MetadataID
-      };
+      // This assumes that there is only one conflicting metadata, ever.
+      //   99% of the time this will be true.  It is possible that sometimes
+      //   it will not be true.  In those cases we'll have to update this logic
+      //   to use an object with multiple ajax calls, like for loading measurements.
+      
+      let metaid = this.conflictingMetas[0].MetadataID;
+      // let query = {
+        // 'MetadataID': this.conflictingMetas[0].MetadataID
+      // };
       
       let deleteMeasures = $.ajax({
-        url: `http://localhost:3000/api/v1/measurements`,
+        url: `http://localhost:3000/api/v1/measurements?` + $.param({MetadataID: metaid }),
         contentType: 'application/json',
-        data: query,
         method:'DELETE',
         timeout: 3000
       })
       
       let deleteMetadata = deleteMeasures.then((data) => {
         return $.ajax({
-          url: `http://localhost:3000/api/v1/metadata`,
+          url: `http://localhost:3000/api/v1/metadata?` + $.param({MetadataID: metaid }),
           contentType: 'application/json',
-          data: query,
           method:'DELETE',
           timeout: 3000
         })
@@ -524,82 +528,99 @@ var vm = new Vue({
     },
     
     uploadCalculatedMeasurements: function() {
-      this.notificationText = `Uploading ${this.measurements.length} measurements...`;
-      this.conversionState = 'loading';
-      let errors        = 0;
-      let successes     = 0;
-      let stepSize      = 30;    // The max number of rows to bulk insert.
-      for (let i=0; i<this.measurements.length; i+=stepSize) {
-        let dataToLoad = {'metaid': this.newDRID,
-                          'offset': this.utcoffset,
-                          'loadnumber': i/stepSize,
-                          'measurements': this.measurements.slice(i, i+stepSize)};
-        //console.log("Starting Post #" + i/stepSize);
-        
-        $.ajax({
-          type: 'POST',
-          url: 'http://localhost:3000/api/v1/measurements',
-          contentType: 'application/json',
-          data: JSON.stringify(dataToLoad),
-          dataType: 'json',
-          timeout: 5000
-        }).done((data) => {
-          console.log("Server says: " + data);
-          if (data != 'Success') {
-            errors += dataToLoad.measurements.length;
-          } else {
-            successes += dataToLoad.measurements.length;
-          }
-          //console.log("Loaded Post #" + i/stepSize);
-        }).fail((err) => {
-          console.log("Upload failed for Post #" + i/stepSize);
-          console.log(err);
-          errors += dataToLoad.measurements.length;
-        }).always(() => {
-          this.notificationText = (`
-            ${errors} errors and 
-            ${successes} successes so far of 
-            ${this.measurements.length} values to load...`);
-          this.error = errors > 0 ? true : false;
-          if (errors + successes == this.measurements.length) {
-            this.conversionState = 'initial';
-            this.notificationText = `Loaded ${successes} measurements; failed to load ${errors}.`;
-            
-            this.setWorkup()
-            .always((data) => {
-              this.measurements = [];
-              this.newLine = '';
-              this.oldLine = '';
-              
-              this.valids = 0;
-              this.nulls = 0;
-              this.recordsToOverwrite = 0;
-              this.loadErrorCount = 0;
-            });
-            
-          };
-        }); 
-      };
-    },
-    
-    setWorkup(headerWithMeta) {
-      let dataToLoad = {
-        FileName:   "Calculated",
-        MetadataID: this.newDRID,
-        UserID:     window.getConfig().userid,
-        offset:     this.utcoffset,
-        DataStarts: this.minMeasurementDate,
-        DataEnds:   this.maxMeasurementDate
-      };
-      return $.ajax({
-        type:        'POST',
-        url:         'http://localhost:3000/api/v1/workup',
+      
+      let utcoffset = this.measurements[0].CollectedDTMOffset;
+      
+      // Fill in all the metadata info that is specific to this file & not automatic
+      this.newDR.FileName      = "Derived from " + this.newDR.FileName;
+      this.newDR.UserID        = window.getConfig().userid;
+      // this.newDR.UTCOffset     = utcoffset;
+      
+      $.ajax({
+        url:         `http://localhost:3000/api/v1/metadata`,
+        data:        JSON.stringify(this.newDR),
         contentType: 'application/json',
-        data:        JSON.stringify(dataToLoad),
-        dataType:    'json',
+        method:      'POST',
         timeout:     3000
+      }).done((metadataID) => {
+        // console.log("Loaded " + metadataID + " successfully.");
+        
+        // Once we have the ID of the new metadata, we load the data
+        //   to the database in chunks of 30 at a time.  This keeps us
+        //   from overloading the call and timing out, and allows us
+        //   to provide feedback to the user about how much data has been 
+        //   loaded during the upload.
+        
+        let calls             = [];
+        
+        this.notificationText = `Uploading ${this.measurements.length} measurements...`;
+        this.conversionState  = 'loading';
+        let errors            = 0;
+        let successes         = 0;
+        let stepSize          = 30;    // The max number of rows to bulk insert.
+        
+        for (let i=0; i<this.measurements.length; i+=stepSize) {
+          let dataToLoad = {'metaid': metadataID,
+                            'offset': utcoffset,
+                            'loadnumber': i/stepSize,
+                            'measurements': this.measurements.slice(i, i+stepSize)};
+          //console.log("Starting Post #" + i/stepSize);
+          
+          calls.push(
+            $.ajax({
+              type: 'POST',
+              url: 'http://localhost:3000/api/v1/measurements',
+              contentType: 'application/json',
+              data: JSON.stringify(dataToLoad),
+              dataType: 'json',
+              timeout: 5000
+            }).done((data) => {
+              // console.log("Server says: " + data);
+              if (data != 'Success') {
+                errors += dataToLoad.measurements.length;
+              } else {
+                successes += dataToLoad.measurements.length;
+              }
+              //console.log("Loaded Post #" + i/stepSize);
+            }).fail((err) => {
+              console.log("Upload failed for Post #" + i/stepSize);
+              console.log(err);
+              errors += dataToLoad.measurements.length;
+            }).always(() => {
+              
+              this.notificationText = (`
+                ${errors} errors and 
+                ${successes} successes so far of 
+                ${this.measurements.length} values to load...`);
+                
+              this.error = errors > 0 ? true : false;
+              
+              if (errors + successes == this.measurements.length) {
+                let nprocessed = errors + successes;
+                this.notificationText = `Processed ${nprocessed}; ${errors} errors and ${successes} successes.`;
+              };
+              
+            })
+          );
+        };
+        
+        Promise.all(calls)
+        .then((result) => {
+          let msg = "Done!";
+          if (errors > 0) {
+            msg = "Loading complete.  Encountered errors with " +
+              errors + " records out of " +
+              (errors + successes);
+          } else {
+            msg = "Loading complete.  Successfully loaded " +
+              successes + " records.";
+          };
+          this.notificationText = msg;
+        });
+        
       });
     },
+    
     
     clickConvert: function() {
       if (this.recordsToOverwrite > 0) {

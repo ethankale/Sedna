@@ -409,6 +409,8 @@ let controller = {
       
       let lastid     = 0;
       
+      console.log(req.body);
+      
       connection.on('connect', function(err) {
         
         let active = req.body.Active;
@@ -442,20 +444,24 @@ let controller = {
         });
         
         // Calculate some values that can't be inserted directly from JSON
-        let offset       = req.body.UTCOffset;
-        let offsetstring = offset < 0 ? 'UTC' + offset/60 : 'UTC+' + (offset/60);
+        // let offset       = req.body.UTCOffset;
+        // let offsetstring = offset < 0 ? 'UTC' + offset/60 : 'UTC+' + (offset/60);
         
-        let dataStarts = lx.DateTime
-              .fromISO(req.body.DataStarts)
-              .setZone(offsetstring)
-              .setZone('UTC', {keepLocalTime: true })
-              .toJSDate();
+        // let dataStarts = lx.DateTime
+              // .fromISO(req.body.DataStarts)
+              // .setZone(offsetstring)
+              // .setZone('UTC', {keepLocalTime: true })
+              // .toJSDate();
         
-        let dataEnds = lx.DateTime
-              .fromISO(req.body.DataEnds)
-              .setZone(offsetstring)
-              .setZone('UTC', {keepLocalTime: true })
-              .toJSDate();
+        // let dataEnds = lx.DateTime
+              // .fromISO(req.body.DataEnds)
+              // .setZone(offsetstring)
+              // .setZone('UTC', {keepLocalTime: true })
+              // .toJSDate();
+        
+        // NEW APPROACH
+        //   Assume all date values are valid ISO strings, including the UTC offset string.
+        //   This should be pretty easy to do using Luxon.
         
         // Add parameters
         request.addParameter('samplePointID',     TYPES.Int,       req.body.SamplePointID);
@@ -468,8 +474,8 @@ let controller = {
         request.addParameter('active',            TYPES.Bit,       active);
         request.addParameter('graphTypeID',       TYPES.Int,       req.body.GraphTypeID);
         request.addParameter('fileName',          TYPES.VarChar,   req.body.FileName);
-        request.addParameter('dataStarts',        TYPES.DateTime2, dataStarts, { nullable: false, scale: 0 });
-        request.addParameter('dataEnds',          TYPES.DateTime2, dataEnds,   { nullable: false, scale: 0 });
+        request.addParameter('dataStarts',        TYPES.VarChar,   req.body.DataStarts);
+        request.addParameter('dataEnds',          TYPES.VarChar,   req.body.DataEnds);
         request.addParameter('userID',            TYPES.Int,       req.body.UserID);
         request.addParameter('equipmentIDSensor', TYPES.Int,       req.body.EquipmentIDSensor);
         request.addParameter('equipmentIDLogger', TYPES.Int,       req.body.EquipmentIDLogger);
