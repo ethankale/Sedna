@@ -593,7 +593,7 @@ var vm = new Vue({
 });
 
 $(document).ready(function() {
-    $("#downloadParameterSelect").select2({ width: '100%' });
+    // $("#downloadParameterSelect").select2({ width: '100%' });
     $("#spSelect").select2({ 
       width:       '100%', 
       placeholder: 'Select a Sample Point'
