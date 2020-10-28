@@ -65,6 +65,7 @@ var vm = new Vue({
     measurements: [],
     parameters:   [],
     methods:      [],
+    units:        [],
     
     conflictingMetas: [],
     
@@ -101,6 +102,7 @@ var vm = new Vue({
     this.loadConversions();
     this.loadMethods();
     this.loadParameters();
+    this.loadUnits();
     this.addResizeListener();
   },
   
@@ -369,6 +371,18 @@ var vm = new Vue({
         timeout: 3000
       }).done((data) => {
         this.methods = data;
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
+    loadUnits: function() {
+      return $.ajax({
+        url: `http://localhost:3000/api/v1/unitList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.units = data;
       }).fail((err) => {
         console.log(err);
       });

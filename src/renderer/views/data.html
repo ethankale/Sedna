@@ -179,7 +179,8 @@
                     @click="clickParameter(param, $event)"
                     class="list-group-item list-group-item-action py-0"
                     v-bind:class="{active: param.active}"
-                    data-toggle="tooltip" v-tooltip:right="param.Method" >
+                    data-toggle="tooltip" 
+                    v-tooltip:right="param.Method" >
                     <p>
                       <strong>{{ param.Name }}</strong>
                       <br>

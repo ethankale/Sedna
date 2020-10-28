@@ -181,6 +181,18 @@
                             >
                           </v-select>
                         </div>
+                      
+                        <label for="newdrunit" class="col-sm-2 col-form-label">Unit</label>
+                        <div class="col-sm-10">
+                          <v-select
+                            id="newdrunit" 
+                            v-model="newDR.UnitID" 
+                            :options="units"
+                            label="Symbol"
+                            :reduce="un => un.UnitID"
+                            >
+                          </v-select>
+                        </div>
                         
                         <label for="newdrnotes" class="col-sm-2 col-form-label">Notes</label>
                         <div class="col-sm-10">
