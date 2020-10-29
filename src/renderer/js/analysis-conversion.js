@@ -76,9 +76,6 @@ var vm = new Vue({
     valids: 0,
     recordsToOverwrite: 0,
     
-    converting: false,
-    // initial -> loading -> calculated -> loaded
-    conversionState: 'initial',
     error: false,
     loadErrorCount: 0,
     notificationText: `Select source and destination data records, and a conversion table.`,
@@ -389,7 +386,6 @@ var vm = new Vue({
     },
     
     getConvertRecordStats: _.debounce(function() {
-      this.conversionState = 'loading';
       let query = {
         'ConversionID': this.ConversionID,
         'MetadataID':   this.oldDRID
@@ -406,7 +402,6 @@ var vm = new Vue({
           this.notificationText = `Stats calculated; running conversion...`;
           this.getConvertedMeasurements();
         } else {
-          this.conversionState = 'initial';
           this.notificationText = 'No records found matching that date range and conversion table.'
         }
       }).fail((err) => {
@@ -417,7 +412,6 @@ var vm = new Vue({
     }, 400),
     
     getConvertedMeasurements: function() {
-      this.conversionState = 'loading';
       let query = {
         'MetadataID':   this.oldDRID,
         'ConversionID': this.ConversionID,
@@ -453,18 +447,15 @@ var vm = new Vue({
           
         });
         this.measurements = data;
-        this.conversionState = 'calculated';
         this.getExistingMetadatas();
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.conversionState = 'initial';
         this.notificationText = "Error attempting to convert old measurements to new."
       });
     },
     
     getExistingMetadatas: function() {
-      this.conversionState = 'loading';
       let query = {
         spID:        this.newDR.SamplePointID,
         ParameterID: this.newDR.ParameterID,
@@ -487,7 +478,6 @@ var vm = new Vue({
         });
         
         this.recordsToOverwrite = rto;
-        this.conversionState = 'calculated';
         this.notificationText = `
           ${this.valids} valid measurements to convert; 
           ${this.nulls} non-matching records; and
@@ -495,7 +485,6 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.conversionState = 'initial';
         this.notificationText = "Error finding number of existing measurements to overwrite."
       });
     },
@@ -532,7 +521,6 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.conversionState = 'initial';
         this.notificationText = "Error deleting existing measurements."
       }).always(() => {
         $("#deleteModal").modal('hide');
@@ -566,7 +554,6 @@ var vm = new Vue({
         let calls             = [];
         
         this.notificationText = `Uploading ${this.measurements.length} measurements...`;
-        this.conversionState  = 'loading';
         let errors            = 0;
         let successes         = 0;
         let stepSize          = 30;    // The max number of rows to bulk insert.
