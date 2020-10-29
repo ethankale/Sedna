@@ -66,6 +66,7 @@ var vm = new Vue({
     parameters:   [],
     methods:      [],
     units:        [],
+    dboptions:    [],
     
     conflictingMetas: [],
     
@@ -102,6 +103,7 @@ var vm = new Vue({
     this.loadMethods();
     this.loadParameters();
     this.loadUnits();
+    this.loadOptions();
     this.addResizeListener();
   },
   
@@ -389,6 +391,19 @@ var vm = new Vue({
       });
     },
     
+    
+    loadOptions: function() {
+      return $.ajax({
+        url: `http://localhost:3000/api/v1/dboptionList`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.dboptions = data;
+      }).fail((err) => {
+        console.log(err);
+      });
+    },
+    
     getConvertRecordStats: _.debounce(function() {
       let query = {
         'ConversionID': this.ConversionID,
@@ -626,7 +641,6 @@ var vm = new Vue({
       if (this.recordsToOverwrite > 0) {
         this.notificationText = "Deleting measurements...";
         $("#deleteModal").modal("show");
-        // this.deleteExistingMeasurements();
       } else {
         this.uploadCalculatedMeasurements();
       }

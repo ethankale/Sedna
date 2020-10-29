@@ -1,6 +1,7 @@
 "use strict";
 
 const conversion          = require('../controllers/conversion.js');
+const dboption            = require('../controllers/dboption.js');
 const equipment           = require('../controllers/equipment.js');
 const equipmentModel      = require('../controllers/equipmentModel.js');
 const graphType           = require('../controllers/graphType.js');
@@ -30,6 +31,9 @@ module.exports = function (app) {
     
     app.get('/api/v1/conversionStats',     conversion.conversionStats);
     app.get('/api/v1/convertMeasurements', conversion.convertMeasurements);
+    
+    // Database Options (database-wide, not user-specific)
+    app.get('/api/v1/dboptionList', dboption.getOptionList);
     
     // Equipment
     app.get('/api/v1/equipmentList', equipment.getEquipmentList);

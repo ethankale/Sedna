@@ -858,6 +858,7 @@ INSERT INTO [Alqwu].[dbo].[Conversion]
   (ConversionName, Active, Description)
 SELECT DISTINCT Rating_Number, 1, Notes
 FROM [GDATA].[dbo].[tblFlowRating_Stats]
+GO
 
 /* Insert conversion values from rating values */
 INSERT INTO [Alqwu].[dbo].[ConversionValue]
@@ -869,5 +870,12 @@ SELECT acf.ConversionID, WaterLevel + Offset, Discharge
   ON gfr.RatingNumber = gfrs.Rating_Number
   LEFT JOIN Alqwu.dbo.Conversion as acf
   ON gfr.RatingNumber = acf.ConversionName
+GO 
+
+INSERT INTO [Alqwu].[dbo].[DBOption] (Name, ValueInt)
+VALUES ('Discharge_ParameterID', 1548), 
+  ('Discharge_MethodID', 1499),
+  ('CFS_UnitID', 7)
+GO
 
 

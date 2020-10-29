@@ -1,3 +1,5 @@
+// This is for user-specific configuration values.
+//   The DBOption table holds the database-wide configuration values.
 
 const { readFileSync } = require('fs')
 const { app }          = require('electron');
