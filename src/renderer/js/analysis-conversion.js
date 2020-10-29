@@ -76,6 +76,8 @@ var vm = new Vue({
     valids: 0,
     recordsToOverwrite: 0,
     
+    disableSave: true,
+    
     error: false,
     loadErrorCount: 0,
     notificationText: `Select source and destination data records, and a conversion table.`,
@@ -107,6 +109,7 @@ var vm = new Vue({
     
     offset: function(val) {
       if (!isNaN(+val) && isFinite(val) && val !== '') { 
+        this.disableSave = true;
         this.notificationText = "Working on it...";
         this.getConvertRecordStats();
       };
@@ -114,6 +117,7 @@ var vm = new Vue({
     
     drift: function(val) {
       if (!isNaN(+val && isFinite(val) && val !== '')) { 
+        this.disableSave = true;
         this.notificationText = "Working on it...";
         this.getConvertRecordStats();
       };
@@ -482,6 +486,8 @@ var vm = new Vue({
           ${this.valids} valid measurements to convert; 
           ${this.nulls} non-matching records; and
           ${this.recordsToOverwrite} records to write over (delete and replace).`;
+          
+        this.disableSave = false;
       }).fail((err) => {
         console.log(err);
         this.error = true;
@@ -631,6 +637,7 @@ var vm = new Vue({
       if (this.pane === 'dr') {
         this.pane = 'newdr';
       } else if (this.pane === 'newdr') {
+        this.disableSave = true;
         this.pane = 'graph';
         this.getConvertRecordStats();
       }
