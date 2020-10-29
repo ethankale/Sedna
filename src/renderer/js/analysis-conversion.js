@@ -646,10 +646,37 @@ var vm = new Vue({
       }
     },
     
+    setStageDischargeDefaults() {
+      let sdParamID  = _.find(this.dboptions, ['Name', 'Discharge_ParameterID']).ValueInt;
+      let sdMethodID = _.find(this.dboptions, ['Name', 'Discharge_MethodID']).ValueInt;
+      let sdUnitID   = _.find(this.dboptions, ['Name', 'CFS_UnitID']).ValueInt;
+      
+      console.log("sdParamID" + sdParamID);
+      console.log("sdMethodID" + sdMethodID);
+      console.log("sdUnitID" + sdUnitID);
+      
+      if (typeof _.find(this.parameters, ['ParameterID', sdParamID]) !== 'undefined') {
+        this.newDR.ParameterID = sdParamID;
+      };
+      if (typeof _.find(this.methods, ['MethodID', sdMethodID]) !== 'undefined') {
+        this.newDR.MethodID = sdMethodID;
+      };
+      if (typeof _.find(this.units, ['UnitID', sdUnitID]) !== 'undefined') {
+        this.newDR.UnitID = sdUnitID;
+      };
+      
+    },
+    
     // Navigation methods
     nextScreen() {
       if (this.pane === 'dr') {
-        this.pane = 'newdr';
+        try { 
+          this.setStageDischargeDefaults();
+        } catch (error) {
+          console.log(error);
+        } finally {
+          this.pane = 'newdr';
+        };
       } else if (this.pane === 'newdr') {
         this.disableSave = true;
         this.pane = 'graph';
