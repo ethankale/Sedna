@@ -138,48 +138,71 @@ GO
 3261 is the id for the 'stage' parameter
 1522 is the id for the 'recording piezometer' method
 12 is the id for the 'feet' unit
-*/
-INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, MethodID, UnitID, Active, FrequencyMinutes)
-SELECT G_ID, 3261, 1522, 12, 1, 15
-FROM GDATA.dbo.tblDischargeGauging
-GROUP BY G_ID
-GO
 
-/* Insert stage workups */
-INSERT INTO Alqwu.dbo.Workup 
-  WITH (TABLOCK) 
-  (MetadataID, FileName, DataStarts, DataEnds, LoadedOn, UserID)
-SELECT DISTINCT amd.MetadataID, FileName, Start_Time, End_Time, AutoDTStamp, WorkedUp_By
-FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu
-  LEFT JOIN Alqwu.dbo.Metadata as amd
-  ON gwu.G_ID = amd.SamplePointID
-WHERE amd.ParameterID = 3261
-  AND amd.MethodID = 1522
+  This uses existing workups as metadata records.
+  
+  Works as follows: start by selecting workups from GData.  Since in GData all
+  workups are saved, a single measurement might have multiple associated 
+  workups if a user uploaded a file multiple times (deleting the last set 
+  of uploaded measurements each time).
+  
+  This query addresses that by selecting only the most recent workup 
+  using a pair of common table expression (cte).  The first checks whether
+  the start date and G_ID are identical; the second checks whether the end date
+  and G_ID are identical.  It works that way because sometimes a user tweaked the
+  start or end date of a file during upload.  This way it's much less likely
+  that you'll get overlapping metadata records.
+  
+  
+ */
+WITH gd_rows AS (
+  SELECT G_ID as SamplePointID, 3261 as ParameterID, 12 as UnitID, gwu.Comments as Notes, 
+    1522 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
+    FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
+    WorkUpDate as CreatedOn,
+    ROW_NUMBER() OVER (
+      PARTITION BY G_ID, FileName
+      ORDER BY WorkUpDate DESC) AS RowNum
+  FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu )
+INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, UnitID, Notes,
+  MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
+  FileName, DataStarts, DataEnds, UserID,
+  CreatedOn)
+SELECT SamplePointID, ParameterID, UnitID, Notes,
+  MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
+  FileName, DataStarts, DataEnds, UserID,
+  CreatedOn 
+FROM gd_rows
+WHERE RowNum = 1
 GO
 
 /* Insert stage measurements 
-   It is vital that: 
-   1) there are no indexes on the Measurements table, and
-   2) the WITH (TABLOCK) statement is used.  Together, these minimize logging.
-   Otherwise, the transaction log can fill up while inserting millions of rows,
-   causing insert failure.  The alternative (batching) is abysmally slow.
+  This only inserts data with matching metadata, which means there will
+  be gaps.
+  
+  You will have to manually review the data for gaps, and re-upload it from
+  GData if it's missing.
+  
 */
 INSERT INTO Alqwu.dbo.Measurement 
   WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, QualifierID, Provisional)
-SELECT amd.MetadataID, D_TimeDate, -480, D_Stage, 
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Provisional, Symbol, QualifierID)
+SELECT amd.MetadataID, 
+  dateadd(hour, D_UTCOffset, D_TimeDate) as CollectedDTM, -480 as CollectedDTMOffset, 
+  D_Stage as Value, D_Provisional as Provisional, '=' as Symbol,
   CASE 
-	WHEN abs([D_Warning]) > 0 THEN 10 
-	WHEN abs([D_Est]) > 0 THEN 17 
-	ELSE NULL END 
-	as QualifierID,
-    D_Provisional
+  WHEN abs([D_Warning]) > 0 THEN 10 
+  WHEN abs([D_Est]) > 0 THEN 17 
+  ELSE NULL END 
+  as QualifierID
 FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
-LEFT JOIN Alqwu.dbo.Metadata as amd
+  LEFT JOIN Alqwu.dbo.Metadata as amd
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3261
   AND amd.MethodID = 1522
-ORDER BY D_TimeDate
+  AND dateadd(hour,8,amd.DataEnds) >= gdg.D_TimeDate
+  AND dateadd(hour,8,amd.DataStarts) <= gdg.D_TimeDate
+WHERE MetadataID IS NOT NULL
 GO
 
 /* Insert discharge metadata 
