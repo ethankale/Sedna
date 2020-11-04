@@ -159,21 +159,27 @@ WITH gd_rows AS (
   SELECT G_ID as SamplePointID, 3261 as ParameterID, 12 as UnitID, gwu.Comments as Notes, 
     1522 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
     FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
-    WorkUpDate as CreatedOn,
+    WorkUpDate as CreatedOn, SensorOffset as CorrectionOffset, SensorCorrLog as CorrectionStepChange,
     ROW_NUMBER() OVER (
-      PARTITION BY G_ID, FileName
+      PARTITION BY G_ID, Start_Time
       ORDER BY WorkUpDate DESC) AS RowNum
-  FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu )
+  FROM [GDATA].[dbo].[tblFlowWorkUpStageTracker] as gwu ),
+  gd_rows2 AS (
+  SELECT *,
+    ROW_NUMBER() OVER (
+      PARTITION BY SamplePointID, DataEnds
+      ORDER BY CreatedOn DESC) AS RowNum2
+  FROM gd_rows as gwu )
 INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, UnitID, Notes,
   MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
   FileName, DataStarts, DataEnds, UserID,
-  CreatedOn)
+  CreatedOn, CorrectionOffset, CorrectionStepChange)
 SELECT SamplePointID, ParameterID, UnitID, Notes,
   MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
   FileName, DataStarts, DataEnds, UserID,
-  CreatedOn 
-FROM gd_rows
-WHERE RowNum = 1
+  CreatedOn, CorrectionOffset, CorrectionStepChange 
+FROM gd_rows2
+WHERE RowNum = 1 and RowNum2 = 1
 GO
 
 /* Insert stage measurements 

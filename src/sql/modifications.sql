@@ -149,3 +149,10 @@ GO
 
 DROP TABLE WorkupUserRole
 GO
+
+ALTER TABLE Alqwu.dbo.Metadata
+ADD [CorrectionOffset] [numeric](18, 6) NULL,
+    [CorrectionDrift] [numeric](18, 6) NULL,
+    [CorrectionStepChange] [numeric](18, 6) NULL
+GO
+
