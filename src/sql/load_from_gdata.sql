@@ -1099,6 +1099,7 @@ SELECT acf.ConversionID, WaterLevel + Offset, Discharge
   ON gfr.RatingNumber = acf.ConversionName
 GO 
 
+/* These options control the default selections during conversions */
 INSERT INTO [Alqwu].[dbo].[DBOption] (Name, ValueInt)
 VALUES ('Discharge_ParameterID', 1548), 
   ('Discharge_MethodID', 1499),
