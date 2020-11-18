@@ -61,8 +61,8 @@ window.setConfig = function(config) {
 };
 
 // PDF Reports
-window.makePDF = function(title, subtitle, table, svg) {
-  let defaultPath = window.getConfig().userDefaultPath;
+window.makePDF = function(title, subtitle, table, svg, filename) {
+  let defaultPath = window.getConfig().userDefaultPath + "/" + filename + ".pdf";
   // console.log(defaultPath);
   
   let path = dialog.showSaveDialogSync({

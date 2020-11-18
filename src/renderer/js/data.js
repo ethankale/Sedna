@@ -12,10 +12,11 @@ let Vue        = require('vue');
 // let dataload   = require('./dataload.js');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
+let sanitize   = require('sanitize-filename');
 
-import vSelect           from "vue-select";
-import flatPickr         from "vue-flatpickr-component";
-import DataLoad          from "./data-load.vue";
+import vSelect           from 'vue-select';
+import flatPickr         from 'vue-flatpickr-component';
+import DataLoad          from './data-load.vue';
 import DataMetadataModal from './data-metadata-modal.vue';
 
 let $          = require('jquery');
@@ -226,8 +227,9 @@ var vm = new Vue({
         let siteName = _.filter(this.samplePoints, ['SamplePointID', this.spID])[0]['Name']
         let subtitle = this.paramDetails.Name + " | " + this.waterYear;
         let svg      = $("#chartContainer svg")[0];
+        let filename = sanitize(siteName + ' ' + subtitle);
         
-        window.makePDF(siteName, subtitle, table, svg);
+        window.makePDF(siteName, subtitle, table, svg, filename);
         this.graphMeasurements();
     },
     
