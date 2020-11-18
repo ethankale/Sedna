@@ -102,16 +102,18 @@ var vm = new Vue({
   computed: {
     
     disableReport: function() {
-      return this.spID === null || this.waterYears.length !== 1
+      return this.spID === null || 
+      this.waterYears.length !== 1 || 
+      this.waterYear === undefined
     },
     
-    siteID: function() {
-      let siteid = null;
-      if (this.samplePoints.length > 0) {
-        siteid = this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
-      };
-      return siteid;
-    },
+    // siteID: function() {
+      // let siteid = null;
+      // if (this.samplePoints.length > 0) {
+        // siteid = this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
+      // };
+      // return siteid;
+    // },
     
     config: function() {
       return window.getConfig();
@@ -221,9 +223,8 @@ var vm = new Vue({
       this.graphMeasurements(1000);
         
         let table    = this.dailyFormatted;
-        let siteName = $("#spSelect :selected").text();
-        let subtitle = $(".list-group-item.list-group-item-action.active h5").text() + " | " +
-                       this.waterYear;
+        let siteName = _.filter(this.samplePoints, ['SamplePointID', this.spID])[0]['Name']
+        let subtitle = this.paramDetails.Name + " | " + this.waterYear;
         let svg      = $("#chartContainer svg")[0];
         
         window.makePDF(siteName, subtitle, table, svg);

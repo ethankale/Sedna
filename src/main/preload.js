@@ -130,7 +130,7 @@ window.makePDF = function(title, subtitle, table, svg) {
       row.y = row.day*lineheight;
       maxY  = maxY < row.y ? row.y : maxY;
       
-      row.valString = row.Value.toFixed(2).padStart(cellchars, " ");
+      row.valString = row.Value === null ? "" : row.Value.toFixed(2).padStart(cellchars, " ");
       
       doc.text(row.valString, row.x+marginleft, row.y+titley, 
         {align:'left', lineBreak: false});
