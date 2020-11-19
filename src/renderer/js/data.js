@@ -30,15 +30,6 @@ let paramMarkup   = "";
 let wycurrent    = 0;
 let wymarkup     = "";
 
-// This directive makes Vue work with Bootstrap's tooltip functionality
-Vue.directive('tooltip', function(el, binding){
-  $(el).tooltip({
-    title: binding.value,
-    placement: binding.arg,
-    trigger: 'hover'
-  });
-});
-
 var vm = new Vue({
   el: '#everythingContainer',
   
