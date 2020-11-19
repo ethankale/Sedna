@@ -121,6 +121,8 @@ var vm = new Vue({
         .minus({ days:1 })
         .setZone('UTC');
       
+      // The idea here is to insert nulls where there are gaps in the days,
+      //   so that continuous records show a break where there's missing data
       this.dailySummary.forEach((d,i,arr) => {
         let dt          = lx.DateTime.fromISO(d.CollectedDate).setZone('UTC');
         let diff        = dt.diff(dtOld, 'days').days;
@@ -261,9 +263,6 @@ var vm = new Vue({
       this.wylist = waterYearList;
       this.waterYear = waterYearList[waterYearList-1];
       
-      console.log(waterYearList);
-      console.log(this.waterYear);
-      
       this.updateDates();
     },
     
@@ -370,7 +369,6 @@ var vm = new Vue({
     },
     
     getWorkups() {
-      console.log("getWorkups");
       let query = {
         spID: this.spID,
       };
@@ -521,18 +519,6 @@ var vm = new Vue({
               .attr('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         };
         
-        if (this.chartType === 'point') {
-          svg.append('g')
-            .selectAll('dot')
-            .data(this.dailyFormatted.filter(d => d.Value != null))
-            .enter()
-            .append('circle')
-              .attr('cx', d => { return x(d.dtm) })
-              .attr('cy', d => { return y(d.Value) })
-              .attr('r', 3)
-              .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
-        }
-        
         if (this.chartType === 'polar') {
           svg.append('g')
             .selectAll('dot')
@@ -541,6 +527,26 @@ var vm = new Vue({
             .append('circle')
               .attr('cx', d => { return x(d.dtm) })
               .attr('cy', d => { return y(d.ValueDegrees) })
+              .attr('r', 3)
+              .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
+        }
+        
+        // We need a fallback chart style in case nothing is displaying
+        let nulls     = _.filter(this.dailyFormatted, ['Value', null]).length;
+        let nullRatio = nulls/this.dailyFormatted.length;
+        
+        // console.log('nulls: ' + nulls);
+        // console.log('null ratio: ' + nullRatio);
+        
+        if (this.chartType === 'point' ||
+            (this.chartType === 'lineRange' && nullRatio > 0.5)) {
+          svg.append('g')
+            .selectAll('dot')
+            .data(this.dailyFormatted.filter(d => d.Value != null))
+            .enter()
+            .append('circle')
+              .attr('cx', d => { return x(d.dtm) })
+              .attr('cy', d => { return y(d.Value) })
               .attr('r', 3)
               .style('fill', d => { return d.Provisional == 1 ? "firebrick" : "steelblue"; })
         }
