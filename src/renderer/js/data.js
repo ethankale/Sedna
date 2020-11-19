@@ -229,7 +229,16 @@ var vm = new Vue({
         let svg      = $("#chartContainer svg")[0];
         let filename = sanitize(siteName + ' ' + subtitle);
         
-        window.makePDF(siteName, subtitle, table, svg, filename);
+        // graph type id 2 is for bar graphs, which are specifically for sums, like precip
+        // type 4 is the average but calculated using 0-360 degrees - specific to wind direction
+        let column = 'Value';
+        if (this.methodDetails.GraphTypeID === 2) {
+          column = 'ValueSum';
+        } else if (this.methodDetails.GraphTypeID === 4) {
+          column = 'ValueDegrees';
+        };
+        
+        window.makePDF(siteName, subtitle, table, column, svg, filename);
         this.graphMeasurements();
     },
     

@@ -61,7 +61,7 @@ window.setConfig = function(config) {
 };
 
 // PDF Reports
-window.makePDF = function(title, subtitle, table, svg, filename) {
+window.makePDF = function(title, subtitle, table, column, svg, filename) {
   let defaultPath = window.getConfig().userDefaultPath + "/" + filename + ".pdf";
   // console.log(defaultPath);
   
@@ -130,7 +130,7 @@ window.makePDF = function(title, subtitle, table, svg, filename) {
       row.y = row.day*lineheight;
       maxY  = maxY < row.y ? row.y : maxY;
       
-      row.valString = row.Value === null ? "" : row.Value.toFixed(2).padStart(cellchars, " ");
+      row.valString = row[column] === null ? "" : row[column].toFixed(2).padStart(cellchars, " ");
       
       doc.text(row.valString, row.x+marginleft, row.y+titley, 
         {align:'left', lineBreak: false});
