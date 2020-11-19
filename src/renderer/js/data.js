@@ -9,7 +9,6 @@ let lx         = require('luxon');
 let Papa       = require('papaparse');
 let alqwuutils = require('./utils.js');
 let Vue        = require('vue');
-// let dataload   = require('./dataload.js');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
 let sanitize   = require('sanitize-filename');
@@ -58,8 +57,8 @@ var vm = new Vue({
     unitcurrent:   null,
     
     waterYears:    [],
-    paramDetails:  [],
-    methodDetails: [],
+    paramDetails:  {},
+    methodDetails: {},
     
     spID:          null,
     waterYear:     null,
@@ -268,6 +267,9 @@ var vm = new Vue({
     
     changeSamplePoint() {
       $("#chartContainer").empty();
+      this.dailySummary  = [];
+      this.paramDetails  = {};
+      this.methodDetails = {};
       this.getWorkups();
       loadParamList();
     },
@@ -535,9 +537,6 @@ var vm = new Vue({
         let nulls     = _.filter(this.dailyFormatted, ['Value', null]).length;
         let nullRatio = nulls/this.dailyFormatted.length;
         
-        // console.log('nulls: ' + nulls);
-        // console.log('null ratio: ' + nullRatio);
-        
         if (this.chartType === 'point' ||
             (this.chartType === 'lineRange' && nullRatio > 0.5)) {
           svg.append('g')
@@ -602,12 +601,6 @@ var vm = new Vue({
 });
 
 $(document).ready(function() {
-    // $("#downloadParameterSelect").select2({ width: '100%' });
-    $("#spSelect").select2({ 
-      width:       '100%', 
-      placeholder: 'Select a Sample Point'
-    });
-    
     vm.onPageLoad();
     
     $("#downloadDataButton").click(function() {
