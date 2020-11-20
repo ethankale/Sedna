@@ -586,6 +586,8 @@ var vm = new Vue({
         this.graphMeasurements();
       })
       .catch(error => {
+        $("#chartContainer").empty();
+        this.paramDetails.Name = "No Data";
         console.log("Ran into an error getting daily measurements/parameter details");
         console.log(error);
       });
