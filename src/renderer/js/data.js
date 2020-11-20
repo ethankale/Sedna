@@ -98,14 +98,6 @@ var vm = new Vue({
       this.waterYear === undefined
     },
     
-    // siteID: function() {
-      // let siteid = null;
-      // if (this.samplePoints.length > 0) {
-        // siteid = this.samplePoints.filter((sp) => {return sp.SamplePointID == this.spID})[0].SiteID;
-      // };
-      // return siteid;
-    // },
-    
     config: function() {
       return window.getConfig();
     },
@@ -341,6 +333,7 @@ var vm = new Vue({
       this.getSamplePoints()
         .done((data) => {
           this.samplePoints = data;
+          this.spID         = this.samplePoints[0].SamplePointID;
         })
         .fail((err) => {
           console.log("Couldn't load sample points.");
@@ -607,8 +600,10 @@ $(document).ready(function() {
       var paramList = $("#downloadParameterSelect").val();
       var filename  = $("#downloadFileName").val();
       
-      if (paramList.length > 0 && !isNaN(vm.downloadStartDate) &&
-        !isNaN(vm.downloadEndDate) && filename.length > 0) {
+      if (paramList.length > 0 && 
+        !isNaN(vm.downloadStartDate) &&
+        !isNaN(vm.downloadEndDate) && 
+        filename.length > 0) {
           var paramids  = [];
           var methodids = [];
           paramList.forEach(param => {
@@ -653,6 +648,9 @@ function loadParamList() {
         let dataSorted = _.orderBy(data, ['nmeasure', 'Name'], ['desc', 'asc']);
         
         vm.params = dataSorted;
+        // Once we port this function into vue, then this should work.
+        // vm.clickParameter(vm.params[0], {});
+        
         var downloadParamMarkup = "";
         
         vm.params.forEach(param => {
