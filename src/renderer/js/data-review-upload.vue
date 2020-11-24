@@ -422,7 +422,8 @@ export default {
     
     uploadData() {
       // Fill in all the metadata info that is specific to this file & not automatic
-      this.metaToCreate.FileName             = this.filePath;
+      
+      this.metaToCreate.FileName             = this.filePath.replace(/^.*[\\\/]/, '');
       this.metaToCreate.DataStarts           = this.dataToLoadSummary.mindate.toISO();
       this.metaToCreate.DataEnds             = this.dataToLoadSummary.maxdate.toISO();
       this.metaToCreate.SamplePointID        = +this.SamplePointId;
