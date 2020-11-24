@@ -116,24 +116,90 @@ window.makePDF = function(title, subtitle, table, column, svg, filename) {
         {align: 'left', lineBreak: false});
     });
     
-    let days = [...Array(32).keys()];
+    let days   = [...Array(32).keys()];
+    let monthArrays = {
+      1:  [],
+      2:  [],
+      3:  [],
+      4:  [],
+      5:  [],
+      6:  [],
+      7:  [],
+      8:  [],
+      9:  [],
+      10: [],
+      11: [],
+      12: []
+    }
+    
     days.forEach((d, i) => {
       let dstring = (d+":").padStart(10);
       if (i > 0) {
-        doc.text(dstring, marginleft, (i*lineheight)+titley, 
-          {align: 'left', lineBreak: false})
+        doc.text(
+          dstring, 
+          marginleft, 
+          (i*lineheight)+titley, 
+          {
+            align: 'left', 
+            lineBreak: false
+          }
+        );
       };
     });
     
+    // Format the data for the table
     table.forEach(row => {
       row.x = (row.month >= 10 ? (row.month-9) : (row.month+3)) * colwidth;
       row.y = row.day*lineheight;
       maxY  = maxY < row.y ? row.y : maxY;
       
-      row.valString = row[column] === null ? "" : row[column].toFixed(2).padStart(cellchars, " ");
+      row.valString = '';
+      if (row[column] !== null) {
+        row.valString = row[column].toFixed(2).padStart(cellchars, " ");
+        monthArrays[row.month].push(+row.valString);
+      };
       
       doc.text(row.valString, row.x+marginleft, row.y+titley, 
         {align:'left', lineBreak: false});
+    });
+    
+    // Write summary statistics
+    let label = column == 'ValueSum' ? 'Sum:' : 'Mean:';
+    doc.text(
+      label.padStart(10), 
+      marginleft, 
+      (34*lineheight)+titley,
+      {
+        align:     'left',
+        lineBreak: false
+      }
+    );
+    
+    let monthNumbers = [1,2,3,4,5,6,7,8,9,10,11,12];
+    monthNumbers.forEach(m => {
+      let monvals = monthArrays[m];
+      let summaryVal = '';
+      if (monvals.length > 0) {
+        summaryVal = monvals.reduce((a,b) => a+b);
+      };
+      let row_x = (m >= 10 ? (m-9) : (m+3)) * colwidth;
+      
+      // If we're just reporting sums (rainfall), then we're done.  Otherwise, we want a mean.
+      if (column == 'Value' && monvals.length > 0) {
+        summaryVal = summaryVal / monvals.length;
+      }
+      
+      summaryVal = summaryVal == '' ? '' : summaryVal.toFixed(2).padStart(cellchars, ' ');
+      doc.text(
+        summaryVal, 
+        row_x+marginleft, 
+        (34*lineheight)+titley,
+        {
+          align:     'left',
+          lineBreak: false
+        }
+      );
+      
     });
     
     // Graph
