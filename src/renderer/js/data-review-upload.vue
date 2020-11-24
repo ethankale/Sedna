@@ -422,12 +422,15 @@ export default {
     
     uploadData() {
       // Fill in all the metadata info that is specific to this file & not automatic
-      this.metaToCreate.FileName      = this.filePath;
-      this.metaToCreate.DataStarts    = this.dataToLoadSummary.mindate.toISO();
-      this.metaToCreate.DataEnds      = this.dataToLoadSummary.maxdate.toISO();
-      this.metaToCreate.SamplePointID = +this.SamplePointId;
-      this.metaToCreate.UserID        = window.getConfig().userid;
-      this.metaToCreate.UTCOffset     = alqwuutils.utcoffset*60;
+      this.metaToCreate.FileName             = this.filePath;
+      this.metaToCreate.DataStarts           = this.dataToLoadSummary.mindate.toISO();
+      this.metaToCreate.DataEnds             = this.dataToLoadSummary.maxdate.toISO();
+      this.metaToCreate.SamplePointID        = +this.SamplePointId;
+      this.metaToCreate.UserID               = window.getConfig().userid;
+      this.metaToCreate.CorrectionOffset     = this.offset;
+      this.metaToCreate.CorrectionDrift      = this.drift;
+      this.metaToCreate.CorrectionStepChange = this.stepchange;
+      this.metaToCreate.UTCOffset            = alqwuutils.utcoffset*60;
       
       $.ajax({
         url:         `http://localhost:3000/api/v1/metadata`,

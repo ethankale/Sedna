@@ -416,13 +416,15 @@ let controller = {
           (SamplePointID, ParameterID, MethodID, UnitID,
           FrequencyMinutes, DecimalPoints, Active, Notes,
           FileName, DataStarts, DataEnds, UserID,
-          EquipmentIDSensor, EquipmentIDLogger)
+          EquipmentIDSensor, EquipmentIDLogger,
+          CorrectionOffset, CorrectionDrift, CorrectionStepChange)
           VALUES 
             (@samplePointID, @parameterID, @methodID,
             @unitID, @frequency, @decimals,
             @active, @notes,
             @fileName, @dataStarts, @dataEnds, @userID,
-            @equipmentIDSensor, @equipmentIDLogger);
+            @equipmentIDSensor, @equipmentIDLogger,
+            @correctionOffset, @correctionDrift, @correctionStepChange);
           SELECT SCOPE_IDENTITY() AS LastID;`
           
         
@@ -445,21 +447,36 @@ let controller = {
         //   This should be pretty easy to do using Luxon.
         
         // Add parameters
-        request.addParameter('samplePointID',     TYPES.Int,       req.body.SamplePointID);
-        request.addParameter('parameterID',       TYPES.Int,       req.body.ParameterID);
-        request.addParameter('methodID',          TYPES.Int,       req.body.MethodID);
-        request.addParameter('unitID',            TYPES.Int,       req.body.UnitID);
-        request.addParameter('frequency',         TYPES.Int,       req.body.FrequencyMinutes);
-        request.addParameter('decimals',          TYPES.Int,       req.body.DecimalPoints);
-        request.addParameter('notes',             TYPES.VarChar,   req.body.Notes);
-        request.addParameter('active',            TYPES.Bit,       active);
-        request.addParameter('graphTypeID',       TYPES.Int,       req.body.GraphTypeID);
-        request.addParameter('fileName',          TYPES.VarChar,   req.body.FileName);
-        request.addParameter('dataStarts',        TYPES.VarChar,   req.body.DataStarts);
-        request.addParameter('dataEnds',          TYPES.VarChar,   req.body.DataEnds);
-        request.addParameter('userID',            TYPES.Int,       req.body.UserID);
-        request.addParameter('equipmentIDSensor', TYPES.Int,       req.body.EquipmentIDSensor);
-        request.addParameter('equipmentIDLogger', TYPES.Int,       req.body.EquipmentIDLogger);
+        request.addParameter('samplePointID',        TYPES.Int,       req.body.SamplePointID);
+        request.addParameter('parameterID',          TYPES.Int,       req.body.ParameterID);
+        request.addParameter('methodID',             TYPES.Int,       req.body.MethodID);
+        request.addParameter('unitID',               TYPES.Int,       req.body.UnitID);
+        request.addParameter('frequency',            TYPES.Int,       req.body.FrequencyMinutes);
+        request.addParameter('decimals',             TYPES.Int,       req.body.DecimalPoints);
+        request.addParameter('notes',                TYPES.VarChar,   req.body.Notes);
+        request.addParameter('active',               TYPES.Bit,       active);
+        request.addParameter('graphTypeID',          TYPES.Int,       req.body.GraphTypeID);
+        request.addParameter('fileName',             TYPES.VarChar,   req.body.FileName);
+        request.addParameter('dataStarts',           TYPES.VarChar,   req.body.DataStarts);
+        request.addParameter('dataEnds',             TYPES.VarChar,   req.body.DataEnds);
+        request.addParameter('userID',               TYPES.Int,       req.body.UserID);
+        request.addParameter('equipmentIDSensor',    TYPES.Int,       req.body.EquipmentIDSensor);
+        request.addParameter('equipmentIDLogger',    TYPES.Int,       req.body.EquipmentIDLogger);
+        request.addParameter(
+          'correctionOffset', 
+          TYPES.Numeric,   
+          req.body.CorrectionOffset,
+          {precision: 7, scale: 3});
+        request.addParameter(
+          'correctionDrift',
+          TYPES.Numeric,
+          req.body.CorrectionDrift,
+          {precision: 7, scale: 3});
+        request.addParameter(
+          'correctionStepChange',
+          TYPES.Numeric,
+          req.body.CorrectionStepChange,
+          {precision: 18, scale: 15});
         
         connection.execSql(request);
         
