@@ -704,7 +704,6 @@ function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     paramids.forEach(paramid   => { paramidsString  += "&paramids=" + paramid })
     methodids.forEach(methodid => { methodidsString += "&methodids=" + methodid })
     
-    
     var url = 'http://localhost:3000/api/v1/getMeasurementDetails' +
         '?spID='        + spID +
         paramidsString  +
@@ -722,7 +721,17 @@ function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
           d.CollectedDateTime = d.CollectedDateTime.replace("T", " ").replace("Z", " ").trim();
         });
         
-        window.writeText(Papa.unparse(data), $("#downloadFileName").val());
+        // Somehow add the site ID
+        let sitecode = _.filter(vm.samplePoints, ['SamplePointID', vm.spID])[0].Name;
+        let fname = $("#downloadFileName").val() +
+          sanitize(
+            sitecode.split(' ')[0].substring(0, 10) + '_' +
+            vm.paramDetails.Name.substring(0, 10) + '_' +
+            vm.downloadStartDate.toISODate() + ' to ' +
+            vm.downloadEndDate.toISODate() +
+          '.csv');
+        
+        window.writeText(Papa.unparse(data), fname);
         
         if (window.writeFileStatus == "Success") {
           $("#downloadAlert")
