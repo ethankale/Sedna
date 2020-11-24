@@ -342,7 +342,13 @@ export default {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Upload Data</h5>
-        <button id="uploadClose" type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button 
+          id="uploadClose" 
+          type="button" 
+          class="close" 
+          v-on:click="$emit('close-modal')"
+          data-dismiss="modal" 
+          aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>

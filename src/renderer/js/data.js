@@ -329,11 +329,20 @@ var vm = new Vue({
       return request;
     },
     
-    onPageLoad() {
+    onPageLoad(old_spID) {
+      console.log(old_spID);
       this.getSamplePoints()
         .done((data) => {
           this.samplePoints = data;
-          this.spID         = this.samplePoints[0].SamplePointID;
+          
+          // if old_spID is a number, then this is probably being called
+          //   because someone just loaded new data.
+          if (old_spID != null) {
+            this.spID =  old_spID;
+            loadParamList();
+          } else {
+            this.spID = this.samplePoints[0].SamplePointID;
+          };
         })
         .fail((err) => {
           console.log("Couldn't load sample points.");
