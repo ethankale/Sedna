@@ -49,6 +49,9 @@ var vm = new Vue({
       CreatedOn: null,
       EquipmentIDSensor: null,
       EquipmentIDLogger: null,
+      CorrectionOffset: 0,
+      CorrectionDrift: 0,
+      CorrectionStepChange: 0,
     },
     
     samplePointList: [],
@@ -111,6 +114,7 @@ var vm = new Vue({
     
     offset: function(val) {
       if (!isNaN(+val) && isFinite(val) && val !== '') { 
+        this.newDR.CorrectionOffset = val;
         this.disableSave = true;
         this.notificationText = "Working on it...";
         this.getConvertRecordStats();
@@ -119,6 +123,7 @@ var vm = new Vue({
     
     drift: function(val) {
       if (!isNaN(+val && isFinite(val) && val !== '')) { 
+        this.newDR.CorrectionDrift = val;
         this.disableSave = true;
         this.notificationText = "Working on it...";
         this.getConvertRecordStats();
@@ -189,15 +194,15 @@ var vm = new Vue({
     oldParamAndMethod: function() { return this.oldDR.paramAndMethod },
     oldDRID:           function() { return this.oldDR.drid },
     
-  newParamAndMethod: function() {
-    let str = '';
-    if (this.newDR.ParameterID != null && this.newDR.MethodID != null) {
-      let param  = _.find(this.parameters, ['ParameterID', this.newDR.ParameterID]).Name;
-      let method = _.find(this.methods,    ['MethodID',    this.newDR.MethodID]).Name;
-      str = param + " (" + method + ")";
-    }
-    return str;
-  },
+    newParamAndMethod: function() {
+      let str = '';
+      if (this.newDR.ParameterID != null && this.newDR.MethodID != null) {
+        let param  = _.find(this.parameters, ['ParameterID', this.newDR.ParameterID]).Name;
+        let method = _.find(this.methods,    ['MethodID',    this.newDR.MethodID]).Name;
+        str = param + " (" + method + ")";
+      }
+      return str;
+    },
     
     stepChangePerMinute: function() {
       if (this.drift == 0) {
@@ -556,6 +561,7 @@ var vm = new Vue({
       // Fill in all the metadata info that is specific to this file & not automatic
       this.newDR.FileName      = "Derived from " + this.newDR.FileName;
       this.newDR.UserID        = window.getConfig().userid;
+      this.newDR.CorrectionStepChange = this.stepChangePerMinute;
       // this.newDR.UTCOffset     = utcoffset;
       
       $.ajax({

@@ -1,7 +1,7 @@
 {
-  "name": "sedna",
-  "productName": "sedna",
-  "version": "0.0.3",
+  "name": "GData2",
+  "productName": "GData2",
+  "version": "0.1.0",
   "description": "A desktop application for managing hydrologic data",
   "main": "src/main/index.js",
   "scripts": {
@@ -29,7 +29,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "sedna"
+            "name": "GData2"
           }
         }
       ]
@@ -39,6 +39,7 @@
     "bootstrap": "^4.5.3",
     "d3": "^5.16.0",
     "d3-svg-legend": "^2.25.6",
+    "electron-devtools-installer": "^3.1.1",
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.17.1",
     "jquery": "^3.5.1",

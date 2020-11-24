@@ -15,7 +15,7 @@ To install the application:
     2. ./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  Only works if the GData database is on the same server as the Sedna database)
     3. ./src/sql/indexes.sql
 4. Use SSMS to set up a user with read/write access on the newly created database.  
-    1. This users can't use the windows login; it has to use a password login.
+    1. This user can't use the windows login; it has to use a password login.
     2. Enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
     3. Enable SQL Server logins; by default it only allows Windows connections.  See <https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server>.
 5. Download the program (currently, grab it from Github.  No formal distributions yet).

@@ -680,29 +680,29 @@ function loadParamList() {
     });
 };
 
-function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
-    let ajaxData = {
-      spID:       vm.spID,
-      paramid:    paramid,
-      methodid:   methodid,
-      startdtm:   startdtm,
-      enddtm:     enddtm,
-      utcoffset:  utcoffset
-    };
+// function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
+    // let ajaxData = {
+      // spID:       vm.spID,
+      // paramid:    paramid,
+      // methodid:   methodid,
+      // startdtm:   startdtm,
+      // enddtm:     enddtm,
+      // utcoffset:  utcoffset
+    // };
     
-    $.ajax({
-      url:  'http://localhost:3000/api/v1/getMeasurements',
-      data: ajaxData,
-      method:  'GET',
-      timeout: 3000
-    }).done(function(data) {
-        vm.measurements = data;
-        vm.measurements.forEach(function(d) {
-            d.dtm = Date.parse(d.CollectedDateTime);
-        });
-        vm.graphMeasurements();
-    });
-};
+    // $.ajax({
+      // url:  'http://localhost:3000/api/v1/getMeasurements',
+      // data: ajaxData,
+      // method:  'GET',
+      // timeout: 3000
+    // }).done(function(data) {
+        // vm.measurements = data;
+        // vm.measurements.forEach(function(d) {
+            // d.dtm = Date.parse(d.CollectedDateTime);
+        // });
+        // vm.graphMeasurements();
+    // });
+// };
 
 function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };
