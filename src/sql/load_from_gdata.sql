@@ -211,8 +211,8 @@ FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3261
   AND amd.MethodID = 1522
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.D_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.D_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.D_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.D_TimeDate
 WHERE MetadataID IS NOT NULL
 GO
 
@@ -267,8 +267,8 @@ FROM [GDATA].[dbo].[tblDischargeGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 1548
   AND amd.MethodID = 1499
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.D_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.D_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.D_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.D_TimeDate
 WHERE MetadataID IS NOT NULL
   AND D_Discharge IS NOT NULL
 GO
@@ -330,8 +330,8 @@ FROM [GDATA].[dbo].[tblWaterTempGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3307
   AND amd.MethodID = 1476
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.W_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.W_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.W_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.W_TimeDate
 WHERE MetadataID IS NOT NULL
   AND W_Value IS NOT NULL
 GO
@@ -392,8 +392,8 @@ FROM [GDATA].[dbo].[tblBarometerGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 740
   AND amd.MethodID = 1458
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.B_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.B_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.B_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.B_TimeDate
 WHERE MetadataID IS NOT NULL
   AND B_Value IS NOT NULL
 GO
@@ -457,8 +457,8 @@ FROM [GDATA].[dbo].[tblRainGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3090
   AND amd.MethodID = 1527
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.R_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.R_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.R_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.R_TimeDate
 WHERE MetadataID IS NOT NULL
   AND R_Value IS NOT NULL
 GO
@@ -524,8 +524,8 @@ FROM [GDATA].[dbo].[tblRelativeHumidityGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3172
   AND amd.MethodID = 1574
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.H_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.H_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.H_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.H_TimeDate
 WHERE MetadataID IS NOT NULL
   AND H_Value IS NOT NULL
 GO
@@ -629,8 +629,8 @@ FROM [GDATA].[dbo].[tblPiezometerGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 10001
   AND amd.MethodID = 1509
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.P_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.P_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.P_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.P_TimeDate
 WHERE MetadataID IS NOT NULL
   AND P_Value IS NOT NULL
 GO
@@ -694,8 +694,8 @@ FROM [GDATA].[dbo].[tblSolarRadiationGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3242
   AND amd.MethodID = 1610
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.S_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.S_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.S_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.S_TimeDate
 WHERE MetadataID IS NOT NULL
   AND S_Value IS NOT NULL
 GO
@@ -759,8 +759,8 @@ FROM [GDATA].[dbo].[tblAirTempGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3301
   AND amd.MethodID = 1476
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.A_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.A_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.A_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.A_TimeDate
 WHERE MetadataID IS NOT NULL
   AND A_Value IS NOT NULL
 GO
@@ -824,8 +824,8 @@ FROM [GDATA].[dbo].[tblWindSpeedGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3541
   AND amd.MethodID = 1629
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.Wi_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.Wi_TimeDate
 WHERE MetadataID IS NOT NULL
   AND Wi_Value IS NOT NULL
 GO
@@ -886,8 +886,8 @@ FROM [GDATA].[dbo].[tblWindSpeedGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 3540
   AND amd.MethodID = 10000
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.Wi_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.Wi_TimeDate
 WHERE MetadataID IS NOT NULL
   AND Wi_Direction IS NOT NULL
 GO
@@ -947,8 +947,8 @@ FROM [GDATA].[dbo].[tblWindSpeedGauging] as gdg
 ON amd.SamplePointID = gdg.G_ID
   AND amd.ParameterID = 10000
   AND amd.MethodID = 1629
-  AND dateadd(hour,8,amd.DataEnds) >= gdg.Wi_TimeDate
-  AND dateadd(hour,8,amd.DataStarts) <= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataEnds) >= gdg.Wi_TimeDate
+  AND dateadd(hour,-8,amd.DataStarts) <= gdg.Wi_TimeDate
 WHERE MetadataID IS NOT NULL
   AND Wi_Gust_Speed IS NOT NULL
 GO
