@@ -373,7 +373,7 @@ GO
 
 /* Comment this out if you don't want to change UTC Offset values */
 UPDATE [GDATA].[dbo].[tblBarometerGauging]
-SET W_UTCOffset = 8
+SET B_UTCOffset = 8
 
 /* Insert barometer measurements */
 INSERT INTO Alqwu.dbo.Measurement 
@@ -446,7 +446,7 @@ INSERT INTO Alqwu.dbo.Measurement
   (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Provisional, Symbol, QualifierID)
 SELECT DISTINCT amd.MetadataID, 
   dateadd(hour, R_UTCOffset, R_TimeDate) as CollectedDTM, -480 as CollectedDTMOffset, 
-  R_Value as Value, R_Provisional as Provisional, '=' as Symbol,
+  R_Value as Value, Provisional as Provisional, '=' as Symbol,
   CASE 
   WHEN abs([R_Warning]) > 0 THEN 10 
   WHEN abs([R_Est]) > 0 THEN 17 
@@ -978,27 +978,6 @@ LEFT JOIN GDATA.dbo.tblGaugeLLID gl
 WHERE gl.G_ID IS NOT NULL
 GO
 
-/* Insert water quality workups.  Different setup from other workups, because the 
-   water quality workup table is different from the rest of GData.
-*/
-INSERT INTO Alqwu.dbo.Workup 
-  WITH (TABLOCK) 
-  (MetadataID, FileName, LoadedOn, Notes, UserID, DataStarts, DataEnds)
-SELECT amd.MetadataID, gwu.file_name, gwu.workup_datetime, gwu.notes, guser.Data_Processor_ID, min(gresult.sample_datetime) as mindt, max(gresult.sample_datetime) as maxdt
-  FROM [GDATA].[dbo].[tblWQWorkUpResult] as gwur
-  LEFT JOIN [GDATA].[dbo].[tblWQWorkUp] as gwu
-    ON gwur.workup_id = gwu.id
-  LEFT JOIN [GDATA].[dbo].[tblDataProcessor] as guser
-    ON gwu.workedup_by = guser.Processor_Name
-  LEFT JOIN [GDATA].[dbo].tblWQResult as gresult
-    ON gwur.result_id = gresult.id
-  LEFT JOIN Alqwu.dbo.Metadata as amd
-    ON gresult.gid = amd.SamplePointID
-	AND gresult.param_id = amd.ParameterID
-	AND gresult.method_id = amd.MethodID
-WHERE amd.MetadataID IS NOT NULL
-GROUP BY amd.MetadataID, gwu.file_name, gwu.workup_datetime, gwu.notes, guser.Data_Processor_ID
-
 /* Insert water quality measurements */
 INSERT INTO Alqwu.dbo.Measurement 
 WITH (TABLOCK)
@@ -1057,7 +1036,7 @@ just run a query to delete all the bad ones.
 /* Insert values */
 INSERT INTO Alqwu.dbo.Measurement 
 WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Note)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Comment)
 SELECT amd.MetadataID, fvi.Date_Time, fvi.UTC_Offset*-60, fd.Parameter_Value, fvi.Comments
 FROM [GDATA].[dbo].[tblFieldData] as fd
 LEFT JOIN [GDATA].[dbo].tblFieldVisitInfo as fvi
