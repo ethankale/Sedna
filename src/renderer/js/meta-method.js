@@ -28,7 +28,7 @@ var vm = new Vue({
   },
   data: {
     methods: [],
-    MethodID: 0,
+    MethodID: null,
     
     graphTypes:  [],
     

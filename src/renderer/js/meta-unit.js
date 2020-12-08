@@ -28,7 +28,7 @@ var vm = new Vue({
   },
   data: {
     units: [],
-    UnitID: 0,
+    UnitID: null,
     
     editstate: 'view',
     error:     false,

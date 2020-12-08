@@ -28,7 +28,7 @@ var vm = new Vue({
   },
   data: {
     qualifiers: [],
-    QualifierID: 0,
+    QualifierID: null,
     
     editstate: 'view',
     error: false,

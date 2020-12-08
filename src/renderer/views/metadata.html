@@ -33,13 +33,14 @@
             
             <hr>
             
-            <a class="nav-link" id="v-pills-equipment-tab" data-toggle="pill" 
-              href="#v-pills-equipment" role="tab" aria-controls="v-pills-equipment" 
-              aria-selected="false">Equipment</a>
             
             <a class="nav-link" id="v-pills-equipmentModel-tab" data-toggle="pill" 
               href="#v-pills-equipmentModel" role="tab" aria-controls="v-pills-equipmentModel" 
               aria-selected="false">Equipment Model</a>
+            
+            <a class="nav-link" id="v-pills-equipment-tab" data-toggle="pill" 
+              href="#v-pills-equipment" role="tab" aria-controls="v-pills-equipment" 
+              aria-selected="false">Equipment</a>
             
             <hr>
             
@@ -214,7 +215,8 @@
               </div>
               
               <new-edit-cancel
-                v-bind:editstate="editstate"
+                :editstate="editstate"
+                :id="spID"
                 v-on:click-edit  ="clickEditSP()"
                 v-on:click-new   ="clickNewSP()"
                 v-on:click-cancel="clickCancelSP()"
@@ -453,6 +455,94 @@
               
             </div>
             
+            <!-- Equipment Model form -->
+            <div class="tab-pane fade" id="v-pills-equipmentModel" role="tabpanel" 
+              aria-labelledby="v-pills-equipmentModel-tab">
+              
+              <form id="em-selectHeader" v-show="editstate === 'view'">
+                <div class="form-group">
+                  <select class="form-control" id="emSelect" 
+                    v-model="emID" 
+                    v-select="emID"
+                    v-on:change="getCurrentEM(emID)">
+                    <option 
+                      v-for="em in ems" 
+                      v-bind:value="em.EquipmentModelID" 
+                      v-bind:key="em.EquipmentModelID">
+                      {{ em.Name }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="form-group form-check">
+                  <input type="checkbox" class="form-check-input" id="equipmentModel-activeFilterCheck" checked
+                    v-on:change="updateEquipmentModelList(emID)">
+                  <label class="form-check-label" for="equipmentModel-activeFilterCheck">Hide Inactive</label>
+                </div>
+                
+                <hr>
+              </form>
+              
+              <div id="equipmentModel-narrative" class="alert alert-info"
+                v-bind:class=" { 'alert-danger': error } "> 
+                {{ notificationText }}
+              </div>
+              
+              <new-edit-cancel
+                :editstate  ="editstate"
+                :id="emID"
+                v-on:click-edit   ="clickEditEM()"
+                v-on:click-new    ="clickNewEM()"
+                v-on:click-cancel ="clickCancelEM()"
+              ></new-edit-cancel>
+              
+              <hr>
+              
+              <form id="equipmentModelForm">
+                <fieldset id="equipmentModelFieldset" :disabled="editstate === 'view'">
+                  
+                  <div class="form-group row"
+                    v-show="editstate !== 'new'">
+                    <p>There {{ currentEM.EquipmentCount === 1 ? 'is 1' : 'are ' + currentEM.EquipmentCount }} 
+                      in inventory.</p>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
+                    <div class="col-sm-10">
+                      <input type="checkbox" class="form-check-input" id="site-active" 
+                        v-model="currentEM.Active">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-name" class="col-sm-2 col-form-label">Name</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="equipmentModel-name"
+                        v-model="currentEM.Name">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-manufacturer" class="col-sm-2 col-form-label">Manufacturer</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="equipmentModel-manufacturer"
+                        v-model="currentEM.Manufacturer">
+                    </div>
+                  </div>
+                  
+                  <div class="form-group row">
+                    <label for="equipmentModel-description" class="col-sm-2 col-form-label">Description</label>
+                    <div class="col-sm-10">
+                      <textarea class="form-control" id="equipmentModel-description" rows="5"
+                        v-model="currentEM.Description"></textarea>
+                    </div>
+                  </div>
+                  
+                </fieldset>
+              </form>
+            </div>
+            
             <!-- Equipment form -->
             <div class="tab-pane fade" id="v-pills-equipment" role="tabpanel" 
               aria-labelledby="v-pills-equipment-tab">
@@ -487,7 +577,8 @@
               </div>
               
               <new-edit-cancel
-                v-bind:editstate="editstate"
+                :editstate="editstate"
+                :id="eqID"
                 v-on:click-edit  ="clickEditEQ()"
                 v-on:click-new   ="clickNewEQ()"
                 v-on:click-cancel="clickCancelEQ()"
@@ -542,93 +633,6 @@
               </form>
             </div>
             
-            <!-- Equipment Model form -->
-            <div class="tab-pane fade" id="v-pills-equipmentModel" role="tabpanel" 
-              aria-labelledby="v-pills-equipmentModel-tab">
-              
-              <form id="em-selectHeader" v-show="editstate === 'view'">
-                <div class="form-group">
-                  <select class="form-control" id="emSelect" 
-                    v-model="emID" 
-                    v-select="emID"
-                    v-on:change="getCurrentEM(emID)">
-                    <option 
-                      v-for="em in ems" 
-                      v-bind:value="em.EquipmentModelID" 
-                      v-bind:key="em.EquipmentModelID">
-                      {{ em.Name }}
-                    </option>
-                  </select>
-                </div>
-                
-                <div class="form-group form-check">
-                  <input type="checkbox" class="form-check-input" id="equipmentModel-activeFilterCheck" checked
-                    v-on:change="updateEquipmentModelList(emID)">
-                  <label class="form-check-label" for="equipmentModel-activeFilterCheck">Hide Inactive</label>
-                </div>
-                
-                <hr>
-              </form>
-              
-              <div id="equipmentModel-narrative" class="alert alert-info"
-                v-bind:class=" { 'alert-danger': error } "> 
-                {{ notificationText }}
-              </div>
-              
-              <new-edit-cancel
-                v-bind:editstate  ="editstate"
-                v-on:click-edit   ="clickEditEM()"
-                v-on:click-new    ="clickNewEM()"
-                v-on:click-cancel ="clickCancelEM()"
-              ></new-edit-cancel>
-              
-              <hr>
-              
-              <form id="equipmentModelForm">
-                <fieldset id="equipmentModelFieldset" :disabled="editstate === 'view'">
-                  
-                  <div class="form-group row"
-                    v-show="editstate !== 'new'">
-                    <p>There {{ currentEM.EquipmentCount === 1 ? 'is 1' : 'are ' + currentEM.EquipmentCount }} 
-                      in inventory.</p>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="site-active" class="col-sm-2 col-form-label">Active</label>
-                    <div class="col-sm-10">
-                      <input type="checkbox" class="form-check-input" id="site-active" 
-                        v-model="currentEM.Active">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-name" class="col-sm-2 col-form-label">Name</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" id="equipmentModel-name"
-                        v-model="currentEM.Name">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-manufacturer" class="col-sm-2 col-form-label">Manufacturer</label>
-                    <div class="col-sm-10">
-                      <input type="text" class="form-control" id="equipmentModel-manufacturer"
-                        v-model="currentEM.Manufacturer">
-                    </div>
-                  </div>
-                  
-                  <div class="form-group row">
-                    <label for="equipmentModel-description" class="col-sm-2 col-form-label">Description</label>
-                    <div class="col-sm-10">
-                      <textarea class="form-control" id="equipmentModel-description" rows="5"
-                        v-model="currentEM.Description"></textarea>
-                    </div>
-                  </div>
-                  
-                </fieldset>
-              </form>
-            </div>
-            
             <!-- Parameter -->
             <div class="tab-pane fade" id="v-pills-parameter" role="tabpanel" 
               aria-labelledby="v-pills-parameter-tab">
@@ -656,7 +660,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate="editstate"
+                :id="ParameterID"
                 v-on:click-edit   ="clickEditParameter()"
                 v-on:click-new    ="clickNewParameter()"
                 v-on:click-cancel ="clickCancelParameter()"
@@ -721,7 +726,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate  ="editstate"
+                :id="MethodID"
                 v-on:click-edit   ="clickEditMethod()"
                 v-on:click-new    ="clickNewMethod()"
                 v-on:click-cancel ="clickCancelMethod()"
@@ -803,7 +809,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate  ="editstate"
+                :id="UnitID"
                 v-on:click-edit   ="clickEditUnit()"
                 v-on:click-new    ="clickNewUnit()"
                 v-on:click-cancel ="clickCancelUnit()"
@@ -861,7 +868,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate  ="editstate"
+                :id="QualifierID"
                 v-on:click-edit   ="clickEditQualifier()"
                 v-on:click-new    ="clickNewQualifier()"
                 v-on:click-cancel ="clickCancelQualifier()"
@@ -925,7 +933,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate  ="editstate"
+                :id="ConversionID"
                 v-on:click-edit   ="clickEditConversion()"
                 v-on:click-new    ="clickNewConversion()"
                 v-on:click-cancel ="clickCancelConversion()"
@@ -1041,7 +1050,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate  ="editstate"
+                :editstate  ="editstate"
+                :id="UserID"
                 v-on:click-edit   ="clickEditUser()"
                 v-on:click-new    ="clickNewUser()"
                 v-on:click-cancel ="clickCancelUser()"

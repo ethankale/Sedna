@@ -25,7 +25,7 @@ var vm = new Vue({
     'new-edit-cancel': NewEditCancel
   },
   data: {
-    spID: 2,
+    spID: null,
     sps: [],
     sites: [],
     
