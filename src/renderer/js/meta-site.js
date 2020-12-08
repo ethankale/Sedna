@@ -28,7 +28,7 @@ var vm = new Vue({
   },
   data: {
     sites: [],
-    siteID: 0,
+    siteID: null,
     
     editstate: 'view',
     error:     false,

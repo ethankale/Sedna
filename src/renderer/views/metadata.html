@@ -3,7 +3,7 @@
   <head>
   
     <!-- REMOVE THIS! -->
-    <!-- <script src="http://localhost:8098"></script> -->
+    <script src="http://localhost:8098"></script>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -110,7 +110,8 @@
                 {{ notificationText }}</div>
               
               <new-edit-cancel
-                v-bind:editstate="editstate"
+                :editstate="editstate"
+                :id="siteID"
                 v-on:click-edit  ="clickEditSite()"
                 v-on:click-new   ="clickNewSite()"
                 v-on:click-cancel="clickCancelSite()"

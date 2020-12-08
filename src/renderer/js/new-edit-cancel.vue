@@ -1,6 +1,9 @@
 <script>
 export default {
-  props: {'editstate': String},
+  props: {
+    'editstate': String,
+    'id':        Number
+  },
   computed: {
     editButtonText: function() {
       return this.editstate === 'edit' ? 'Save' : 'Edit';
@@ -9,7 +12,11 @@ export default {
       return this.editstate === 'new' ? 'Save' : 'New';
     },
     editDisabled: function() {
-      return this.editstate === 'new' ? true : false;
+      let disabled = false;
+      if (this.editstate === 'new' | this.id === null) {
+        disabled = true;
+      }
+      return disabled;
     },
     newDisabled: function() {
       return this.editstate === 'edit' ? true : false;
