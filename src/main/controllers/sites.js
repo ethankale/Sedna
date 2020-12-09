@@ -99,7 +99,7 @@ let controller = {
             
           var request = new Request(statement, function(err, rowCount) {
             if (err) {
-              res.status(400).end();
+              res.status(400).end(err);
               console.log(err);
             } else {
               res.status(200).json("Success");
@@ -107,14 +107,14 @@ let controller = {
             connection.close();
           });
           
-          request.addParameter('siteid',      TYPES.Int, req.body.SiteID);
+          request.addParameter('siteid',      TYPES.Int,     req.body.SiteID);
           request.addParameter('code',        TYPES.VarChar, req.body.Code);
           request.addParameter('name',        TYPES.VarChar, req.body.Name);
           request.addParameter('address',     TYPES.VarChar, req.body.Address);
           request.addParameter('city',        TYPES.VarChar, req.body.City);
-          request.addParameter('zip',         TYPES.VarChar, req.body.Zip);
+          request.addParameter('zip',         TYPES.VarChar, req.body.ZipCode);
           request.addParameter('description', TYPES.VarChar, req.body.Description);
-          request.addParameter('active',      TYPES.Bit, req.body.Active)
+          request.addParameter('active',      TYPES.Bit,     req.body.Active)
           
           connection.execSql(request);
         });
