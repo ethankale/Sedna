@@ -187,7 +187,8 @@ var vm = new Vue({
       }).fail((err) => {
         console.log(err);
         this.error = true;
-        this.notificationText = "Could not add the Sample Point.  Please double-check the values.";
+        this.notificationText = "Could not add the Sample Point.  Please double-check the values." +
+          " The Site + Name must be unique; e.g. one site can't have two 'Default' sample points.";
       });
     },
     
