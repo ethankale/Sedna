@@ -282,7 +282,7 @@ let controller = {
         lastid = columns[0].value;
       });
       
-      let active = typeof req.body.active == 'undefined' ? false : req.body.active;
+      let active = typeof req.body.Active == 'undefined' ? false : req.body.Active;
       
       request.addParameter('SiteID',                    TYPES.Int,          req.body.SiteID)
       request.addParameter('Name',                      TYPES.VarChar,      req.body.Name)
