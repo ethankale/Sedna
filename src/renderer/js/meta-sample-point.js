@@ -73,21 +73,23 @@ var vm = new Vue({
     },
   },
   mounted: function () {
-    let self = this;
-    
-    self.updateSamplePointList();
-    
-    $.ajax({
-      url: `http://localhost:3000/api/v1/getsites`,
-      method:'GET',
-      timeout: 3000
-    }).done(function(data) {
-      self.sites = data;
-    }).fail(function(err) {
-      console.log(err);
-    });
+    this.updateSamplePointList();
+    this.updateSiteList();
   },
+  
   methods: {
+    updateSiteList: function() {
+      $.ajax({
+        url: `http://localhost:3000/api/v1/getsites`,
+        method:'GET',
+        timeout: 3000
+      }).done((data) => {
+        this.sites = data;
+      }).fail(function(err) {
+        console.log(err);
+      });
+    },
+    
     updateSamplePointList: function(spID) {
       this.changingSPs = true;
       let active = $("#sample-point-activeFilterCheck").prop('checked') ? '?active=1': '';

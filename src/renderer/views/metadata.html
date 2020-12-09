@@ -224,7 +224,7 @@
               
               <hr>
               
-              <form id="sample-pointForm">
+              <form id="sample-pointForm" @submit.prevent>
                 <fieldset id="sample-pointFieldset" :disabled="editstate === 'view'">
                   
                   <div class="form-group row">
@@ -243,8 +243,11 @@
                       </select>
                     </div>
                     <div class="col-sm-2">
-                      <!-- <button class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span>R</button> -->
-                      <!-- <span class="glyphicon glyphicon-refresh"></span> -->
+                      <button 
+                        class="btn btn-light"
+                        v-on:click="updateSiteList">
+                        Refresh
+                      </button>
                     </div>
                   </div>
                   
