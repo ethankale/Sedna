@@ -372,6 +372,21 @@ var vm = new Vue({
       return request;
     },
     
+    updateSamplePointSelect() {
+      this.getSamplePoints().done((data) => {
+        this.samplePoints = data;
+        if (data.length > 0) {
+          this.spID = data[0].SamplePointID;
+        } else {
+          this.spID = null;
+        };
+      })
+      .fail((err) => {
+        console.log("Couldn't load sample points.");
+        console.log(err);
+      });
+    },
+    
     getWorkups() {
       let query = {
         spID: this.spID,
