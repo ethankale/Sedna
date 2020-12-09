@@ -92,7 +92,7 @@ var vm = new Vue({
       this.changingSPs = true;
       let active = $("#sample-point-activeFilterCheck").prop('checked') ? '?active=1': '';
       $.ajax({
-        url: `http://localhost:3000/api/v1/samplePointList${active}`,
+        url: `http://localhost:3000/api/v1/samplePointList`,
         method:'GET',
         timeout: 3000
       }).done((data) => {
