@@ -24,6 +24,7 @@ const createWindow = () => {
         preload: path.join(app.getAppPath(), './src/main/preload.js')
     }
   });
+  mainWindow.setMenuBarVisibility(false);
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, '../renderer/views/index.html'));

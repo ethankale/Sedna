@@ -1,7 +1,7 @@
 {
   "name": "GData2",
   "productName": "GData2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A desktop application for managing hydrologic data",
   "main": "src/main/index.js",
   "scripts": {
