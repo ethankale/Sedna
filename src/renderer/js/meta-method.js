@@ -141,6 +141,7 @@ var vm = new Vue({
       for (const prop in this.currentMethod) {
         this.currentMethod[prop] = null;
       };
+      this.currentMethod.GraphTypeID = 1;
       this.notificationText   = "Fill in fields below.  'Save' to create new Method."
     },
     
