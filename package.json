@@ -1,9 +1,9 @@
 {
-  "name": "GData2",
+  "name": "@electron-forge/publisher-github",
   "productName": "GData2",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A desktop application for managing hydrologic data",
-  "main": "src/main/index.js",
+  "main": "src/main/main.js",
   "scripts": {
     "build": "webpack",
     "start": "electron-forge start",
@@ -21,15 +21,25 @@
   },
   "license": "MIT",
   "config": {
+    "repository": {
+      "owner": "ethankale",
+      "name": "Sedna"
+    },
     "forge": {
       "packagerConfig": {
+        "icon":      "./src/main/GData.ico",
         "asar": true
       },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "GData2"
+            "authors":   "Nat Kale",
+            "exe":       "GData2.exe",
+            "name":      "GData2",
+            "title":     "GData2",
+            "setupExe":  "GData2_Installer.exe",
+            "setupIcon": "./src/main/GData.ico"
           }
         }
       ]

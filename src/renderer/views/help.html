@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../../../dist/index_webpack.css">
+    <link rel="stylesheet" href="../index.css">
+  </head>
+  <body>
+    <h1>GData 2</h1>
+    
+    <h2>The Basics</h2>
+    <p>
+      GData 2 is a database for managing environmental data, with an emphasis
+      on hydrologic and metorologic data.  It can handle continuous data, like 15
+      minute stream or rainfall records, and discrete data, like water quality samples.
+    </p>
+    
+    <p>
+      GData 2 is public domain.  You are free to use or modify it as you see fit.
+    </p>
+    
+    <p>
+      The original GData was created by Brendan Grant and others at King County, Washington.  
+      GData 2 was created by Nat Kale at Thurston County, Washington.
+      The design of GData 2 is influenced by the paper 
+      <a href="https://iwaponline.com/wqrj/article/54/1/1/64706/Towards-a-water-quality-database-for-raw-and"
+        target="_blank">Towards a water quality database for raw and validated data with emphasis on structured metadata</a>.
+    </p>
+    
+    <h2>Getting Started</h2>
+    <p>
+      If you're this far you've already installed the application from the
+      <a href="https://github.com/ethankale/Sedna" target="_blank">GData 2 GitHub</a>.
+      The next thing to do is to set up an SQL Server instance with an authorized user,
+      put the user settings into GData 2, then load data (either from an instance of GData
+      or directly through the interface).
+    
+      <h3>SQL Server Installation and Setup</h3>
+      <p>
+        To install the application:
+        <ol>
+          <li>
+            Get access to an MSSQL instance (2012 or above).  You can install the Express 
+            version on your desktop from 
+            <a href="https://www.microsoft.com/en-us/sql-server/sql-server-downloads" target="_blank">Microsoft</a>.
+          </li>
+          <li>
+            Install SQL Server Management Studio (SSMS).  Download from the 
+            <a href="https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver15"
+              target="_blank">Microsoft website</a>.
+          </li>
+          <li>
+            Open a new Query window in SSMS and run the database install/setup scripts in the following order:
+            <ol>
+              <li>./src/sql/schema.sql</li>
+              <li>./src/sql/load_from_gdata.sql (optional, if you're migrating from GData.  
+                Only works if the GData database is on the same server as the Sedna database)</li>
+              <li>./src/sql/indexes.sql</li>
+            </ol>
+          </li>
+          <li>Use SSMS to set up a user with read/write access on the newly created database.  
+            <ul>
+              <li>This user can't use the windows login; it has to use a password login.</li>
+              <li>Enable TCP connections for the server in the SQL Server Configuration Manager.  See
+                <a href="https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip"
+                  target="_blank">this Stack Overflow post.</a>.</li>
+              <li>Enable SQL Server logins; by default it only allows Windows connections.  See
+                <a href="https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server"
+                  target="_blank">this stack overflow post.</a>.</li>
+            </ul>
+          </li>
+          <li>
+            Download the program (currently, grab it from Github.  No formal distributions yet).
+          </li>
+          <li>
+            Open the program, immediate go to settings, and put in the SQL Server info for the DB 
+            and the user you created.
+          </li>
+        </ol>
+        That should do it.  The most likely issue you'll run into is with the user; make sure the 
+        user you create and use has permission to read, write, and delete for every table in the database.
+      </p>
+      
+      <h3>Adding Metadata</h3>
+      <p>
+        Before you can add date, you need at least one of each of the following:
+        <ul>
+          <li>Site</li>
+          <li>Sample Point (belongs to a Site, so create a Site first)</li>
+          <li>Parameter</li>
+          <li>Method</li>
+          <li>Unit</li>
+        </ul>
+        You can add all of these through the <strong>Metadata</strong> page.
+      </p>
+    
+    <h2>Updates</h2>
+      <p>Look for the latest release on the 
+        <a href="https://github.com/ethankale/Sedna/releases" target="_blank">GitHub repository</a>.
+        You can check the title bar of this Help window to see what your current version is.
+        Most updates should be as simple as downloading the installer and running it.
+        Just check this page when you're done to verify that everything worked as expected.
+      </p>
+      
+  </body>
+</html>
