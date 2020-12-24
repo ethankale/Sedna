@@ -556,7 +556,7 @@ export default {
       
       <div class="col-10"
         v-if="screen == 'fieldSelect'">
-        <h5 class="text-center">Additional Fields</h5>
+        <h5 class="text-center">{{ valueField }}</h5>
       </div>
       
       <div class="col-10"

@@ -202,10 +202,11 @@ export default {
       v-if="showContainer == 'reviewData'">
       
       <ul id="uploadReviewTab" class="nav nav-tabs" role="tablist">
-        <li v-for="column in columnsToLoad"
+        <li v-for="(column, index) in columnsToLoad"
           class="nav-item">
           <a 
             class="nav-link" 
+            :class="{'active' : index === 0}"
             data-toggle="tab" 
             role="tab" 
             v-bind:id="column + '-tab'" 
@@ -217,8 +218,9 @@ export default {
       
       <div class="tab-content" id="uploadReviewTabContent">
         <div 
-          v-for="column in columnsToLoad"
+          v-for="(column, index) in columnsToLoad"
           class="tab-pane fade" 
+          :class="{'active' : index === 0, 'show' : index === 0}"
           v-bind:id="column" 
           role="tabpanel" 
           v-bind:aria-labelledby="column + '-tab'">
