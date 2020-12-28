@@ -1,8 +1,9 @@
 
 // CSS imports first (https://getbootstrap.com/docs/4.4/getting-started/webpack/)
 import 'bootstrap/dist/css/bootstrap.min.css';
-import "vue-select/dist/vue-select.css";
+import 'vue-select/dist/vue-select.css';
 import 'flatpickr/dist/flatpickr.css';
+import 'intro.js/minified/introjs.min.css'
 
 // Then JS imports
 let lx         = require('luxon');
@@ -12,6 +13,7 @@ let Vue        = require('vue');
 let d3         = require('d3');
 let legend     = require('d3-svg-legend');
 let sanitize   = require('sanitize-filename');
+let introJS    = require('intro.js');
 
 import vSelect           from 'vue-select';
 import flatPickr         from 'vue-flatpickr-component';
@@ -193,6 +195,10 @@ var vm = new Vue({
   },
   
   methods: {
+    startTutorial() {
+      introJS().start();
+    },
+    
     setWaterYear(wy) {
       if (this.waterYear != undefined) {
         var firstdtm  = new Date(`${wy-1}-10-01T00:00:00`);
@@ -746,34 +752,12 @@ function loadParamList() {
             </option>`
             
         });
-        
+        if (vm.params.length > 0) {
+          vm.clickParameter(vm.params[0]);
+        };
         $('#downloadParameterSelect').empty().append(downloadParamMarkup);
     });
 };
-
-// function loadMeasurements(siteid, paramid, methodid, startdtm, enddtm, utcoffset) {
-    // let ajaxData = {
-      // spID:       vm.spID,
-      // paramid:    paramid,
-      // methodid:   methodid,
-      // startdtm:   startdtm,
-      // enddtm:     enddtm,
-      // utcoffset:  utcoffset
-    // };
-    
-    // $.ajax({
-      // url:  'http://localhost:3000/api/v1/getMeasurements',
-      // data: ajaxData,
-      // method:  'GET',
-      // timeout: 3000
-    // }).done(function(data) {
-        // vm.measurements = data;
-        // vm.measurements.forEach(function(d) {
-            // d.dtm = Date.parse(d.CollectedDateTime);
-        // });
-        // vm.graphMeasurements();
-    // });
-// };
 
 function downloadMeasurements(spID, paramids, methodids, startdtm, enddtm) {
     var dateoptions = { year: 'numeric', month: 'numeric', day: 'numeric' };

@@ -121,16 +121,24 @@
         <div id="mainContainer">
           <div class="container-fluid" role="main">
             <h1>Data</h1>
-            <p><a href="index.html">Home</a></p>
+            
+            <div class="row">
+              <div class="col-6">
+                <p><a href="index.html">Home</a></p>
+              </div>
+              <div class="col-6">
+                <p class="float-right"><a href="#" @click="startTutorial()">Help</a></p>
+              </div>
+            </div>
             
             <form>
-            
               <div class="row">
                 <div class="col">
                 
                   <div class="form-group">
                     <v-select
                       id="samplePointSelect"
+                      data-intro="Start by selecting a Sample Point here."
                       label="Name"
                       v-model="spID"
                       :options="samplePoints"
@@ -148,7 +156,12 @@
                 </div>
               </div>
               
-              <div id="date-select-row" class="form-group row">
+              <div 
+                id="date-select-row" 
+                class="form-group row"
+                data-intro="Select any start and end date,
+                  pick a specific water year to run a report, 
+                  or click 'All Data' to grab all the available data.">
                 <div class="col-4">
                   <label for="startDate">Start Date</label>
                   <flat-pickr
@@ -194,7 +207,11 @@
             </form>
             
             <div class="row border-top">
-              <div id="paramList" class="col-3">
+              <div 
+                id="paramList" 
+                class="col-3"
+                data-intro="Click on a parameter in this list to change
+                  the data you're looking at, like rainfall, temperature, stream flow, etc.">
                 
                 <div class="list-group list-group-flush">
                   <a href="#"

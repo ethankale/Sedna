@@ -27,18 +27,18 @@
     },
     "forge": {
       "packagerConfig": {
-        "icon":      "./src/main/GData.ico",
+        "icon": "./src/main/GData.ico",
         "asar": true
       },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "authors":   "Nat Kale",
-            "exe":       "GData2.exe",
-            "name":      "GData2",
-            "title":     "GData2",
-            "setupExe":  "GData2_Installer.exe",
+            "authors": "Nat Kale",
+            "exe": "GData2.exe",
+            "name": "GData2",
+            "title": "GData2",
+            "setupExe": "GData2_Installer.exe",
             "setupIcon": "./src/main/GData.ico"
           }
         }
@@ -52,6 +52,7 @@
     "electron-devtools-installer": "^3.1.1",
     "electron-squirrel-startup": "^1.0.0",
     "express": "^4.17.1",
+    "intro.js": "^3.2.1",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "luxon": "^1.25.0",
