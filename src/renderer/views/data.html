@@ -155,6 +155,7 @@
                     v-model="downloadStartDateString"
                     class="form-control"
                     :class="{ 'is-invalid': !downloadStartDateString }"
+                    @on-change="datesChange"
                     name="startDate">
                   </flat-pickr>
                 </div>
@@ -165,6 +166,7 @@
                     v-model="downloadEndDateString"
                     class="form-control"
                     :class="{ 'is-invalid': !downloadEndDateString }"
+                    @on-change="datesChange"
                     name="endDate">
                   </flat-pickr>
                 </div>

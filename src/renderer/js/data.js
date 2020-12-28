@@ -76,26 +76,28 @@ var vm = new Vue({
     },
     
     waterYear: function(wy) {
-      
-      if (this.waterYear != undefined) {
-        var firstdtm  = new Date(`${wy-1}-10-01T00:00:00`);
-        var lastdtm   = new Date(`${wy}-09-30T00:00:00`);
-        
-        this.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
-        this.downloadEndDateString   = lx.DateTime.fromJSDate(lastdtm).toISODate();
-      };
-      
-      this.updateDates();
+      this.setWaterYear(wy);
     },
     
   },
   
   computed: {
     
+    oneWYOrLess: function() {
+      let startdate = lx.DateTime.fromISO(this.downloadStartDateString);
+      let enddate   = lx.DateTime.fromISO(this.downloadEndDateString);
+      
+      let startwy = startdate.month < 10 ? startdate.year : startdate.year + 1;
+      let endwy   = enddate.month   < 10 ? enddate.year   : enddate.year + 1;
+      
+      return startwy == endwy;
+    },
+    
     disableReport: function() {
       return this.spID === null || 
-      this.waterYears.length !== 1 || 
-      this.waterYear === undefined
+      !this.oneWYOrLess || 
+      this.waterYear === undefined ||
+      this.waterYear === null
     },
     
     config: function() {
@@ -191,6 +193,29 @@ var vm = new Vue({
   },
   
   methods: {
+    setWaterYear(wy) {
+      if (this.waterYear != undefined) {
+        var firstdtm  = new Date(`${wy-1}-10-01T00:00:00`);
+        var lastdtm   = new Date(`${wy}-09-30T00:00:00`);
+        
+        this.downloadStartDateString = lx.DateTime.fromJSDate(firstdtm).toISODate();
+        this.downloadEndDateString   = lx.DateTime.fromJSDate(lastdtm).toISODate();
+      };
+      
+      this.updateDates();
+    },
+    
+    datesChange() {
+      if (this.oneWYOrLess) {
+        let startdate = lx.DateTime.fromISO(this.downloadStartDateString);
+        let startwy   = startdate.month < 10 ? startdate.year : startdate.year + 1;
+        
+        this.waterYear = startwy;
+      } else {
+        this.waterYear = null;
+      };
+    },
+      
     clickCreateReport() {
       // To modify this to create one page per water year, we'll have to:
       //   1: save the list of water years and the start & end dates locally
@@ -204,8 +229,10 @@ var vm = new Vue({
       
       // Really not sure I want to do this yet.  Maybe just disable the report if there's more
       //   than one wy present.
-      
-      this.graphMeasurements(1000);
+        
+        // this.setWaterYear(this.waterYear);
+        
+        this.graphMeasurements(1000);
         
         let table    = this.dailyFormatted;
         let siteName = _.filter(this.samplePoints, ['SamplePointID', this.spID])[0]['Name']
