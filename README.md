@@ -18,7 +18,7 @@ To install the application:
     1. This user can't use the windows login; it has to use a password login.
     2. Enable TCP connections for the server in the SQL Server Configuration Manager.  See <https://stackoverflow.com/questions/2388042/connect-to-sql-server-2008-with-tcp-ip>.
     3. Enable SQL Server logins; by default it only allows Windows connections.  See <https://stackoverflow.com/questions/11625899/cannot-login-after-creating-the-user-in-sql-server>.
-5. Download the program (currently, grab it from Github.  No formal distributions yet).
+5. Download and install the program.  The latest stable version is in [Releases](https://github.com/ethankale/Sedna/releases).
 6. Open the program, immediate go to settings, and put in the SQL Server info for the DB and the user you created.
 
 That should do it.  Most likely issue is with the user; make sure the user you create & use has permission to read, write, and delete for every table in the database.

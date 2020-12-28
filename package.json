@@ -1,7 +1,7 @@
 {
   "name": "@electron-forge/publisher-github",
   "productName": "GData2",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A desktop application for managing hydrologic data",
   "main": "src/main/main.js",
   "scripts": {
