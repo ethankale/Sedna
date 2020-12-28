@@ -149,7 +149,7 @@
               </div>
               
               <div id="date-select-row" class="form-group row">
-                <div class="col-5">
+                <div class="col-4">
                   <label for="startDate">Start Date</label>
                   <flat-pickr
                     v-model="downloadStartDateString"
@@ -160,7 +160,7 @@
                   </flat-pickr>
                 </div>
                 
-                <div class="col-5">
+                <div class="col-4">
                   <label for="endDate">End Date</label>
                   <flat-pickr
                     v-model="downloadEndDateString"
@@ -178,6 +178,16 @@
                     v-model="waterYear"
                     :options="wylist">
                   </v-select>
+                </div>
+                
+                <div class="col-2">
+                  <label for="allData">Show Everything</label>
+                  <button
+                    id="allData"
+                    class="btn btn-primary"
+                    @click.prevent="clickAllData($event)"
+                    :disabled="paramcurrent === null">All Data
+                  </button>
                 </div>
               
               </div>

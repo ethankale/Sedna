@@ -293,6 +293,35 @@ var vm = new Vue({
       loadParamList();
     },
     
+    getAllMeasurementDateSpan() {
+      let query = {
+        spID:      this.spID,
+        paramid:   this.paramcurrent,
+        methodid:  this.methodcurrent
+      };
+      let request = $.ajax({
+        url:         `http://localhost:3000/api/v1/measurementDateSpan`,
+        data:        query,
+        method:      'GET',
+        timeout:     3000,
+        dataType:    'json',
+        contentType: 'application/json'
+      });
+      return request;
+    },
+    
+    clickAllData(e) {
+      this.getAllMeasurementDateSpan()
+      .done((data) => {
+        this.downloadStartDateString = lx.DateTime.fromISO(data[0].mindt).toISODate();
+        this.downloadEndDateString   = lx.DateTime.fromISO(data[0].maxdt).toISODate();
+      })
+      .fail((err) =>  {
+        console.log(err);
+      });
+        
+    },
+    
     getGraphTypes() {
       let request = $.ajax({
         url: `http://localhost:3000/api/v1/graphTypeList`,

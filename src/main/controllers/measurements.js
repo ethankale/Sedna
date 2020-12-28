@@ -139,6 +139,58 @@ let controller = {
       });
     },
     
+    getDateSpan: function(req, res) {
+      let mssql_config = cfg.getConfig().mssql;
+      var returndata = [];
+      var connection = new Connection(mssql_config);
+      
+      // console.log(req.query);
+      
+      let spID      = req.query.spID;
+      let paramid   = req.query.paramid;
+      let methodid  = req.query.methodid;
+      
+      connection.on('connect', function(err) {
+        if(err) {
+          console.log('Error: ', err);
+          res.status(400).json(err);
+        } else {
+          let statement = `SELECT 
+            min(DataStarts) as mindt,
+            max(DataEnds) as maxdt
+            FROM Metadata as md
+            WHERE md.SamplePointID = ${spID}
+            AND md.ParameterID     = ${paramid}
+            AND md.MethodID        = ${methodid}`;
+          
+          let request = new Request(statement, function(err, rowCount) {
+            if (err) {
+              console.log(err);
+              res.status(400).json(err);
+            } else {
+              res.status(200).json(returndata);
+            }
+          });
+          
+          request.addParameter('spID',       TYPES.Int, spID);
+          request.addParameter('paramid',    TYPES.Int, paramid);
+          request.addParameter('methodid',   TYPES.Int, methodid);
+          
+          request.on('row', function(columns) {
+            let newrow = {};
+            columns.forEach((column) => {
+              newrow[[column.metadata.colName]] = column.value;
+            });
+            returndata.push(newrow);
+          });
+          
+          connection.execSql(request);
+          
+        };
+      });
+      
+    },
+    
     getCountByDtmAndMetaid: function(req, res) {
       let cfg = require('./config.js')
       let mssql_config = cfg.getConfig().mssql;
