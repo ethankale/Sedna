@@ -1036,7 +1036,7 @@ just run a query to delete all the bad ones.
 /* Insert values */
 INSERT INTO Alqwu.dbo.Measurement 
 WITH (TABLOCK)
-  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Comment)
+  (MetadataID, CollectedDtm, CollectedDTMOffset, Value, Note)
 SELECT amd.MetadataID, fvi.Date_Time, fvi.UTC_Offset*-60, fd.Parameter_Value, fvi.Comments
 FROM [GDATA].[dbo].[tblFieldData] as fd
 LEFT JOIN [GDATA].[dbo].tblFieldVisitInfo as fvi
