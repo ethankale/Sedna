@@ -93,7 +93,7 @@ GO
 SET IDENTITY_INSERT Alqwu.dbo.SamplePoint ON;
 GO
 INSERT INTO Alqwu.dbo.SamplePoint (SamplePointID, SiteID, Name, Latitude, Longitude, ElevationFeet, ElevationDatum, ElevationReference)
-SELECT G_ID, G_ID, 'Default' as Name, LAT, LON, Elevation, Vert_datum, Elevation_of
+SELECT G_ID, G_ID, 'Default' as Name, LAT, LON, Elevation, left(Vert_datum, 10), Elevation_of
 FROM gdata.dbo.tblGaugeLLID
 SET IDENTITY_INSERT Alqwu.dbo.SamplePoint OFF;
 GO
