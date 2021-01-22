@@ -280,9 +280,9 @@ GO
 3 is the GData parameter id for water temperature
 */
 WITH gd_rows AS (
-  SELECT G_ID as SamplePointID, 3307 as ParameterID, 6 as UnitID, gwu.WorkUp_Notes as Notes, 
+  SELECT G_ID as SamplePointID, 3307 as ParameterID, 6 as UnitID, left(gwu.WorkUp_Notes, 254) as Notes, 
     1476 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
-    gwu.WorkUp_Notes as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
+    left(gwu.WorkUp_Notes, 254) as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
     WorkUp_Date as CreatedOn, 
     ROW_NUMBER() OVER (
       PARTITION BY G_ID, Start_Time
@@ -300,7 +300,7 @@ INSERT INTO Alqwu.dbo.Metadata (SamplePointID, ParameterID, UnitID, Notes,
   MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
   FileName, DataStarts, DataEnds, UserID,
   CreatedOn)
-SELECT SamplePointID, ParameterID, UnitID, Notes,
+SELECT SamplePointID, ParameterID, UnitID, Notes, 
   MethodID, Active, FrequencyMinutes, DecimalPoints, GraphTypeID,
   FileName, DataStarts, DataEnds, UserID,
   CreatedOn 
@@ -343,9 +343,9 @@ GO
 10 is the GData parameter id for barometric pressure
 */
 WITH gd_rows AS (
-  SELECT G_ID as SamplePointID, 740 as ParameterID, 100 as UnitID, gwu.WorkUp_Notes as Notes, 
+  SELECT G_ID as SamplePointID, 740 as ParameterID, 100 as UnitID, left(gwu.WorkUp_Notes, 254) as Notes, 
     1458 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
-    gwu.WorkUp_Notes as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
+    left(gwu.WorkUp_Notes, 254) as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
     WorkUp_Date as CreatedOn, 
     ROW_NUMBER() OVER (
       PARTITION BY G_ID, Start_Time
@@ -405,9 +405,9 @@ GO
 1 is the GData parameter id for barometric pressure
 */
 WITH gd_rows AS (
-  SELECT G_ID as SamplePointID, 3090 as ParameterID, 14 as UnitID, gwu.WorkUp_Notes as Notes, 
+  SELECT G_ID as SamplePointID, 3090 as ParameterID, 14 as UnitID, left(gwu.WorkUp_Notes, 254) as Notes, 
     1527 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
-    gwu.WorkUp_Notes as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
+    left(gwu.WorkUp_Notes, 254) as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
     WorkUp_Date as CreatedOn, 
     ROW_NUMBER() OVER (
       PARTITION BY G_ID, Start_Time
@@ -471,9 +471,9 @@ GO
 34 is the GData parameter id for relative humidity
 */
 WITH gd_rows AS (
-  SELECT G_ID as SamplePointID, 3172 as ParameterID, 3 as UnitID, gwu.WorkUp_Notes as Notes, 
+  SELECT G_ID as SamplePointID, 3172 as ParameterID, 3 as UnitID, left(gwu.WorkUp_Notes, 254) as Notes, 
     1574 as MethodID, 1 as Active, 15 as FrequencyMinutes, 2 as DecimalPoints,  null as GraphTypeID,
-    gwu.WorkUp_Notes as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
+    left(gwu.WorkUp_Notes, 254) as FileName, Start_Time as DataStarts, End_Time as DataEnds, gwu.WorkedUp_By as UserID, 
     WorkUp_Date as CreatedOn, 
     ROW_NUMBER() OVER (
       PARTITION BY G_ID, Start_Time
