@@ -77,8 +77,10 @@ var vm = new Vue({
       this.changeSamplePoint();
     },
     
-    waterYear: function(wy) {
-      this.setWaterYear(wy);
+    waterYear: function(newwy, oldwy) {
+      if ((typeof(newwy) !== 'undefined') & (typeof(oldwy) !== 'undefined')) {
+        this.setWaterYear(newwy);
+      };
     },
     
   },
@@ -660,6 +662,7 @@ var vm = new Vue({
     },
     
     updateDates() {
+      
       Promise.allSettled([
         this.getDailyMeasurements(), 
         this.getParameterDetails(),
