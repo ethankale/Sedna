@@ -106,6 +106,16 @@ CREATE NONCLUSTERED INDEX [measurement_metadataid_idx] ON [dbo].[Measurement]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
 
+/* This query deletes any duplicate measurements that were imported from GData.
+	It arbitrarily deletes rows according to their MeasurementID (highest ID is preserved) */
+DELETE
+FROM [Alqwu].[dbo].[Measurement]
+WHERE MeasurementID NOT IN (
+  SELECT MAX(MeasurementID)
+  FROM [Alqwu].[dbo].[Measurement] as m
+  GROUP BY m.MetadataID, m.CollectedDateTime, m.Depth_M, m.Duplicate
+);
+
 /****** Object:  Index [measurement_unique_idx]    Script Date: 2020-06-10 2:18:40 PM ******/
 CREATE UNIQUE NONCLUSTERED INDEX [measurement_unique_idx] ON [dbo].[Measurement]
 (
