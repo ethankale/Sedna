@@ -46,6 +46,8 @@ var vm = new Vue({
     workups:       [],
     dailySummary:  [],
     
+    loadingDaily:  false,
+    
     graphTypes:    [],
     chartType:     "",
     
@@ -353,7 +355,7 @@ var vm = new Vue({
       let request = $.ajax({
         url: `http://localhost:3000/api/v1/getMeasurementsDaily`,
         method:'GET',
-        timeout: 3000,
+        timeout: 10000,
         data: query,
         dataType: 'json',
         contentType: 'application/json'
@@ -369,7 +371,7 @@ var vm = new Vue({
       let request = $.ajax({
         url: `http://localhost:3000/api/v1/parameter`,
         method:'GET',
-        timeout: 3000,
+        timeout: 10000,
         data: query,
         dataType: 'json',
         contentType: 'application/json'
@@ -385,7 +387,7 @@ var vm = new Vue({
       let request = $.ajax({
         url: `http://localhost:3000/api/v1/method`,
         method:'GET',
-        timeout: 3000,
+        timeout: 10000,
         data: query,
         dataType: 'json',
         contentType: 'application/json'
@@ -394,7 +396,6 @@ var vm = new Vue({
     },
     
     onPageLoad(old_spID) {
-      console.log(old_spID);
       this.getSamplePoints()
         .done((data) => {
           this.samplePoints = data;
@@ -662,24 +663,29 @@ var vm = new Vue({
     },
     
     updateDates() {
-      
-      Promise.allSettled([
-        this.getDailyMeasurements(), 
-        this.getParameterDetails(),
-        this.getMethodDetails()
-      ]).then((data) => {
-        this.dailySummary  = data[0].value;
-        this.paramDetails  = data[1].value;
-        this.methodDetails = data[2].value;
-        
-        this.graphMeasurements();
-      })
-      .catch(error => {
-        $("#chartContainer").empty();
-        this.paramDetails.Name = "No Data";
-        console.log("Ran into an error getting daily measurements/parameter details");
-        console.log(error);
-      });
+      if (this.loadingDaily == false) {
+        this.loadingDaily = true;
+        Promise.allSettled([
+          this.getDailyMeasurements(), 
+          this.getParameterDetails(),
+          this.getMethodDetails()
+        ]).then((data) => {
+          this.dailySummary  = data[0].value;
+          this.paramDetails  = data[1].value;
+          this.methodDetails = data[2].value;
+          
+          this.loadingDaily = false;
+          
+          this.graphMeasurements();
+        })
+        .catch(error => {
+          this.loadingDaily = false;
+          $("#chartContainer").empty();
+          this.paramDetails.Name = "Error Loading Data";
+          console.log("Ran into an error getting daily measurements/parameter details");
+          console.log(error);
+        });
+      };
     }
   }
 });
@@ -720,7 +726,7 @@ $(document).ready(function() {
     });
     
     // These are the two date inputs - start and end date
-    $("#date-select-row input").change(function() {
+    $("#date-select-row input").change(function(e) {
       vm.updateDates();
     });
     
